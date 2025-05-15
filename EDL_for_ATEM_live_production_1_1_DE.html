@@ -1,0 +1,442 @@
+<html>
+  <head>
+  
+    <style>
+        #comment-list {
+            list-style: none;
+            padding: 0;
+        }
+        .new-entry {
+            animation: slide-in 0.5s ease-in;
+        }
+        .deleted-entry {
+            animation: slide-out 0.5s ease-out;
+        }
+        @keyframes slide-in {
+            from {
+                transform: translateY(-20%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        @keyframes slide-out {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+        li {
+  display: flex;
+  flex-wrap: nowrap;
+}
+    </style>
+    
+    <script>
+    
+    
+    
+    
+    window.onbeforeunload = function() {
+  return "Are you sure you want to leave? Any unsaved data will be lost.";
+}
+      let startTime = new Date();
+      let timecodeList = [];
+      let timezoneOffsets = {
+    "UTC": 0,
+    "UTC-12": -12,
+    "UTC-11": -11,
+    "UTC-10": -10,
+    "UTC-9": -9,
+    "UTC-8": -8,
+    "UTC-7": -7,
+    "UTC-6": -6,
+    "UTC-5": -5,
+    "UTC-4": -4,
+    "UTC-3": -3,
+    "UTC-2": -2,
+    "UTC-1": -1,
+    "UTC+1": 1,
+    "UTC+2": 2,
+    "UTC+3": 3,
+    "UTC+4": 4,
+    "UTC+5": 5,
+    "UTC+6": 6,
+    "UTC+7": 7,
+    "UTC+8": 8,
+    "UTC+9": 9,
+    "UTC+10": 10,
+    "UTC+11": 11,
+    "UTC+12": 12
+}
+    let framerates = {
+        "24": 24,
+        "30": 30,
+        "50": 50,
+        "60": 60,
+        "120":120,
+        "25": 25
+    }
+function updateTime() {
+    let selectedTimezone = document.getElementById("timezone-selector").value;
+    let offset = timezoneOffsets[selectedTimezone];
+    let selectedFramerate = document.getElementById("framerate-selector").value;
+    let framerate = framerates[selectedFramerate];
+    let latency = document.getElementById("latency-input").value;
+    let currentTime = new Date();
+    currentTime.setMilliseconds(currentTime.getMilliseconds() + parseInt(latency));
+    let hours = (currentTime.getUTCHours() + offset) % 24;
+    if (hours < 0) {
+       hours += 24;
+    }
+    let minutes = currentTime.getUTCMinutes();
+    let seconds = currentTime.getUTCSeconds();
+    let milliseconds = currentTime.getUTCMilliseconds();
+    let timecode = `${formatNumber(hours)}:${formatNumber(minutes)}:${formatNumber(seconds)}:${formatNumber(Math.round(milliseconds / 1000 * framerate))}`;
+    document.getElementById("timer").innerHTML = timecode;
+}
+      function formatNumber(n) {
+        return n.toString().padStart(2, "0");
+      }
+      function formatNumberThree(n) {
+        return n.toString().padStart(3, "0");
+      }
+function sync() {
+  let beep = new Audio("https://www.julius-video.de/wp-content/uploads/2023/01/beepsound.mp3"); 
+  beep.play();
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Syncpoint", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+}
+function addComment() {
+  let comment = prompt("Kommentar eingeben:");
+  let timecode = document.getElementById("timer").innerHTML;
+  let commentItem = {timecode: timecode, comment: comment, id: Date.now()};
+  timecodeList.unshift(commentItem);
+  saveProject();
+  // Get the project title from the textbox
+  let projectTitle = document.getElementById("project-title").value;
+  let edlFileName = `${projectTitle}.edl`;
+  // Use the edlFileName variable as the filename for the EDL file
+}
+      function addOuttake() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Outtake", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }
+      function addStart() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Start", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }
+      function addCut() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Pause", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }
+      function addContinue() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Fortsetzung", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }
+      function addEnd() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Ende", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }
+      function addAgain() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Wiederholung", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }
+      function addCheckforerror() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Überprüfe auf Fehler", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }
+      
+      function addCloseup() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Close-up", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }      
+      
+      function addSlomo() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Slow motion oder timelapse", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }      
+                      
+      function addTransition() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Übergang", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }                   
+      function addVFX() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Visual Effekts oder SFX/Music", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }      
+                      
+      function addBesttake() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Bester Take", id: Date.now()};
+        timecodeList.push(commentItem);
+        saveProject();
+      }                   
+   // Add animation classes in the correct places
+   function renderList() {
+   timecodeList.sort((a, b) => b.id - a.id);
+        let listHTML = "";
+        timecodeList.forEach(({ timecode, comment, id }, index) => {
+            listHTML += `<li id="item_${id}" ${index === 0 ? "class='new-entry'" : ""}><input style="width: 110px" type="text" value="${timecode}" id="timecode_${id}" onblur="editComment(${id})"><input style="width: 70%" type="text" value="${comment}" id="comment_${id}" onblur="editComment(${id})"><button style="width: 10px" onclick="deleteComment(${id})">x</button></li>`;
+        });
+        document.getElementById("comment-list").innerHTML = listHTML;
+    }
+    
+    
+    
+    function deleteComment(id) {
+        document.getElementById(`item_${id}`).classList.add("deleted-entry");
+        setTimeout(() => {
+            timecodeList = timecodeList.filter((item) => item.id !== id);
+            saveProject();
+        }, 500);
+    }
+      
+      function editComment(id) {
+        let timecode = document.getElementById(`timecode_${id}`).value;
+        let comment = document.getElementById(`comment_${id}`).value;
+        let commentToEdit = timecodeList.find(item => item.id === id);
+        commentToEdit.timecode = timecode;
+        commentToEdit.comment = comment;
+        saveProject();
+      }
+    
+function downloadList() {
+  let currentDate = new Date();
+  let date = currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1).toString().padStart(2, "0") + "-" + currentDate.getDate().toString().padStart(2, "0");
+  let time = currentDate.getHours().toString().padStart(2, "0") + "-" + currentDate.getMinutes().toString().padStart(2, "0") + "-" + currentDate.getSeconds().toString().padStart(2, "0");
+let projectTitle = document.getElementById("project-title").value;
+let edlFileName = `${date}_${time}_${projectTitle.replace("ä","ae").replace("ü","ue").replace("ö","oe").replace(/[^a-zA-Z0-9]/g, "_")}.edl`;
+  let commentNr = "1"
+  let listString = `TITLE: ${projectTitle} | created in edl webapp by JULIUS-VIDEO.DE \nFCM: NON-DROP FRAME\n\n`;
+  timecodeList.forEach(({timecode, comment}) => {
+    let colorCode = "ResolveColorBlue";
+    if (comment === "Outtake") {
+      colorCode = "ResolveColorFuchsia";
+    } else if (comment === "Pause") {
+      colorCode = "ResolveColorPink";
+    } else if (comment === "Start") {
+      colorCode = "ResolveColorYellow";
+    } else if (comment === "Syncpoint") {
+      colorCode = "ResolveColorGreen";
+    } else if (comment === "Fortsetzung") {
+      colorCode = "ResolveColorCyan";
+    } else if (comment === "Wiederholung") {
+      colorCode = "ResolveColorSand";
+    } else if (comment === "Ende") {
+      colorCode = "ResolveColorRed";
+    } else if (comment === "Überprüfe auf Fehler") {
+      colorCode = "ResolveColorCocoa";      
+    }
+    listString += `${formatNumberThree(commentNr)}  001      V     C        ${timecode} ${timecode} ${timecode} ${timecode} \n |C:${colorCode} |M:${comment} |D:1\n\n`;
+    commentNr ++ ;
+  });
+  let a = document.createElement("a");
+  let file = new Blob([listString], {type: "text/plain"});
+  a.href = URL.createObjectURL(file);
+  a.download = edlFileName;
+  a.click();
+}
+// Save the list of timecodes and comments with the project name in a cookie
+function saveProject() {
+    let projectName = document.getElementById("project-title").value;
+    if(projectName === "") {
+        projectName = "Autosave";
+    }
+    let timecodeListJson = JSON.stringify(timecodeList);
+    document.cookie = `${projectName}=${timecodeListJson}; expires=Fri, 31 Dec 9999 23:59:59 GMT`;
+    populateDropdown();
+    let dropdown = document.getElementById("project-dropdown");
+    let selected = dropdown.options[dropdown.selectedIndex].text;
+    if (projectName !== "" && projectName !== selected) {
+        let option = document.createElement("option");
+        option.text = projectName;
+        dropdown.add(option);
+        dropdown.value = projectName;
+    }
+    document.getElementById("project-title").value = projectName;
+    dropdown.selectedIndex = dropdown.options.findIndex(x => x.value === projectName)
+}
+// Populate the project dropdown list with all saved project names
+function populateDropdown() {
+    let dropdown = document.getElementById("project-dropdown");
+    dropdown.innerHTML = "";
+    let cookieArray = document.cookie.split(";");
+    let projectNames = new Set();
+    for (let i = 0; i < cookieArray.length; i++) {
+        let cookie = cookieArray[i];
+        let cookieName = cookie.split("=")[0].trim();
+if (cookieName === "wordpress_test_cookie" || 
+    cookieName === "wp-settings-1" || 
+    cookieName === "wp-settings-time-1" || 
+    cookieName === "pbid" || 
+    cookieName === "pys_session_limit" || 
+    cookieName === "last_pysTrafficSource" || 
+    cookieName === "cookie_notice_accepted" ||
+    cookieName === "pys_start_session" ||
+    cookieName === "pys_first_visit" ||
+    cookieName === "pysTrafficSource" ||
+    cookieName === "pys_landing_page" ||
+    cookieName === "last_pys_landing_page") {
+        continue;
+}
+
+        if (!projectNames.has(cookieName)) {
+            let option = document.createElement("option");
+            option.value = cookieName;
+            option.innerHTML = cookieName;
+            projectNames.add(cookieName);
+            dropdown.appendChild(option);
+        }
+    }
+    dropdown.value = document.getElementById("project-title").value;
+    dropdown.onchange = function() {
+        document.getElementById("project-title").value = dropdown.value;
+        loadProject();
+    }
+    renderList();
+}
+// Load the list of timecodes and comments for the selected project
+function loadProject() {
+    let projectName = document.getElementById("project-dropdown").value;
+    let cookieArray = document.cookie.split(";");
+    for (let i = 0; i < cookieArray.length; i++) {
+        let cookie = cookieArray[i];
+        let cookieName = cookie.split("=")[0].trim();
+        if (cookieName === projectName) {
+            let timecodeListJson = cookie.split("=")[1];
+            timecodeList = JSON.parse(timecodeListJson);
+            renderList();
+            break;
+        }
+    }
+}
+// Delete the selected project from the dropdown and cookies
+function deleteProject() {
+    let projectName = document.getElementById("project-dropdown").value;
+    document.cookie = `${projectName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    populateDropdown();
+    timecodeList = [];
+    renderList();
+}
+window.addEventListener("load", populateDropdown);
+    </script>
+  </head>
+  <body onload="setInterval(updateTime, 33.3334)">
+    <div>
+        <h1>Kommentarliste für Liveproduktion</h1>
+        <h5>Die App ermöglicht das Erstellen von Kommentarmarken (Regie, Redaktion, Kapitel) während einer Live-Aufzeichnung. Die erstellten Schnittlisten werden in Timelines mit auf Uhrzeitbasiertem Timecode geladen, für z.B. Produktionen mit dem ATEM Pro/Mini Pro ISO.</h5> 
+        <h6>Speichern und wechseln Sie Projekte in Ihrem Browser:</h6> 
+        <div style="display: flex; justify-content: left; align-items: left;font-size: 20px"> 
+        <input type="text" id="project-title" placeholder="Projektname eingeben..."> 
+            
+            </div>
+<div style="display: flex; justify-content: left; align-items: left;font-size: 20px"> 
+    <select id="project-dropdown" style="width: 100%;" onchange="loadProject()"><option value="" disabled selected>Wählen Sie ein Projekt aus</option></select>
+  
+    <button onclick="deleteProject()">Löschen</button>
+  </div>
+  <br>
+  <h6>Einstellungen:</h6> 
+        <div>
+            <select id="timezone-selector" onchange="updateTime()">
+  <option value="UTC-12">UTC-12</option>
+  <option value="UTC-11">UTC-11</option>
+  <option value="UTC-10">UTC-10</option>
+  <option value="UTC-9">UTC-9</option>
+  <option value="UTC-8">UTC-8</option>
+  <option value="UTC-7">UTC-7</option>
+  <option value="UTC-6">UTC-6</option>
+  <option value="UTC-5">UTC-5</option>
+  <option value="UTC-4">UTC-4</option>
+  <option value="UTC-3">UTC-3</option>
+  <option value="UTC-2">UTC-2</option>
+  <option value="UTC-1">UTC-1</option>
+  <option value="UTC">UTC</option>
+  <option value="UTC+1"selected>UTC+1</option>
+  <option value="UTC+2">UTC+2</option>
+  <option value="UTC+3">UTC+3</option>
+  <option value="UTC+4">UTC+4</option>
+  <option value="UTC+5">UTC+5</option>
+  <option value="UTC+6">UTC+6</option>
+  <option value="UTC+7">UTC+7</option>
+  <option value="UTC+8">UTC+8</option>
+  <option value="UTC+9">UTC+9</option>
+  <option value="UTC+10">UTC+10</option>
+  <option value="UTC+11">UTC+11</option>
+  <option value="UTC+12">UTC+12</option>
+            </select>        
+            <select id="framerate-selector" onchange="updateTime()">
+                <option value="24">24fps</option>
+                <option value="25"selected>25fps</option>
+                <option value="30" >30fps</option>
+                <option value="50" >50fps</option>
+                <option value="60" >60fps</option>
+                <option value="120" >120fps</option>                             
+            </select>
+            <br>
+            <label "for="latency-input">Latenz (ms):</label>
+<input style="width: 100px" type="number" id="latency-input" value="0">
+        </div>
+        <br>
+        <div style="display: flex; justify-content: center; align-items: center;font-size: 20px" id="timer"> </div>
+    </div>
+    <div>
+                <table>
+            <tr>
+              <td> 
+                <div style="display: flex; justify-content: center; align-items: center;"></div>
+            <button onclick="addComment()" style="margin: 5px; padding: 20px;">Neuer Kommentar ✍️</button>
+            <button onclick="addStart()" style="margin: 5px; padding: 20px;">Start ▶️</button>
+            <button onclick="addCut()" style="margin: 5px; padding: 20px;">Pause ✂️</button>
+            <button onclick="addContinue()" style="margin: 5px; padding: 20px;">Fortsetzen 🚶‍♀️</button>
+            <button onclick="addAgain()" style="margin: 5px; padding: 20px;">Wiederholen 🔁</button>
+            <button onclick="addOuttake()" style="margin: 5px; padding: 20px;">Outtake 🤣</button>
+            <button onclick="addEnd()" style="margin: 5px; padding: 20px;">Ende ✋</button>
+            <button onclick="addCheckforerror()" style="margin: 5px; padding: 20px;">Fehler markieren 🚨</button>
+            <button onclick="addSlomo()" style="margin: 5px; padding: 20px;">Geschwindigkeit verändern 🐢/🐇</button>
+            <button onclick="addTransition()" style="margin: 5px; padding: 20px;">Übergang 🔥</button>
+            <button onclick="addVFX()" style="margin: 5px; padding: 20px;">Effekte 💥</button>
+            <button onclick="addBesttake()" style="margin: 5px; padding: 20px;">Beste Take 🤎</button>
+            <button id="sync-button" onclick="sync()" style="margin: 5px; padding: 20px;">Sync 🎬</button>            
+
+        </td>
+    </tr>
+  </table>
+          </div>
+          
+    </div>
+    <div>
+      <ul id="comment-list"></ul>      
+    </div>
+    <div><button onclick="downloadList()">Download</button></div>
+    <h4>Um die Liste der Kommentare zu speichern, klicken Sie auf „Herunterladen“. Das speichert die Liste als EDL-Datei, die Sie in Davinci Resolve öffnen können. Öffnen Sie Davinci Resolve, laden Sie das Projekt und klicken Sie mit der rechten Maustaste auf die Timeline, wo Sie die Liste importieren möchten. Wählen Sie „Import“ und dann „Timeline Marker from edl“ und wählen Sie die EDL-Datei aus, um sie zu laden.</h4>    
+  </body>
+  
+</html>
