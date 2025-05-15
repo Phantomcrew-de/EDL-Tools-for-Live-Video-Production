@@ -1,0 +1,151 @@
+<html>
+  <head>
+    <script>
+      let startTime = new Date();
+      let timecodeList = [];
+
+      function updateTime() {
+        let currentTime = new Date();
+        let hours = currentTime.getUTCHours();
+        let minutes = currentTime.getUTCMinutes();
+        let seconds = currentTime.getUTCSeconds();
+        let milliseconds = currentTime.getUTCMilliseconds();
+        let timecode = `${formatNumber(hours)}:${formatNumber(minutes)}:${formatNumber(seconds)}:${formatNumber(Math.round(milliseconds / 1000 * 30))}`;
+        document.getElementById("timer").innerHTML = timecode;
+      }
+
+      function formatNumber(n) {
+        return n.toString().padStart(2, "0");
+      }
+      function formatNumberThree(n) {
+        return n.toString().padStart(3, "0");
+      }
+
+      function addComment() {
+        let comment = prompt("Enter your comment:");
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: comment, id: Date.now()};
+        timecodeList.push(commentItem);
+        renderList();
+      }
+
+      function addOuttake() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Outtake", id: Date.now()};
+        timecodeList.push(commentItem);
+        renderList();
+      }
+
+      function addStart() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Start", id: Date.now()};
+        timecodeList.push(commentItem);
+        renderList();
+      }
+
+      function addCut() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Cut", id: Date.now()};
+        timecodeList.push(commentItem);
+        renderList();
+      }
+
+      function addContinue() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Continue", id: Date.now()};
+        timecodeList.push(commentItem);
+        renderList();
+      }
+
+
+      function addEnd() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "End", id: Date.now()};
+        timecodeList.push(commentItem);
+        renderList();
+      }
+
+      function addAgain() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Again", id: Date.now()};
+        timecodeList.push(commentItem);
+        renderList();
+      }
+
+      function addCheckforerror() {
+        let timecode = document.getElementById("timer").innerHTML;
+        let commentItem = {timecode: timecode, comment: "Check this part for an Error", id: Date.now()};
+        timecodeList.push(commentItem);
+        renderList();
+      }
+
+
+
+      function renderList() {
+        let listHTML = "";
+        timecodeList.forEach((item) => {
+            listHTML += `
+                <li>
+                    Timecode: <input type="text" value="${item.timecode}" id="timecode_${item.id}" onblur="editComment(${item.id})">
+                    Comment: <input type="text" value="${item.comment}" id="comment_${item.id}" onblur="editComment(${item.id})">
+                    <button onclick="deleteComment(${item.id})">Delete</button>
+                </li>
+            `;
+        });
+        document.getElementById("comment-list").innerHTML = listHTML;
+      }
+      
+      function editComment(id) {
+        let timecode = document.getElementById(`timecode_${id}`).value;
+        let comment = document.getElementById(`comment_${id}`).value;
+        let commentToEdit = timecodeList.find(item => item.id === id);
+        commentToEdit.timecode = timecode;
+        commentToEdit.comment = comment;
+        renderList();
+      }
+
+      function deleteComment(id) {
+        timecodeList = timecodeList.filter(item => item.id !== id);
+        renderList();
+      }
+
+      function downloadList() {
+        let commentNr = "1"
+        let listString = "TITLE: Edit list for liveproduction at Julius-Video.de \nFCM: NON-DROP FRAME\n\n";
+        timecodeList.forEach(({timecode, comment}) => {
+          listString += `${formatNumberThree(commentNr)}  001      V     C        ${timecode} ${timecode} ${timecode} ${timecode} \n |C:ResolveColorBlue |M:${comment} |D:1\n\n`;
+          commentNr ++ ;
+        });
+
+        let a = document.createElement("a");
+        let file = new Blob([listString], {type: "text/plain"});
+        a.href = URL.createObjectURL(file);
+        a.download = "timeline-markers.edl";
+        a.click();
+      }
+    </script>
+  </head>
+  <body onload="setInterval(updateTime, 33.3334)">
+    <div>
+        <h1>Edit List for Liveproductions</h1>
+        <h5>This program is a simple timecode tracker that allows you to keep track of comments or notes with a timestamp.</h5>      
+        <div id="timer"></div>
+    </div>
+    <div>
+      <br><button onclick="addComment()">Add a new Comment ✍️</button>
+      <button onclick="addStart()">Start 🎬</button>
+      <button onclick="addCut()">Cut ✂️</button>
+      <button onclick="addContinue()">Continue 🔁</button>
+      <button onclick="addOuttake()">Outtake 🤣</button>
+      <button onclick="addEnd()">End ✋</button>
+      <button onclick="addCheckforerror()">Mark an Error 🦟</button>
+      
+    </div>
+    <div>
+      <ul id="comment-list"></ul>      
+    </div>
+    <div><button onclick="downloadList()">Download</button></div>
+    <h4>To download the list of comments and outtakes, click the "Download List" button. This will download the list as EDL formatted file that you can open with a text editor or video editing software that supports this format. For e.g. DaVinci Resolve</h4>
+  </body>
+</html>
+
