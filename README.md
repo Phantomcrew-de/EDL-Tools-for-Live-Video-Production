@@ -82,4 +82,4 @@ MIT License (Feel free to use, adapt, and distribute)
 
 ## 🤝 Author
 
-Made with ❤️ by Julius – [julius-video.de](https://www.julius-video.de)
+Made with ❤️ by Julius – [phantomcrew.de](https://phantomcrew.de/)
