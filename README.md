@@ -76,7 +76,8 @@ An HTML video player for reviewing media files and adding comments directly at s
 
 ## 📄 License
 
-MIT License (Feel free to use, adapt, and distribute)
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0).  
+You are free to use, modify, and distribute it — as long as you share your changes under the same license.
 
 ---
 
