@@ -12,6 +12,16 @@ File: `EDL_for_ATEM_live_production_1_1_EN.html`
 
 A browser-based timecode tracker tailored for live production environments (e.g., ATEM-based multicam shoots). It enables editors or live directors to mark important moments (Start, Cut, Outtake, etc.) with frame-accurate timestamps and generate `.EDL` files for import into DaVinci Resolve.
 
+#### 📷 Screenshots
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="screenshots/screenshot_edl_marker_1_1.png" width="250px"><br>
+      <strong>EDL Marker Tool</strong>
+    </td>
+  </tr>
+</table>
+
 #### ✨ Features
 
 * Real-time timecode with configurable framerate (24–120 fps)
@@ -27,6 +37,16 @@ A browser-based timecode tracker tailored for live production environments (e.g.
 File: `EDL_video_player_for_resolve_1_1_DE.html`
 
 An HTML video player for reviewing media files and adding comments directly at specific timecodes. Designed for editors and directors to review takes collaboratively.
+
+#### 📷 Screenshots
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="screenshots/screenshot_edl_videoplayer_1_1.png" width="250px"><br>
+      <strong>EDL Video Player</strong>
+    </td>
+  </tr>
+</table>
 
 #### ✨ Features
 
