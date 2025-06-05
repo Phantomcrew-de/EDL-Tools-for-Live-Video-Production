@@ -88,9 +88,19 @@ An HTML video player for reviewing media files and adding comments directly at s
 ## 📁 File Structure
 
 ```
-├── EDL_for_ATEM_live_production_1_1_EN.html
-├── EDL_for_ATEM_live_production_1_1_DE.html
-├── EDL_video_player_for_resolve_1_1_DE.html
+📁 EDL-Tools-for-Live-Video-Production-main
+├── 📄 EDL_for_ATEM_live_production_1_1_EN.html
+├── 📄 EDL_for_ATEM_live_production_1_1_DE.html
+├── 📄 EDL_video_player_for_resolve_1_1_DE.html
+├── 📄 LICENSE
+├── 📄 README.md
+├── 📁 css
+│   └── 📄 style.css
+├── 📁 legacy
+│   ├── 📄 EDL_for_ATEM_live_production_0_1_EN.html
+│   └── 📄 style.css
+└── 📁 sfx
+    └── 🔊 beepsound.mp3
 ```
 
 ---
