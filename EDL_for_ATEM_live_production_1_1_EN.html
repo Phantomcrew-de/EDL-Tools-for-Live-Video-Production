@@ -1,7 +1,14 @@
 <html>
   <head>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/style.css">
     <style>
+
+@media (max-width: 1024px) {
+body {
+	padding-left: 5%;
+	padding-right: 5%;
+}
+}
         #comment-list {
             list-style: none;
             padding: 0;
@@ -112,7 +119,7 @@ function updateTime() {
         return n.toString().padStart(3, "0");
       }
 function sync() {
-  let beep = new Audio("https://www.julius-video.de/wp-content/uploads/2023/01/beepsound.mp3"); 
+  let beep = new Audio("sfx/beepsound.mp3"); 
   beep.play();
         let timecode = document.getElementById("timer").innerHTML;
         let commentItem = {timecode: timecode, comment: "Syncpoint", id: Date.now()};
