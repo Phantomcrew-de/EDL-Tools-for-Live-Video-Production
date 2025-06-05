@@ -1,0 +1,93 @@
+/* Modernes Design für den EDL Video Player */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f9fafb;
+    color: #1f2937;
+    margin: 0;
+    padding: 2rem;
+    line-height: 1.6;
+}
+
+h1, label {
+    color: #111827;
+    font-weight: 600;
+}
+
+input[type="file"],
+input[type="text"],
+select,
+button {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background-color: #fff;
+    color: #111827;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+}
+
+input[type="text"]:focus,
+select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+button {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    cursor: pointer;
+    width: auto;
+    display: inline-block;
+}
+
+button:hover {
+    background-color: #2563eb;
+}
+
+.video-player {
+    width: 100%;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+form {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+#comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#comment-list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem;
+    background: #f3f4f6;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+}
+
+#comment-list input[type="text"] {
+    flex: 1;
+    min-width: 10ch;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
