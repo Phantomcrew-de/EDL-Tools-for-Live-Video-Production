@@ -1,4 +1,4 @@
-# 🎬 EDL Tools for Live Video Production & DaVinci Resolve
+# 🎬 EDL Tools for Live ATEM Video Production & DaVinci Resolve
 
 This repository provides two lightweight, browser-based web applications to support timecode-based editing and video annotation workflows, particularly for live productions and DaVinci Resolve postproduction.
 
