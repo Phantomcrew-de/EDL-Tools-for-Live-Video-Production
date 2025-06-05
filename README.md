@@ -76,9 +76,9 @@ An HTML video player for reviewing media files and adding comments directly at s
 ---
 
 ## 📄 License
-
-This project is licensed under the GNU General Public License v3.0 (GPL-3.0).  
-You are free to use, modify, and distribute it — as long as you share your changes under the same license.
+Licensed under the GNU General Public License v3.0 (GPL-3.0) — free to use, modify, and distribute under the same terms.
+This is an unofficial project and has no affiliation with Blackmagic Design.
+“DaVinci Resolve” is a registered trademark of Blackmagic Design Pty Ltd.
 
 ---
 
