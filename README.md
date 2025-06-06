@@ -7,7 +7,7 @@ This repository provides two lightweight, browser-based web applications to supp
 ## 🛠️ Tools Included
 
 ### 1. **EDL Marker Tool for Live Production**
-[Example: EDL Marker Tool](https://www.julius-video.de/leistungen/hard-und-softwareloesungen/edl-webapp-en/)
+[Example: EDL Marker Tool](https://htmlpreview.github.io/?https://github.com/Phantomcrew-de/EDL-Tools-for-Live-Video-Production/blob/main/EDL_for_ATEM_live_production_1_1_EN.html)
 File: `EDL_for_ATEM_live_production_1_1_EN.html`
 
 A browser-based timecode tracker tailored for live production environments (e.g., ATEM-based multicam shoots). It enables editors or live directors to mark important moments (Start, Cut, Outtake, etc.) with frame-accurate timestamps and generate `.EDL` files for import into DaVinci Resolve.
@@ -33,7 +33,7 @@ A browser-based timecode tracker tailored for live production environments (e.g.
 ---
 
 ### 2. **EDL-Enabled Video Commenting Tool for Resolve**
-[Example: EDL Video Player](https://www.julius-video.de/leistungen/hard-und-softwareloesungen/edl-video-player/)
+[Example: EDL Video Player](https://htmlpreview.github.io/?https://github.com/Phantomcrew-de/EDL-Tools-for-Live-Video-Production/blob/main/EDL_video_player_for_resolve_1_1_DE.html)
 File: `EDL_video_player_for_resolve_1_1_DE.html`
 
 An HTML video player for reviewing media files and adding comments directly at specific timecodes. Designed for editors and directors to review takes collaboratively.
