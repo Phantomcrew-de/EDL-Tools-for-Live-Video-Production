@@ -32,6 +32,7 @@
 
 <script>
 let originalFilename = "export";
+let originalEntries = [];
 let originalLines = [];
 
 function parseEDL(content) {
@@ -59,18 +60,23 @@ function toFrames(tc, fps) {
   return ((h * 3600 + m * 60 + s) * fps + f);
 }
 
+
 function fromFrames(frames, fps, wrap24) {
   if (wrap24) {
     const maxFrames = 24 * 3600 * fps;
     frames = ((frames % maxFrames) + maxFrames) % maxFrames;
   }
+
+  frames = Math.max(0, frames);  // verhindert negative Timecodes
   const totalSeconds = Math.floor(frames / fps);
-  const f = Math.round(frames % fps);
+  const f = Math.floor(frames % fps);  // BUGFIX: keine Rundung über Framegrenze
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
+
   return [h, m, s, f].map(x => String(x).padStart(2, '0')).join(':');
 }
+
 
 function showEntries(entries) {
   const container = document.getElementById('entries');
@@ -117,8 +123,9 @@ document.getElementById('edlFile').addEventListener('change', function() {
   originalFilename = file.name.replace(/\.edl$/i, '');
   const reader = new FileReader();
   reader.onload = function(e) {
-    const entries = parseEDL(e.target.result);
-    showEntries(entries);
+    const parsed = parseEDL(e.target.result);
+    originalEntries = JSON.parse(JSON.stringify(parsed));
+    showEntries(parsed);
   };
   reader.readAsText(file);
 });
@@ -134,13 +141,13 @@ function parseOffsetTC(tc) {
   return sign * ((h * 3600 + m * 60 + s) * parseFloat(document.getElementById('fps').value) + f);
 }
 
+
 function applyOffset() {
   const offsetFrames = parseOffsetTC(document.getElementById('offset').value);
   const fps = parseFloat(document.getElementById('fps').value);
   const wrap24 = document.getElementById('wrap24').checked;
 
-  const entries = getEntries();
-  const updated = entries.map(e => {
+  const updated = originalEntries.map(e => {
     const newFrames = toFrames(e.timecode, fps) + offsetFrames;
     return {
       comment: e.comment,
@@ -148,6 +155,7 @@ function applyOffset() {
     };
   });
   showEntries(updated);
+
 }
 
 function downloadEDL() {
