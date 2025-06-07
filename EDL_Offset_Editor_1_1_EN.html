@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>EDL Offset Editor</title>
+  <style>
+    body { font-family: Arial; margin: 20px; background: #0b0b3b; color: white; }
+    .controls { margin: 10px 0; }
+    .entry { background: #1a1a4c; padding: 10px; margin: 10px 0; border-radius: 8px; display: flex; gap: 10px; align-items: center; }
+    .entry input { padding: 5px; border-radius: 5px; border: none; width: 40%; }
+    .entry button { background: #ff4d4d; border: none; color: white; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+    .entry button:hover { background: #e60000; }
+    #downloadBtn { margin-top: 20px; background: #4CAF50; padding: 10px 20px; border: none; border-radius: 5px; color: white; cursor: pointer; }
+    #downloadBtn:hover { background: #45a049; }
+  </style>
+</head>
+<body>
+
+<h2>EDL Offset Editor</h2>
+
+<input type="file" id="edlFile" accept=".edl">
+<div class="controls">
+  <label>Offset (HH:MM:SS:FF): <input type="text" id="offset" value="00:00:00:00"></label>
+  <label>Framerate: <input type="number" id="fps" value="25" step="0.01"></label>
+  <label><input type="checkbox" id="wrap24"> Wrap bei 24h</label>
+  <button onclick="applyOffset()">Offset anwenden</button>
+  <button onclick="clearFields()">Löschen</button>
+</div>
+
+<div id="entries"></div>
+<button id="downloadBtn" onclick="downloadEDL()">Download EDL</button>
+
+<script>
+let originalFilename = "export";
+let originalLines = [];
+
+function parseEDL(content) {
+  originalLines = content.split(/\r?\n/);
+  const entries = [];
+  let currentComment = "";
+
+  for (let i = 0; i < originalLines.length; i++) {
+    const line = originalLines[i];
+    if (line.startsWith('*')) {
+      currentComment = line.slice(1).trim();
+    } else {
+      const match = line.match(/(\d{2}:\d{2}:\d{2}:\d{2})/);
+      if (match) {
+        entries.push({ comment: currentComment || `Kommentar ${entries.length + 1}`, timecode: match[1], lineIndex: i });
+        currentComment = "";
+      }
+    }
+  }
+  return entries;
+}
+
+function toFrames(tc, fps) {
+  const [h, m, s, f] = tc.split(':').map(Number);
+  return ((h * 3600 + m * 60 + s) * fps + f);
+}
+
+function fromFrames(frames, fps, wrap24) {
+  if (wrap24) {
+    const maxFrames = 24 * 3600 * fps;
+    frames = ((frames % maxFrames) + maxFrames) % maxFrames;
+  }
+  const totalSeconds = Math.floor(frames / fps);
+  const f = Math.round(frames % fps);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return [h, m, s, f].map(x => String(x).padStart(2, '0')).join(':');
+}
+
+function showEntries(entries) {
+  const container = document.getElementById('entries');
+  container.innerHTML = '';
+
+  entries.forEach((entry, index) => {
+    const div = document.createElement('div');
+    div.className = 'entry';
+    div.innerHTML = `
+      <input type="text" value="${entry.comment}" data-index="${index}" class="comment">
+      <input type="text" value="${entry.timecode}" data-index="${index}" class="timecode">
+      <button onclick="deleteEntry(${index})">Delete</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function getEntries() {
+  const timecodeInputs = document.querySelectorAll('.timecode');
+  const commentInputs = document.querySelectorAll('.comment');
+  const entries = [];
+  for (let i = 0; i < timecodeInputs.length; i++) {
+    entries.push({
+      timecode: timecodeInputs[i].value,
+      comment: commentInputs[i].value
+    });
+  }
+  return entries;
+}
+
+function deleteEntry(index) {
+  const entries = getEntries();
+  entries.splice(index, 1);
+  showEntries(entries);
+}
+
+function clearFields() {
+  document.getElementById('entries').innerHTML = '';
+}
+
+document.getElementById('edlFile').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  originalFilename = file.name.replace(/\.edl$/i, '');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const entries = parseEDL(e.target.result);
+    showEntries(entries);
+  };
+  reader.readAsText(file);
+});
+
+function parseOffsetTC(tc) {
+  const sign = tc.trim().startsWith('-') ? -1 : 1;
+  const clean = tc.replace(/^[-+]/, '').trim();
+  const parts = clean.split(':').map(Number);
+  const h = parts[0] || 0;
+  const m = parts[1] || 0;
+  const s = parts[2] || 0;
+  const f = parts[3] || 0;
+  return sign * ((h * 3600 + m * 60 + s) * parseFloat(document.getElementById('fps').value) + f);
+}
+
+function applyOffset() {
+  const offsetFrames = parseOffsetTC(document.getElementById('offset').value);
+  const fps = parseFloat(document.getElementById('fps').value);
+  const wrap24 = document.getElementById('wrap24').checked;
+
+  const entries = getEntries();
+  const updated = entries.map(e => {
+    const newFrames = toFrames(e.timecode, fps) + offsetFrames;
+    return {
+      comment: e.comment,
+      timecode: fromFrames(newFrames, fps, wrap24)
+    };
+  });
+  showEntries(updated);
+}
+
+function downloadEDL() {
+  const entries = getEntries();
+  const updatedLines = [...originalLines];
+  let entryIndex = 0;
+
+  for (let i = 0; i < updatedLines.length; i++) {
+    if (updatedLines[i].startsWith('*')) {
+      updatedLines[i] = `* ${entries[entryIndex]?.comment || ''}`;
+    } else if (updatedLines[i].match(/\d{2}:\d{2}:\d{2}:\d{2}/)) {
+      const tc = entries[entryIndex]?.timecode || '00:00:00:00';
+      // replace all 4 timecodes in line
+      updatedLines[i] = updatedLines[i].replace(/(\d{2}:\d{2}:\d{2}:\d{2})/g, tc);
+      entryIndex++;
+    }
+  }
+
+  const edlContent = updatedLines.join('\n');
+  const blob = new Blob([edlContent], { type: 'text/plain' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = originalFilename + '_offset.edl';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
+
+</body>
+</html>
