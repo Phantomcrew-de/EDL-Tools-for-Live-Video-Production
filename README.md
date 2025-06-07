@@ -66,6 +66,13 @@ An HTML video player for reviewing media files and adding comments directly at s
 
 ---
 
+### 3. **EDL Offset Editor**
+
+[Example: EDL Video Player](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Offset_Editor_1_1_EN.html)
+File: `EDL_Offset_Editor_1_1_EN.html`
+
+---
+
 ## 📝 How to Use
 
 1. Open either HTML file in your browser.
