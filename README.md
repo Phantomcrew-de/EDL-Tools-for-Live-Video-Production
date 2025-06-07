@@ -110,6 +110,7 @@ File: `EDL_Offset_Editor_1_1_EN.html`
 ├── 📄 EDL_for_ATEM_live_production_1_1_EN.html
 ├── 📄 EDL_for_ATEM_live_production_1_1_DE.html
 ├── 📄 EDL_video_player_for_resolve_1_1_DE.html
+├── 📄 EDL_Offset_Editor_1_1_EN.html
 ├── 📄 LICENSE
 ├── 📄 README.md
 ├── 📁 css
