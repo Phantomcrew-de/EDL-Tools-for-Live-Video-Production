@@ -171,12 +171,18 @@ function downloadEDL() {
   let entryIndex = 0;
 
   for (let i = 0; i < updatedLines.length; i++) {
-    if (updatedLines[i].startsWith('*')) {
-      updatedLines[i] = `* ${entries[entryIndex]?.comment || ''}`;
-    } else if (updatedLines[i].match(/\d{2}:\d{2}:\d{2}:\d{2}/)) {
-      const tc = entries[entryIndex]?.timecode || '00:00:00:00';
-      // replace all 4 timecodes in line
-      updatedLines[i] = updatedLines[i].replace(/(\d{2}:\d{2}:\d{2}:\d{2})/g, tc);
+    const line = updatedLines[i];
+
+    // Ersetze Timecode-Zeile, falls Eintrag vorhanden
+    if (line.match(/(\d{2}:\d{2}:\d{2}:\d{2})/) && entryIndex < entries.length) {
+      // Ersetze alle Timecodes in dieser Zeile durch den aktuellen Timecode aus dem Editor
+      updatedLines[i] = line.replace(/(\d{2}:\d{2}:\d{2}:\d{2})/g, entries[entryIndex].timecode);
+      continue; // Gehe zur nächsten Zeile
+    }
+
+    // Ersetze Kommentar in |M:-Zeile, falls Eintrag vorhanden
+    if (line.includes('|M:') && entryIndex < entries.length) {
+      updatedLines[i] = line.replace(/\|M:([^|]*)/, '|M:' + entries[entryIndex].comment);
       entryIndex++;
     }
   }
@@ -190,6 +196,7 @@ function downloadEDL() {
   link.click();
   document.body.removeChild(link);
 }
+
 </script>
 
 </body>
