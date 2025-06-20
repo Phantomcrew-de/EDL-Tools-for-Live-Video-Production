@@ -24,7 +24,6 @@
       color: #fff;
       border-bottom: 2.5px solid #30c7ff;
     }
-    /* Tab-Content Container */
     .tab-content {
       display: none;
       position: absolute;
@@ -57,7 +56,7 @@
       opacity: 1;
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 1; /* wichtig, damit swipe-inner über ::before liegt */
+      z-index: 1;
     }
     .tab-content.active {
       display: block;
@@ -129,11 +128,8 @@
       filter: grayscale(0.1) brightness(2.3) drop-shadow(0 0 3px #fff) drop-shadow(0 1px 8px #30c7ffcc);
       background: #30c7ff66;
     }
-    /* Keyframes für swipe + Fade */
     @keyframes swipe-in-left { from { transform: translateX(-60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
-    @keyframes swipe-out-left { from { transform: translateX(0); opacity:1; } to { transform: translateX(-60px); opacity:0; } }
     @keyframes swipe-in-right { from { transform: translateX(60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
-    @keyframes swipe-out-right { from { transform: translateX(0); opacity:1; } to { transform: translateX(60px); opacity:0; } }
   </style>
 </head>
 <body>
@@ -185,126 +181,171 @@
       <iframe id="iframe-help" src="https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/"></iframe>
     </div>
   </div>
-  <script>
-    window.globalEDLText = "";
-    let tabOrder = ["offset","atem","resolve","help"];
-    let currentTab = "offset";
-    let switchingTab = false;
+<script>
+window.globalEDLText = "";
+let tabOrder = ["offset","atem","resolve","help"];
+let currentTab = "offset";
+let switchingTab = false;
 
-    // ---- ATEM Language Switch ----
-    const atemLangBtn = {
-      DE: "EDL_for_ATEM_live_production_1_1_DE.html",
-      EN: "EDL_for_ATEM_live_production_1_1_EN.html"
-    };
-    let currentAtemLang = "EN";
-    function setAtemLang(lang) {
-      lang = (lang === "DE") ? "DE" : "EN";
-      currentAtemLang = lang;
-      document.getElementById("iframe-atem").src = atemLangBtn[lang];
-      document.querySelectorAll('.atem-lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === lang);
-      });
-    }
+// ---- Hilfsfunktionen für Hash/Query-Parsing ----
+function getHashTabAndQuery() {
+  // z.B. "#atem?lang=de"
+  const hash = window.location.hash.replace(/^#/, '');
+  const [tab, query] = hash.split('?');
+  const params = {};
+  if (query) {
+    query.split('&').forEach(pair => {
+      let [k, v] = pair.split('=');
+      if (k && v) params[k] = v;
+    });
+  }
+  return { tab: tab || 'offset', params };
+}
+
+function setHash(tab, params = {}) {
+  let hash = '#' + tab;
+  const query = Object.entries(params).map(([k, v]) => `${k}=${v}`).join('&');
+  if (query) hash += '?' + query;
+  if (window.location.hash !== hash) window.location.hash = hash;
+}
+
+// ---- ATEM Language Switch + URL-Parameter ----
+const atemLangBtn = {
+  DE: "EDL_for_ATEM_live_production_1_1_DE.html",
+  EN: "EDL_for_ATEM_live_production_1_1_EN.html"
+};
+let currentAtemLang = "EN";
+
+function getAtemLangFromParams(params) {
+  return params.lang && params.lang.toLowerCase() === "de" ? "DE" : "EN";
+}
+
+function setAtemLangQuery(lang) {
+  const { tab, params } = getHashTabAndQuery();
+  if (tab !== "atem") return;
+  const newParams = { ...params, lang: lang.toLowerCase() };
+  setHash(tab, newParams);
+}
+
+function setAtemLang(lang, updateUrl=true) {
+  lang = (lang === "DE") ? "DE" : "EN";
+  if (currentAtemLang === lang) {
     document.querySelectorAll('.atem-lang-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        setAtemLang(btn.dataset.lang);
-      });
+      btn.classList.toggle('active', btn.dataset.lang === lang);
     });
-    setAtemLang("EN");
+    return;
+  }
+  currentAtemLang = lang;
+  const iframe = document.getElementById("iframe-atem");
+  if (iframe && !iframe.src.endsWith(atemLangBtn[lang])) {
+    iframe.src = atemLangBtn[lang];
+  }
+  document.querySelectorAll('.atem-lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  if (updateUrl) setAtemLangQuery(lang);
+}
 
-    // ---- Tab System with ONLY IN Animation ----
-    function doSwipe(outTab, inTab, dir, cb) {
-      if (!outTab || !inTab) { if(cb)cb(); return; }
-      const outContent = outTab.querySelector('.swipe-inner');
-      const inContent = inTab.querySelector('.swipe-inner');
-      if (!outContent || !inContent) { if(cb)cb(); return; }
+document.querySelectorAll('.atem-lang-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    setAtemLang(btn.dataset.lang, true);
+  });
+});
 
-      // Reset all anims
-      outContent.style.animation = '';
-      inContent.style.animation = '';
-      inContent.style.transform = '';
-      outContent.style.transform = '';
+function doSwipe(outTab, inTab, dir, cb) {
+  if (!outTab || !inTab) { if(cb)cb(); return; }
+  const outContent = outTab.querySelector('.swipe-inner');
+  const inContent = inTab.querySelector('.swipe-inner');
+  if (!outContent || !inContent) { if(cb)cb(); return; }
+  outContent.style.animation = '';
+  inContent.style.animation = '';
+  inContent.style.transform = '';
+  outContent.style.transform = '';
+  inTab.style.zIndex = 2;
+  outTab.style.zIndex = 1;
+  inContent.style.zIndex = 2;
+  outContent.style.zIndex = 1;
+  outTab.classList.remove('active');
+  outTab.style.zIndex = 0;
+  outContent.style.animation = '';
+  inTab.classList.add('active');
+  inContent.style.animation = `swipe-in-${dir} 0.38s cubic-bezier(0.77,0,0.18,1) forwards`;
+  inTab.style.zIndex = 1;
+  setTimeout(() => {
+    inContent.style.animation = '';
+    if (cb) cb();
+  }, 380);
+}
 
-      // Keine Lücke durch stacking und absolute Positionierung
-      inTab.style.zIndex = 2;
-      outTab.style.zIndex = 1;
-      inContent.style.zIndex = 2;
-      outContent.style.zIndex = 1;
-
-      // Out-Tab einfach ausblenden, keine Animation
-      outTab.classList.remove('active');
-      outTab.style.zIndex = 0;
-      outContent.style.animation = '';
-
-      // In-Tab mit Animation anzeigen
-      inTab.classList.add('active');
-      inContent.style.animation = `swipe-in-${dir} 0.38s cubic-bezier(0.77,0,0.18,1) forwards`;
-      inTab.style.zIndex = 1;
-      setTimeout(() => {
-        inContent.style.animation = '';
-        if (cb) cb();
-      }, 380);
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const nextTab = tab.dataset.target;
+    if (switchingTab || nextTab === currentTab) return;
+    switchingTab = true;
+    let params = {};
+    if (nextTab === "atem") {
+      const { params: hashParams } = getHashTabAndQuery();
+      params.lang = hashParams.lang || "en";
     }
-
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        const nextTab = tab.dataset.target;
-        if (switchingTab || nextTab === currentTab) return;
-        switchingTab = true;
-        window.location.hash = tab.dataset.hash;
-        exportEDLFromTab(currentTab);
-
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-
-        const fromIdx = tabOrder.indexOf(currentTab);
-        const toIdx = tabOrder.indexOf(nextTab);
-        let dir = (toIdx > fromIdx) ? 'right' : 'left';
-
-        const currentContent = document.getElementById('tab-' + currentTab);
-        const nextContent = document.getElementById('tab-' + nextTab);
-
-        doSwipe(currentContent, nextContent, dir, () => {
-          setTimeout(() => importEDLToTab(nextTab), 180);
-          currentTab = nextTab;
-          switchingTab = false;
-        });
-      });
-    });
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const hash = window.location.hash || '#offset';
-      const targetTab = Array.from(document.querySelectorAll('.tab')).find(tab => tab.dataset.hash === hash);
-      if (targetTab) targetTab.click();
-      document.querySelectorAll('.tab-content').forEach((div, idx) => {
-        if (!div.classList.contains('active')) div.style.zIndex = 0;
-        else div.style.zIndex = 1;
-      });
-    });
-
-    window.addEventListener('hashchange', () => {
-      const hash = window.location.hash;
-      const targetTab = Array.from(document.querySelectorAll('.tab')).find(tab => tab.dataset.hash === hash);
-      if (targetTab) targetTab.click();
-    });
-
-    function exportEDLFromTab(tabId) {
-      const iframe = document.getElementById('iframe-' + tabId);
-      if(iframe && iframe.contentWindow)
-        iframe.contentWindow.postMessage({type: 'EXPORT_EDL'}, '*');
-    }
-    function importEDLToTab(tabId) {
-      if (window.globalEDLText && window.globalEDLText.length > 0) {
-        const iframe = document.getElementById('iframe-' + tabId);
-        if(iframe && iframe.contentWindow)
-          iframe.contentWindow.postMessage({type: 'IMPORT_EDL', edl: window.globalEDLText}, '*');
-      }
-    }
-    window.addEventListener('message', (event) => {
-      if (event.data.type === 'EXPORT_RESULT' && typeof event.data.edl === 'string') {
-        window.globalEDLText = event.data.edl;
+    setHash(nextTab, params);
+    exportEDLFromTab(currentTab);
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const fromIdx = tabOrder.indexOf(currentTab);
+    const toIdx = tabOrder.indexOf(nextTab);
+    let dir = (toIdx > fromIdx) ? 'right' : 'left';
+    const currentContent = document.getElementById('tab-' + currentTab);
+    const nextContent = document.getElementById('tab-' + nextTab);
+    doSwipe(currentContent, nextContent, dir, () => {
+      setTimeout(() => importEDLToTab(nextTab), 180);
+      currentTab = nextTab;
+      switchingTab = false;
+      if (nextTab === "atem") {
+        const { params: hashParams } = getHashTabAndQuery();
+        setAtemLang(getAtemLangFromParams(hashParams), false);
       }
     });
-  </script>
+  });
+});
+
+function activateTabFromHash() {
+  const { tab, params } = getHashTabAndQuery();
+  const tabBtn = Array.from(document.querySelectorAll('.tab')).find(t => t.dataset.target === tab);
+  if (tabBtn) tabBtn.click();
+  if (tab === "atem") {
+    setTimeout(() => setAtemLang(getAtemLangFromParams(params), false), 120);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  activateTabFromHash();
+  document.querySelectorAll('.tab-content').forEach((div, idx) => {
+    if (!div.classList.contains('active')) div.style.zIndex = 0;
+    else div.style.zIndex = 1;
+  });
+});
+
+window.addEventListener('hashchange', () => {
+  activateTabFromHash();
+});
+
+function exportEDLFromTab(tabId) {
+  const iframe = document.getElementById('iframe-' + tabId);
+  if(iframe && iframe.contentWindow)
+    iframe.contentWindow.postMessage({type: 'EXPORT_EDL'}, '*');
+}
+function importEDLToTab(tabId) {
+  if (window.globalEDLText && window.globalEDLText.length > 0) {
+    const iframe = document.getElementById('iframe-' + tabId);
+    if(iframe && iframe.contentWindow)
+      iframe.contentWindow.postMessage({type: 'IMPORT_EDL', edl: window.globalEDLText}, '*');
+  }
+}
+window.addEventListener('message', (event) => {
+  if (event.data.type === 'EXPORT_RESULT' && typeof event.data.edl === 'string') {
+    window.globalEDLText = event.data.edl;
+  }
+});
+</script>
 </body>
 </html>
