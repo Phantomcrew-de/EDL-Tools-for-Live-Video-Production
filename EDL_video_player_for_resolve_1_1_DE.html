@@ -279,6 +279,55 @@ function twoDigits(number) {
             var blob = new Blob([edlContent], {type: "text/plain;charset=utf-8"});
             saveAs(blob, `${videos[currentVideo].name}.edl`);
         }
+		// Referenzen (einmal am Anfang setzen)
+var videoPlayer = document.getElementById("video-player");
+var commentInput = document.getElementById("comment-input");
+var addButton = document.querySelector('#comment-form input[type="button"]');
+
+// 1. Pausiere Video, wenn das Kommentarfeld im Fokus ist
+commentInput.addEventListener("focus", function() {
+    if (!videoPlayer.paused) videoPlayer.pause();
+});
+
+// 2. Starte Video wieder, wenn per Enter kommentiert oder Add gedrückt wird
+commentInput.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        addComment();
+        event.preventDefault(); // damit das Formular nicht neu lädt
+        setTimeout(() => {
+            if (videoPlayer.paused) videoPlayer.play();
+        }, 100); // leicht verzögern für sauberes UX
+    }
+});
+addButton.addEventListener("click", function() {
+    setTimeout(() => {
+        if (videoPlayer.paused) videoPlayer.play();
+    }, 100);
+});
+
+// 3. GoTo-Button: Springe, dann pausiere 1 Sekunde, dann spiele weiter
+function createButton(text, onClick) {
+    var button = document.createElement("button");
+    button.textContent = text;
+    if (text === "Go To") {
+        button.onclick = function() {
+            // Speichere aktuellen Abspielstatus
+            const wasPlaying = !videoPlayer.paused;
+            onClick();
+            videoPlayer.pause();
+            setTimeout(() => {
+                if (wasPlaying) videoPlayer.play();
+            }, 1000); // 1 Sekunde Pause
+        };
+    } else {
+        button.onclick = onClick;
+    }
+    return button;
+}
+commentInput.addEventListener("input", function() {
+    if (!videoPlayer.paused) videoPlayer.pause();
+});
+
     </script>
 </body>
 </html>
