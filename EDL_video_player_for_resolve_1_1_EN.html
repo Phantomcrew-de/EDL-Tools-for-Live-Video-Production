@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EDL Video Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+       
+	   <style>
+        @media (max-width: 1024px) {
+		body {
+			padding-left: 5%;
+			padding-right: 5%;
+		}
+
+
+        .video-player {
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+		
+ 
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+	<h1>EDL Video Player</h1>
+    <label for="edl-input">Add videos</label>
+        <input type="file" id="video-input" multiple onchange="loadVideos()">
+                <br><br>
+        <label>Current video</label>
+        
+        
+        <select id="video-select" onchange="changeVideo()"></select>
+        <br>
+        <video id="video-player" controls style="width:100%;"></video>
+    </div>
+    <div>
+    <br>
+               
+        <form id="comment-form">
+            <input type="text" id="comment-input" placeholder="Add a comment...">
+            <input type="button" value="Add" onclick="addComment()">
+        </form>
+         
+        <ul id="comment-list">
+        </ul>
+        <button id="clear-comments" onclick="clearComments()">Delete all comments</button><br>
+<br>
+        <label>Import .edl markers</label>
+        <input type="file" id="edl-input" onchange="loadEDL()"><br><br>
+        <button id="download-edl" onclick="downloadEDL()">Download EDL markers</button>
+    </div>
+
+    <script>
+        var videoPlayer = document.getElementById("video-player");
+        var videoSelect = document.getElementById("video-select");
+        var commentList = document.getElementById("comment-list");
+        var downloadEDLButton = document.getElementById("download-edl");
+        var videos = [];
+        var currentVideo = 0;
+
+        document.getElementById("comment-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            addComment();
+        });
+ // ... Existing script code ...
+function clearComments() {
+    // Confirmation prompt
+    if (confirm("Are you sure you want to delete all comments?")) {
+        if (videos && videos[currentVideo]) {
+            videos[currentVideo].comments = [];
+            updateCommentList();
+        } else {
+            console.error('No video is currently selected or loaded.');
+        }
+    }
+}
+
+
+
+        function loadEDL() {
+            var edlInput = document.getElementById("edl-input");
+            var file = edlInput.files[0];
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+                var contents = e.target.result;
+                console.log("EDL file content:", contents); // Debug log
+                parseEDL(contents);
+            };
+
+            reader.readAsText(file);
+        }
+
+         function parseTime(timeText) {
+            var parts = timeText.split(":").map(Number);
+            if (parts.length !== 4 || parts.some(isNaN)) {
+                console.error("Invalid time format:", timeText);
+                return "00:00:00:00";
+            }
+            return timeText; // Assuming the timeText is already in the correct format
+        }
+
+        function parseEDL(edlContent) {
+            var lines = edlContent.split("\n");
+            
+
+            lines.forEach(line => {
+                if (line.includes("|M:") && line.includes("|C:")) {
+                    var commentText = line.split("|M:")[1].split("|")[0].trim();
+                    var timeCode = line.split("|C:")[1].split(" ")[0].trim();
+                    videos[currentVideo].comments.push({ comment: commentText, time: parseTime(timeCode) });
+                }
+            });
+
+            updateCommentList();
+        }
+
+function parseTime(timeText) {
+    var parts = timeText.split(":").map(Number);
+    if (parts.length !== 4 || parts.some(isNaN)) {
+        console.error("Invalid time format:", timeText);
+        return timeText; // Return the original timeText if format is incorrect
+    }
+    var hours = parts[0];
+    var minutes = parts[1];
+    var seconds = parts[2];
+    var frames = parts[3];
+    // Adjust this to match your EDL's frame rate
+    var totalSeconds = hours * 3600 + minutes * 60 + seconds + frames / 30;
+    return formatTime(totalSeconds); // Convert total seconds back to time format
+}
+
+
+function parseEDL(edlContent) {
+    var lines = edlContent.split("\n");
+
+    var previousTimeCode = ""; // Variable to hold the previous line's timecode
+
+    lines.forEach((line, index) => {
+        // Check if the current line contains the timecode structure
+        if (line.includes("V     C        ")) {
+            // Extract the timecode, assuming it follows "V     C        "
+            previousTimeCode = line.split("V     C        ")[1].split(" ")[0].trim();
+        } else if (line.includes("|M:")) {
+            // The current line has a comment, and the previous line had the timecode
+            var commentText = line.split("|M:")[1].split("|")[0].trim();
+            if (previousTimeCode && commentText) {
+                videos[currentVideo].comments.push({ comment: commentText, time: previousTimeCode });
+            }
+            // Reset the previousTimeCode for the next use
+            previousTimeCode = "";
+        }
+    });
+
+    updateCommentList();
+}
+
+
+
+
+
+function formatTime(totalSeconds) {
+    var hours = Math.floor(totalSeconds / 3600);
+    var minutes = Math.floor((totalSeconds % 3600) / 60);
+    var seconds = Math.floor(totalSeconds % 60);
+    var frames = Math.floor((totalSeconds % 1) * 30); // Convert back to frames
+    return twoDigits(hours) + ":" + twoDigits(minutes) + ":" + twoDigits(seconds) + ":" + twoDigits(frames);
+}
+
+function twoDigits(number) {
+    return number < 10 ? "0" + number : number.toString();
+}
+
+
+        // ... Rest of the existing script code ...
+        function loadVideos() {
+            var videoInput = document.getElementById("video-input");
+            var files = videoInput.files;
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                var url = URL.createObjectURL(file);
+                var video = {
+                    url: url,
+                    name: file.name,
+                    comments: []
+                };
+                videos.push(video);
+                var option = document.createElement("option");
+                option.text = file.name;
+                videoSelect.add(option);
+            }
+            changeVideo();
+        }
+
+        function changeVideo() {
+            currentVideo = videoSelect.selectedIndex;
+            videoPlayer.src = videos[currentVideo].url;
+            updateCommentList();
+        }
+
+        function addComment() {
+            var commentInput = document.getElementById("comment-input");
+            var comment = commentInput.value.trim();
+            var time = formatTime(videoPlayer.currentTime);
+
+            if (comment) {
+                videos[currentVideo].comments.push({ comment: comment, time: time });
+                updateCommentList();
+                commentInput.value = "";
+            }
+        }
+
+        function updateCommentList() {
+            commentList.innerHTML = "";
+            videos[currentVideo].comments.forEach((commentObj, index) => {
+                var listItem = document.createElement("li");
+                listItem.appendChild(createEditableField("text", commentObj.comment, index, "comment"));
+                listItem.appendChild(createEditableField("text", commentObj.time, index, "time"));
+                listItem.appendChild(createButton("Go To", () => {
+                    videoPlayer.currentTime = parseTime(commentObj.time);
+                    videoPlayer.play();
+                }));
+                listItem.appendChild(createButton("Delete", () => {
+                    videos[currentVideo].comments.splice(index, 1);
+                    updateCommentList();
+                }));
+                commentList.appendChild(listItem);
+            });
+            downloadEDLButton.disabled = videos[currentVideo].comments.length === 0;
+        }
+
+        function createEditableField(type, value, index, field) {
+            var input = document.createElement("input");
+            input.type = type;
+            input.value = value;
+            input.addEventListener("input", function() {
+                videos[currentVideo].comments[index][field] = this.value;
+            });
+            return input;
+        }
+
+        function createButton(text, onClick) {
+            var button = document.createElement("button");
+            button.textContent = text;
+            if (text === "Go To") {
+                button.onclick = function() {
+                    // Save current play state
+                    const wasPlaying = !videoPlayer.paused;
+                    onClick();
+                    videoPlayer.pause();
+                    setTimeout(() => {
+                        if (wasPlaying) videoPlayer.play();
+                    }, 1000); // 1 second pause
+                };
+            } else {
+                button.onclick = onClick;
+            }
+            return button;
+        }
+
+        function formatTime(time) {
+            var hours = Math.floor(time / 3600);
+            var minutes = Math.floor((time % 3600) / 60);
+            var seconds = Math.floor(time % 60);
+            var frames = Math.floor((time % 1) * 30); // Assuming 30 frames per second
+            return (hours < 10 ? "0" + hours : hours) + ":" +
+                   (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                   (seconds < 10 ? "0" + seconds : seconds) + ":" +
+                   (frames < 10 ? "0" + frames : frames);
+        }
+
+        function parseTime(timeText) {
+            var parts = timeText.split(":").map(parseFloat);
+            var frames = parts[3] / 30; // Assuming 30 frames per second
+            return parts[0] * 3600 + parts[1] * 60 + parts[2] + frames;
+        }
+
+        function downloadEDL() {
+            var edlContent = `TITLE: Edit list for ${videos[currentVideo].name}\nFCM: NON-DROP FRAME\n\n`;
+            videos[currentVideo].comments.forEach((comment, index) => {
+                var timeCode = formatTime(parseTime(comment.time));
+                edlContent += `00${index + 1}  001      V     C        ${timeCode} ${timeCode} ${timeCode} ${timeCode} \n |C:ResolveColorBlue |M:${comment.comment} |D:1\n\n`;
+            });
+            var blob = new Blob([edlContent], {type: "text/plain;charset=utf-8"});
+            saveAs(blob, `${videos[currentVideo].name}.edl`);
+        }
+		// Referenzen (einmal am Anfang setzen)
+var videoPlayer = document.getElementById("video-player");
+var commentInput = document.getElementById("comment-input");
+var addButton = document.querySelector('#comment-form input[type="button"]');
+
+// 1. Pause video when comment field is focused
+commentInput.addEventListener("focus", function() {
+    if (!videoPlayer.paused) videoPlayer.pause();
+});
+
+// 2. Play video again when comment is added via Enter or Add button
+commentInput.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        addComment();
+        event.preventDefault(); // prevent form reload
+        setTimeout(() => {
+            if (videoPlayer.paused) videoPlayer.play();
+        }, 100); // slight delay for clean UX
+    }
+});
+addButton.addEventListener("click", function() {
+    setTimeout(() => {
+        if (videoPlayer.paused) videoPlayer.play();
+    }, 100);
+});
+
+// 3. GoTo-Button: Jump, then pause 1 second, then play again
+function createButton(text, onClick) {
+    var button = document.createElement("button");
+    button.textContent = text;
+    if (text === "Go To") {
+        button.onclick = function() {
+            // Save current play state
+            const wasPlaying = !videoPlayer.paused;
+            onClick();
+            videoPlayer.pause();
+            setTimeout(() => {
+                if (wasPlaying) videoPlayer.play();
+            }, 1000); // 1 second pause
+        };
+    } else {
+        button.onclick = onClick;
+    }
+    return button;
+}
+commentInput.addEventListener("input", function() {
+    if (!videoPlayer.paused) videoPlayer.pause();
+});
+
+    </script>
+</body>
+</html>

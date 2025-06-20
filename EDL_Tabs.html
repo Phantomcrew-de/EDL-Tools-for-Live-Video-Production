@@ -188,10 +188,15 @@
     </div>
   </div>
   <div class="tab-content" id="tab-resolve" style="background:transparent;">
-    <div class="swipe-inner">
-      <iframe id="iframe-resolve" src="EDL_video_player_for_resolve_1_1_DE.html"></iframe>
+  <div class="swipe-inner">
+    <div class="atem-lang-switch">
+      <button class="atem-lang-btn" data-lang="DE" title="Deutsch">🇩🇪 DE</button>
+      <button class="atem-lang-btn" data-lang="EN" title="English">🇬🇧 EN</button>
     </div>
+    <iframe id="iframe-resolve-de" class="atem-iframe" src="EDL_video_player_for_resolve_1_1_DE.html"></iframe>
+    <iframe id="iframe-resolve-en" class="atem-iframe" src="EDL_video_player_for_resolve_1_1_EN.html"></iframe>
   </div>
+</div>
   <div class="tab-content" id="tab-offset" style="background:transparent;">
     <div class="swipe-inner">
       <iframe id="iframe-offset" src="EDL_Offset_Editor_1_1_EN.html"></iframe>
@@ -259,6 +264,37 @@ function setAtemLang(lang, updateUrl=true) {
   });
   if (updateUrl) setAtemLangQuery(lang);
 }
+
+// ---- RESOLVE Language Switch ----
+let currentResolveLang = localStorage.getItem("lastResolveLang") || "DE";
+function getResolveLangFromParams(params) {
+  if (params.lang && params.lang.toLowerCase() === "de") return "DE";
+  if (params.lang && params.lang.toLowerCase() === "en") return "EN";
+  return null;
+}
+function setResolveLangQuery(lang) {
+  const { tab, params } = getHashTabAndQuery();
+  if (tab !== "resolve") return;
+  const newParams = { ...params, lang: lang.toLowerCase() };
+  setHash(tab, newParams);
+}
+function setResolveLang(lang, updateUrl=true) {
+  lang = (lang === "EN") ? "EN" : "DE";
+  currentResolveLang = lang;
+  localStorage.setItem("lastResolveLang", lang);
+  document.getElementById('iframe-resolve-de').classList.toggle('active', lang === "DE");
+  document.getElementById('iframe-resolve-en').classList.toggle('active', lang === "EN");
+  document.querySelectorAll('#tab-resolve .atem-lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  if (updateUrl) setResolveLangQuery(lang);
+}
+document.querySelectorAll('#tab-resolve .atem-lang-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    setResolveLang(btn.dataset.lang, true);
+  });
+});
+
 document.querySelectorAll('.atem-lang-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
     setAtemLang(btn.dataset.lang, true);
@@ -300,6 +336,13 @@ document.querySelectorAll('.tab').forEach(tab => {
       const { params: hashParams } = getHashTabAndQuery();
       params.lang = hashParams.lang || "";
     }
+
+      if (nextTab === "resolve") {
+        const { params: hashParams } = getHashTabAndQuery();
+        let newLang = getResolveLangFromParams(hashParams);
+        if (!newLang) newLang = localStorage.getItem("lastResolveLang") || "DE";
+        setResolveLang(newLang, false);
+      }
     setHash(nextTab, params);
     exportEDLFromTab(currentTab);
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -321,6 +364,13 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (!newLang) newLang = localStorage.getItem("lastAtemLang") || "EN";
         setAtemLang(newLang, false);
       }
+
+      if (nextTab === "resolve") {
+        const { params: hashParams } = getHashTabAndQuery();
+        let newLang = getResolveLangFromParams(hashParams);
+        if (!newLang) newLang = localStorage.getItem("lastResolveLang") || "DE";
+        setResolveLang(newLang, false);
+      }
     });
   });
 });
@@ -335,6 +385,12 @@ function activateTabFromHash() {
     // 2. Falls keiner gesetzt, zuletzt genutzte Sprache (persistiert) verwenden
     if (!newLang) newLang = localStorage.getItem("lastAtemLang") || "EN";
     setTimeout(() => setAtemLang(newLang, false), 120);
+  }
+
+  if (tab === "resolve") {
+    let newLang = getResolveLangFromParams(params);
+    if (!newLang) newLang = localStorage.getItem("lastResolveLang") || "DE";
+    setTimeout(() => setResolveLang(newLang, false), 120);
   }
 }
 
