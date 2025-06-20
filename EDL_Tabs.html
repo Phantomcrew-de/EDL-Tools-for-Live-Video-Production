@@ -128,6 +128,10 @@
       filter: grayscale(0.1) brightness(2.3) drop-shadow(0 0 3px #fff) drop-shadow(0 1px 8px #30c7ffcc);
       background: #30c7ff66;
     }
+    /* Für parallele ATEM-iframes: */
+    .atem-iframe { display: none; }
+    .atem-iframe.active { display: block; }
+
     @keyframes swipe-in-left { from { transform: translateX(-60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
     @keyframes swipe-in-right { from { transform: translateX(60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
   </style>
@@ -168,7 +172,8 @@
         <button class="atem-lang-btn" data-lang="DE" title="Deutsch">🇩🇪 DE</button>
         <button class="atem-lang-btn" data-lang="EN" title="English">🇬🇧 EN</button>
       </div>
-      <iframe id="iframe-atem" src="EDL_for_ATEM_live_production_1_1_EN.html"></iframe>
+      <iframe id="iframe-atem-de" class="atem-iframe" src="EDL_for_ATEM_live_production_1_1_DE.html"></iframe>
+      <iframe id="iframe-atem-en" class="atem-iframe" src="EDL_for_ATEM_live_production_1_1_EN.html"></iframe>
     </div>
   </div>
   <div class="tab-content" id="tab-resolve" style="background:transparent;">
@@ -189,7 +194,6 @@ let switchingTab = false;
 
 // ---- Hilfsfunktionen für Hash/Query-Parsing ----
 function getHashTabAndQuery() {
-  // z.B. "#atem?lang=de"
   const hash = window.location.hash.replace(/^#/, '');
   const [tab, query] = hash.split('?');
   const params = {};
@@ -209,43 +213,27 @@ function setHash(tab, params = {}) {
   if (window.location.hash !== hash) window.location.hash = hash;
 }
 
-// ---- ATEM Language Switch + URL-Parameter ----
-const atemLangBtn = {
-  DE: "EDL_for_ATEM_live_production_1_1_DE.html",
-  EN: "EDL_for_ATEM_live_production_1_1_EN.html"
-};
+// ---- ATEM Language Switch für parallele iframes ----
 let currentAtemLang = "EN";
-
 function getAtemLangFromParams(params) {
   return params.lang && params.lang.toLowerCase() === "de" ? "DE" : "EN";
 }
-
 function setAtemLangQuery(lang) {
   const { tab, params } = getHashTabAndQuery();
   if (tab !== "atem") return;
   const newParams = { ...params, lang: lang.toLowerCase() };
   setHash(tab, newParams);
 }
-
 function setAtemLang(lang, updateUrl=true) {
   lang = (lang === "DE") ? "DE" : "EN";
-  if (currentAtemLang === lang) {
-    document.querySelectorAll('.atem-lang-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.lang === lang);
-    });
-    return;
-  }
   currentAtemLang = lang;
-  const iframe = document.getElementById("iframe-atem");
-  if (iframe && !iframe.src.endsWith(atemLangBtn[lang])) {
-    iframe.src = atemLangBtn[lang];
-  }
+  document.getElementById('iframe-atem-de').classList.toggle('active', lang === "DE");
+  document.getElementById('iframe-atem-en').classList.toggle('active', lang === "EN");
   document.querySelectorAll('.atem-lang-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
   });
   if (updateUrl) setAtemLangQuery(lang);
 }
-
 document.querySelectorAll('.atem-lang-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
     setAtemLang(btn.dataset.lang, true);
