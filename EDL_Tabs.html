@@ -39,13 +39,17 @@
     .tab-content .swipe-inner {
       width: 100%;
       height: 100%;
-      transition: transform 0.4s cubic-bezier(0.77,0,0.18,1);
-      will-change: transform;
+      transition: none;
+      will-change: transform, opacity;
       background: #222;
       display: flex;
       flex-direction: column;
       justify-content: stretch;
       align-items: stretch;
+      opacity: 1;
+      /* Verhindert Lücken-Effekt bei Animationen */
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
     }
     .tab-content.active {
       display: block;
@@ -57,6 +61,7 @@
       border: none;
       background: #222;
       display: block;
+      flex: 1 1 0%;
     }
     .github-link {
       margin-left: auto;
@@ -78,11 +83,50 @@
     .github-link:hover svg {
       fill: #30c7ff;
     }
-    /* Keyframes für swipe */
-    @keyframes swipe-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-    @keyframes swipe-out-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
-    @keyframes swipe-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
-    @keyframes swipe-out-right { from { transform: translateX(0); } to { transform: translateX(100%); } }
+    .atem-lang-switch {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      align-items: center;
+      margin: 0;
+      padding: 7px 14px 6px 0;
+      background: linear-gradient(90deg, #393c40 75%, #43484e 100%);
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 2px 8px 0 #0004;
+      position: relative;
+      z-index: 5;
+      min-height: 38px;
+      /* Macht Hintergrund heller als Content */
+    }
+    .atem-lang-btn {
+      font-size: 23px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      filter: grayscale(0.4) brightness(1.6) drop-shadow(0 0 2px #fff8);
+      transition: filter 0.2s, transform 0.12s, background 0.18s;
+      outline: none;
+      padding: 0 6px;
+      border-radius: 7px;
+      position: relative;
+      top: 1px;
+      line-height: 1.15;
+      box-shadow: 0 1px 2px #0002;
+    }
+    .atem-lang-btn.active {
+      filter: grayscale(0) brightness(2.1) drop-shadow(0 2px 6px #30c7ff88);
+      background: #30c7ff33;
+      transform: scale(1.17);
+    }
+    .atem-lang-btn:hover, .atem-lang-btn:focus {
+      filter: grayscale(0.1) brightness(2.3) drop-shadow(0 0 3px #fff) drop-shadow(0 1px 8px #30c7ffcc);
+      background: #30c7ff66;
+    }
+    /* Keyframes für swipe + Fade */
+    @keyframes swipe-in-left { from { transform: translateX(-60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+    @keyframes swipe-out-left { from { transform: translateX(0); opacity:1; } to { transform: translateX(-60px); opacity:0; } }
+    @keyframes swipe-in-right { from { transform: translateX(60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+    @keyframes swipe-out-right { from { transform: translateX(0); opacity:1; } to { transform: translateX(60px); opacity:0; } }
   </style>
 </head>
 <body>
@@ -110,22 +154,26 @@
       </svg>
     </a>
   </div>
-  <div class="tab-content active" id="tab-offset">
+  <div class="tab-content active" id="tab-offset" style="background:#222;">
     <div class="swipe-inner">
       <iframe id="iframe-offset" src="EDL_Offset_Editor_1_1_EN.html"></iframe>
     </div>
   </div>
-  <div class="tab-content" id="tab-atem">
+  <div class="tab-content" id="tab-atem" style="background:#222;">
     <div class="swipe-inner">
+      <div class="atem-lang-switch">
+        <button class="atem-lang-btn" data-lang="DE" title="Deutsch">🇩🇪 DE</button>
+        <button class="atem-lang-btn" data-lang="EN" title="English">🇬🇧 EN</button>
+      </div>
       <iframe id="iframe-atem" src="EDL_for_ATEM_live_production_1_1_EN.html"></iframe>
     </div>
   </div>
-  <div class="tab-content" id="tab-resolve">
+  <div class="tab-content" id="tab-resolve" style="background:#222;">
     <div class="swipe-inner">
       <iframe id="iframe-resolve" src="EDL_video_player_for_resolve_1_1_DE.html"></iframe>
     </div>
   </div>
-  <div class="tab-content" id="tab-help">
+  <div class="tab-content" id="tab-help" style="background:#222;">
     <div class="swipe-inner">
       <iframe id="iframe-help" src="https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/"></iframe>
     </div>
@@ -134,39 +182,70 @@
     window.globalEDLText = "";
     let tabOrder = ["offset","atem","resolve","help"];
     let currentTab = "offset";
+    let switchingTab = false;
 
-    function doSwipe(outTab, inTab, dir) {
-      if (!outTab || !inTab) return;
+    // ---- ATEM Language Switch ----
+    const atemLangBtn = {
+      DE: "EDL_for_ATEM_live_production_1_1_DE.html",
+      EN: "EDL_for_ATEM_live_production_1_1_EN.html"
+    };
+    let currentAtemLang = "EN";
+    function setAtemLang(lang) {
+      lang = (lang === "DE") ? "DE" : "EN";
+      currentAtemLang = lang;
+      document.getElementById("iframe-atem").src = atemLangBtn[lang];
+      document.querySelectorAll('.atem-lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+      });
+    }
+    document.querySelectorAll('.atem-lang-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        setAtemLang(btn.dataset.lang);
+      });
+    });
+    setAtemLang("EN");
+
+    // ---- Tab System with OUT + IN Animation ----
+    function doSwipe(outTab, inTab, dir, cb) {
+      if (!outTab || !inTab) { if(cb)cb(); return; }
       const outContent = outTab.querySelector('.swipe-inner');
       const inContent = inTab.querySelector('.swipe-inner');
-      if (!outContent || !inContent) return;
+      if (!outContent || !inContent) { if(cb)cb(); return; }
 
+      // Reset all anims
       outContent.style.animation = '';
       inContent.style.animation = '';
       inContent.style.transform = '';
       outContent.style.transform = '';
 
-      inTab.classList.add('active');
-      inContent.style.animation = `swipe-in-${dir} 0.42s cubic-bezier(0.77,0,0.18,1)`;
+      // Keine Lücke durch stacking und absolute Positionierung
       inTab.style.zIndex = 2;
       outTab.style.zIndex = 1;
+      inContent.style.zIndex = 2;
+      outContent.style.zIndex = 1;
 
-      outContent.style.animation = `swipe-out-${dir} 0.42s cubic-bezier(0.77,0,0.18,1)`;
-
+      // Out-animation zuerst (slide + fade)
+      outContent.style.animation = `swipe-out-${dir} 0.38s cubic-bezier(0.77,0,0.18,1) forwards`;
       setTimeout(() => {
         outTab.classList.remove('active');
-        inTab.classList.add('active');
         outTab.style.zIndex = 0;
-        inTab.style.zIndex = 1;
-        inContent.style.animation = '';
         outContent.style.animation = '';
-      }, 420);
+        // In-animation jetzt
+        inTab.classList.add('active');
+        inContent.style.animation = `swipe-in-${dir} 0.38s cubic-bezier(0.77,0,0.18,1) forwards`;
+        inTab.style.zIndex = 1;
+        setTimeout(() => {
+          inContent.style.animation = '';
+          if (cb) cb();
+        }, 380);
+      }, 380);
     }
 
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         const nextTab = tab.dataset.target;
-        if (nextTab === currentTab) return;
+        if (switchingTab || nextTab === currentTab) return;
+        switchingTab = true;
         window.location.hash = tab.dataset.hash;
         exportEDLFromTab(currentTab);
 
@@ -180,10 +259,11 @@
         const currentContent = document.getElementById('tab-' + currentTab);
         const nextContent = document.getElementById('tab-' + nextTab);
 
-        doSwipe(currentContent, nextContent, dir);
-
-        setTimeout(() => importEDLToTab(nextTab), 200);
-        currentTab = nextTab;
+        doSwipe(currentContent, nextContent, dir, () => {
+          setTimeout(() => importEDLToTab(nextTab), 180);
+          currentTab = nextTab;
+          switchingTab = false;
+        });
       });
     });
 
@@ -204,11 +284,16 @@
     });
 
     function exportEDLFromTab(tabId) {
-      document.getElementById('iframe-' + tabId).contentWindow.postMessage({type: 'EXPORT_EDL'}, '*');
+      const iframe = document.getElementById('iframe-' + tabId);
+      if(iframe && iframe.contentWindow)
+        iframe.contentWindow.postMessage({type: 'EXPORT_EDL'}, '*');
     }
     function importEDLToTab(tabId) {
-      if (window.globalEDLText && window.globalEDLText.length > 0)
-        document.getElementById('iframe-' + tabId).contentWindow.postMessage({type: 'IMPORT_EDL', edl: window.globalEDLText}, '*');
+      if (window.globalEDLText && window.globalEDLText.length > 0) {
+        const iframe = document.getElementById('iframe-' + tabId);
+        if(iframe && iframe.contentWindow)
+          iframe.contentWindow.postMessage({type: 'IMPORT_EDL', edl: window.globalEDLText}, '*');
+      }
     }
     window.addEventListener('message', (event) => {
       if (event.data.type === 'EXPORT_RESULT' && typeof event.data.edl === 'string') {
