@@ -25,7 +25,6 @@
   <label>Framerate: <input type="number" id="fps" value="25" step="0.01"></label>
   <label><input type="checkbox" id="wrap24"> Wrap bei 24h</label>
   <button onclick="applyOffset()">Offset anwenden</button>
-  <button onclick="clearFields()">Löschen</button>
 </div>
 
 <div id="entries"></div>
@@ -154,16 +153,18 @@ function applyOffset() {
   const fps = parseFloat(document.getElementById('fps').value);
   const wrap24 = document.getElementById('wrap24').checked;
 
-  const updated = originalEntries.map(e => {
+  // Nutze den aktuellen Zustand, nicht originalEntries!
+  const currentEntries = getEntries();
+  const updated = currentEntries.map(e => {
     const newFrames = toFrames(e.timecode, fps) + offsetFrames;
     return {
-      comment: e.comment,
+      comment: e.comment, // Kommentar bleibt unverändert!
       timecode: fromFrames(newFrames, fps, wrap24)
     };
   });
   showEntries(updated);
-
 }
+
 
 function downloadEDL() {
   const entries = getEntries();
