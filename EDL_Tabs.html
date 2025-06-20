@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <title>EDL-Tools Roundtrip Suite</title>
   <style>
-    body { background: #181818; color: #eee; margin: 0; font-family: sans-serif; }
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body { background: #181818; color: #eee; margin: 0; font-family: sans-serif; height: 100vh; }
     .tab-container { display: flex; background: #222; }
     .tab {
       cursor: pointer;
@@ -23,13 +24,14 @@
       color: #fff;
       border-bottom: 2.5px solid #30c7ff;
     }
+    /* Tab-Content Container */
     .tab-content {
       display: none;
-      height: calc(100vh - 48px);
       position: absolute;
       top: 48px;
       left: 0;
-      width: 100vw;
+      width: 100%;
+      height: calc(100vh - 48px);
       background: #222;
       z-index: 0;
       overflow: hidden;
@@ -40,10 +42,21 @@
       transition: transform 0.4s cubic-bezier(0.77,0,0.18,1);
       will-change: transform;
       background: #222;
+      display: flex;
+      flex-direction: column;
+      justify-content: stretch;
+      align-items: stretch;
     }
     .tab-content.active {
       display: block;
       z-index: 1;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #222;
+      display: block;
     }
     .github-link {
       margin-left: auto;
@@ -66,10 +79,10 @@
       fill: #30c7ff;
     }
     /* Keyframes für swipe */
-    @keyframes swipe-in-left { from { transform: translateX(-100vw); } to { transform: translateX(0); } }
-    @keyframes swipe-out-left { from { transform: translateX(0); } to { transform: translateX(-100vw); } }
-    @keyframes swipe-in-right { from { transform: translateX(100vw); } to { transform: translateX(0); } }
-    @keyframes swipe-out-right { from { transform: translateX(0); } to { transform: translateX(100vw); } }
+    @keyframes swipe-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    @keyframes swipe-out-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+    @keyframes swipe-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    @keyframes swipe-out-right { from { transform: translateX(0); } to { transform: translateX(100%); } }
   </style>
 </head>
 <body>
@@ -97,22 +110,22 @@
       </svg>
     </a>
   </div>
-  <div class="tab-content active" id="tab-offset" style="position: absolute;">
+  <div class="tab-content active" id="tab-offset">
     <div class="swipe-inner">
       <iframe id="iframe-offset" src="EDL_Offset_Editor_1_1_EN.html"></iframe>
     </div>
   </div>
-  <div class="tab-content" id="tab-atem" style="position: absolute;">
+  <div class="tab-content" id="tab-atem">
     <div class="swipe-inner">
       <iframe id="iframe-atem" src="EDL_for_ATEM_live_production_1_1_DE.html"></iframe>
     </div>
   </div>
-  <div class="tab-content" id="tab-resolve" style="position: absolute;">
+  <div class="tab-content" id="tab-resolve">
     <div class="swipe-inner">
       <iframe id="iframe-resolve" src="EDL_video_player_for_resolve_1_1_DE.html"></iframe>
     </div>
   </div>
-  <div class="tab-content" id="tab-help" style="position: absolute;">
+  <div class="tab-content" id="tab-help">
     <div class="swipe-inner">
       <iframe id="iframe-help" src="https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/"></iframe>
     </div>
@@ -128,19 +141,16 @@
       const inContent = inTab.querySelector('.swipe-inner');
       if (!outContent || !inContent) return;
 
-      // Reset all
       outContent.style.animation = '';
       inContent.style.animation = '';
       inContent.style.transform = '';
       outContent.style.transform = '';
 
-      // Prepare
       inTab.classList.add('active');
       inContent.style.animation = `swipe-in-${dir} 0.42s cubic-bezier(0.77,0,0.18,1)`;
       inTab.style.zIndex = 2;
       outTab.style.zIndex = 1;
 
-      // Starte out animation
       outContent.style.animation = `swipe-out-${dir} 0.42s cubic-bezier(0.77,0,0.18,1)`;
 
       setTimeout(() => {
@@ -157,15 +167,12 @@
       tab.addEventListener('click', () => {
         const nextTab = tab.dataset.target;
         if (nextTab === currentTab) return;
-        // Hash
         window.location.hash = tab.dataset.hash;
         exportEDLFromTab(currentTab);
 
-        // Tabs
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
 
-        // Animation Richtung
         const fromIdx = tabOrder.indexOf(currentTab);
         const toIdx = tabOrder.indexOf(nextTab);
         let dir = (toIdx > fromIdx) ? 'right' : 'left';
@@ -180,18 +187,16 @@
       });
     });
 
-    // On load, korrekter Tab
     window.addEventListener('DOMContentLoaded', () => {
       const hash = window.location.hash || '#offset';
       const targetTab = Array.from(document.querySelectorAll('.tab')).find(tab => tab.dataset.hash === hash);
       if (targetTab) targetTab.click();
-      // Fix: Zeige nur den aktuellen Content
       document.querySelectorAll('.tab-content').forEach((div, idx) => {
         if (!div.classList.contains('active')) div.style.zIndex = 0;
         else div.style.zIndex = 1;
       });
     });
-    // Hash-Änderung (z.B. per Browsernavigation) setzt Tab
+
     window.addEventListener('hashchange', () => {
       const hash = window.location.hash;
       const targetTab = Array.from(document.querySelectorAll('.tab')).find(tab => tab.dataset.hash === hash);
