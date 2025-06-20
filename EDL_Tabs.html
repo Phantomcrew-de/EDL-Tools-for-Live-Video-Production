@@ -132,10 +132,28 @@
     .atem-iframe.active { display: block; }
     @keyframes swipe-in-left { from { transform: translateX(-60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
     @keyframes swipe-in-right { from { transform: translateX(60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+	.tab-container {
+  display: flex;
+  align-items: center;
+  background: #222;
+}
+
+.logo {
+  height: 30px;         /* oder je nach Bedarf */
+  margin-right: 22px;   /* Abstand zu den Tabs */
+  margin-left: 14px;    /* evtl. etwas Abstand links */
+  margin-bottom: 2px;    /* evtl. etwas Abstand unten */
+  user-select: none;
+  pointer-events: none;
+}
+
   </style>
 </head>
 <body>
   <div class="tab-container">
+  <a href="https://phantomcrew.de/" target="_blank" class="logo-link" title="Phantomcrew-Website">
+    <img src="graphics/Phantomcrew_Logo_nebeneinander_02_lq.png" class="logo" alt="Phantomcrew Logo" />
+  </a>
     <div class="tab active" data-target="offset" data-hash="#offset">📝 Offset-Editor</div>
     <div class="tab" data-target="atem" data-hash="#atem">🎛️ ATEM Tool</div>
     <div class="tab" data-target="resolve" data-hash="#resolve">🎬 Resolve Player</div>
