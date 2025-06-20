@@ -10,7 +10,7 @@ This repository provides two lightweight, browser-based web applications to supp
 ## 🛠️ Tools Included
 
 ### 1. **EDL Marker Tool for Live Production**
-[Example: EDL Marker Tool](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_for_ATEM_live_production_1_1_EN.html)
+[Example: EDL Marker Tool](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html#atem?lang=en)
 File: `EDL_for_ATEM_live_production_1_1_EN.html`
 
 A browser-based timecode tracker tailored for live production environments (e.g., ATEM-based multicam shoots). It enables editors or live directors to mark important moments (Start, Cut, Outtake, etc.) with frame-accurate timestamps and generate `.EDL` files for import into DaVinci Resolve.
@@ -36,7 +36,7 @@ A browser-based timecode tracker tailored for live production environments (e.g.
 ---
 
 ### 2. **EDL-Enabled Video Commenting Tool for Resolve**
-[Example: EDL Video Player](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_video_player_for_resolve_1_1_EN.html)
+[Example: EDL Video Player](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html#resolve?lang=en)
 File: `EDL_video_player_for_resolve_1_1_EN.html`
 
 An HTML video player for reviewing media files and adding comments directly at specific timecodes. Designed for editors and directors to review takes collaboratively.
@@ -71,7 +71,7 @@ An HTML video player for reviewing media files and adding comments directly at s
 
 ### 3. **EDL Offset Editor**
 
-[Example: EDL Offset Editor](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Offset_Editor_1_1_EN.html)
+[Example: EDL Offset Editor](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html#offset)
 File: `EDL_Offset_Editor_1_1_EN.html`
 
 #### 📷 Screenshot
