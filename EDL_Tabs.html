@@ -205,7 +205,7 @@
     });
     setAtemLang("EN");
 
-    // ---- Tab System with OUT + IN Animation ----
+    // ---- Tab System with ONLY IN Animation ----
     function doSwipe(outTab, inTab, dir, cb) {
       if (!outTab || !inTab) { if(cb)cb(); return; }
       const outContent = outTab.querySelector('.swipe-inner');
@@ -224,20 +224,18 @@
       inContent.style.zIndex = 2;
       outContent.style.zIndex = 1;
 
-      // Out-animation zuerst (slide + fade)
-      outContent.style.animation = `swipe-out-${dir} 0.38s cubic-bezier(0.77,0,0.18,1) forwards`;
+      // Out-Tab einfach ausblenden, keine Animation
+      outTab.classList.remove('active');
+      outTab.style.zIndex = 0;
+      outContent.style.animation = '';
+
+      // In-Tab mit Animation anzeigen
+      inTab.classList.add('active');
+      inContent.style.animation = `swipe-in-${dir} 0.38s cubic-bezier(0.77,0,0.18,1) forwards`;
+      inTab.style.zIndex = 1;
       setTimeout(() => {
-        outTab.classList.remove('active');
-        outTab.style.zIndex = 0;
-        outContent.style.animation = '';
-        // In-animation jetzt
-        inTab.classList.add('active');
-        inContent.style.animation = `swipe-in-${dir} 0.38s cubic-bezier(0.77,0,0.18,1) forwards`;
-        inTab.style.zIndex = 1;
-        setTimeout(() => {
-          inContent.style.animation = '';
-          if (cb) cb();
-        }, 380);
+        inContent.style.animation = '';
+        if (cb) cb();
       }, 380);
     }
 
