@@ -39,17 +39,23 @@ let originalLines = [];
 function parseEDL(content) {
   originalLines = content.split(/\r?\n/);
   const entries = [];
-  let currentComment = "";
+  let lastTimecode = null;
 
   for (let i = 0; i < originalLines.length; i++) {
     const line = originalLines[i];
-    if (line.startsWith('*')) {
-      currentComment = line.slice(1).trim();
-    } else {
-      const match = line.match(/(\d{2}:\d{2}:\d{2}:\d{2})/);
-      if (match) {
-        entries.push({ comment: currentComment || `Kommentar ${entries.length + 1}`, timecode: match[1], lineIndex: i });
-        currentComment = "";
+    // Suche nach Timecode-Zeile
+    const match = line.match(/(\d{2}:\d{2}:\d{2}:\d{2})/);
+    if (match) {
+      lastTimecode = match[1];
+    }
+    // Suche nach Kommentarzeile mit |M:
+    if (line.includes('|M:')) {
+      // Kommentar extrahieren (alles nach |M:, bis zum nächsten | oder Zeilenende)
+      const commentMatch = line.match(/\|M:([^|]*)/);
+      const comment = commentMatch ? commentMatch[1].trim() : '';
+      if (lastTimecode) {
+        entries.push({ comment, timecode: lastTimecode, lineIndex: i });
+        lastTimecode = null;
       }
     }
   }
