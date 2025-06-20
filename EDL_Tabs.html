@@ -128,10 +128,8 @@
       filter: grayscale(0.1) brightness(2.3) drop-shadow(0 0 3px #fff) drop-shadow(0 1px 8px #30c7ffcc);
       background: #30c7ff66;
     }
-    /* Für parallele ATEM-iframes: */
     .atem-iframe { display: none; }
     .atem-iframe.active { display: block; }
-
     @keyframes swipe-in-left { from { transform: translateX(-60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
     @keyframes swipe-in-right { from { transform: translateX(60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
   </style>
@@ -213,10 +211,12 @@ function setHash(tab, params = {}) {
   if (window.location.hash !== hash) window.location.hash = hash;
 }
 
-// ---- ATEM Language Switch für parallele iframes ----
-let currentAtemLang = "EN";
+// ---- ATEM Language Switch für parallele iframes + persistente Sprache ----
+let currentAtemLang = localStorage.getItem("lastAtemLang") || "EN";
 function getAtemLangFromParams(params) {
-  return params.lang && params.lang.toLowerCase() === "de" ? "DE" : "EN";
+  if (params.lang && params.lang.toLowerCase() === "de") return "DE";
+  if (params.lang && params.lang.toLowerCase() === "en") return "EN";
+  return null;
 }
 function setAtemLangQuery(lang) {
   const { tab, params } = getHashTabAndQuery();
@@ -227,6 +227,7 @@ function setAtemLangQuery(lang) {
 function setAtemLang(lang, updateUrl=true) {
   lang = (lang === "DE") ? "DE" : "EN";
   currentAtemLang = lang;
+  localStorage.setItem("lastAtemLang", lang);
   document.getElementById('iframe-atem-de').classList.toggle('active', lang === "DE");
   document.getElementById('iframe-atem-en').classList.toggle('active', lang === "EN");
   document.querySelectorAll('.atem-lang-btn').forEach(btn => {
@@ -273,7 +274,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     let params = {};
     if (nextTab === "atem") {
       const { params: hashParams } = getHashTabAndQuery();
-      params.lang = hashParams.lang || "en";
+      params.lang = hashParams.lang || "";
     }
     setHash(nextTab, params);
     exportEDLFromTab(currentTab);
@@ -290,7 +291,11 @@ document.querySelectorAll('.tab').forEach(tab => {
       switchingTab = false;
       if (nextTab === "atem") {
         const { params: hashParams } = getHashTabAndQuery();
-        setAtemLang(getAtemLangFromParams(hashParams), false);
+        // 1. Sprachparameter aus URL bevorzugen
+        let newLang = getAtemLangFromParams(hashParams);
+        // 2. Falls keiner gesetzt, zuletzt genutzte Sprache (persistiert) verwenden
+        if (!newLang) newLang = localStorage.getItem("lastAtemLang") || "EN";
+        setAtemLang(newLang, false);
       }
     });
   });
@@ -301,7 +306,11 @@ function activateTabFromHash() {
   const tabBtn = Array.from(document.querySelectorAll('.tab')).find(t => t.dataset.target === tab);
   if (tabBtn) tabBtn.click();
   if (tab === "atem") {
-    setTimeout(() => setAtemLang(getAtemLangFromParams(params), false), 120);
+    // 1. Sprachparameter aus URL bevorzugen
+    let newLang = getAtemLangFromParams(params);
+    // 2. Falls keiner gesetzt, zuletzt genutzte Sprache (persistiert) verwenden
+    if (!newLang) newLang = localStorage.getItem("lastAtemLang") || "EN";
+    setTimeout(() => setAtemLang(newLang, false), 120);
   }
 }
 
