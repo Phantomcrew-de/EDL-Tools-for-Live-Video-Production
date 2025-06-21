@@ -209,7 +209,7 @@ function addComment() {
    timecodeList.sort((a, b) => b.id - a.id);
         let listHTML = "";
         timecodeList.forEach(({ timecode, comment, id }, index) => {
-            listHTML += `<li id="item_${id}" ${index === 0 ? "class='new-entry'" : ""}><input style="width: 110px" type="text" value="${timecode}" id="timecode_${id}" onblur="editComment(${id})"><input style="width: 70%" type="text" value="${comment}" id="comment_${id}" onblur="editComment(${id})"><button style="width: 10px" onclick="deleteComment(${id})">x</button></li>`;
+            listHTML += `<li id="item_${id}" ${index === 0 ? "class='new-entry'" : ""}><input style="width: 110px" type="text" value="${timecode}" id="timecode_${id}" onblur="editComment(${id})"><input style="width: 70%" type="text" value="${comment}" id="comment_${id}" onblur="editComment(${id})"><button style="width: 10px" onclick="deleteComment(${id})"> x&emsp;</button></li>`;
         });
         document.getElementById("comment-list").innerHTML = listHTML;
     }
@@ -428,19 +428,19 @@ window.addEventListener("load", populateDropdown);
             <tr>
               <td> 
                 <div style="display: flex; justify-content: center; align-items: center;"></div>
-            <button onclick="addComment()" style="margin: 5px; padding: 20px;">Neuer Kommentar ✍️</button>
-            <button onclick="addStart()" style="margin: 5px; padding: 20px;">Start ▶️</button>
-            <button onclick="addCut()" style="margin: 5px; padding: 20px;">Pause ✂️</button>
-            <button onclick="addContinue()" style="margin: 5px; padding: 20px;">Fortsetzen 🚶‍♀️</button>
-            <button onclick="addAgain()" style="margin: 5px; padding: 20px;">Wiederholen 🔁</button>
-            <button onclick="addOuttake()" style="margin: 5px; padding: 20px;">Outtake 🤣</button>
-            <button onclick="addEnd()" style="margin: 5px; padding: 20px;">Ende ✋</button>
-            <button onclick="addCheckforerror()" style="margin: 5px; padding: 20px;">Fehler markieren 🚨</button>
-            <button onclick="addSlomo()" style="margin: 5px; padding: 20px;">Geschwindigkeit verändern 🐢/🐇</button>
-            <button onclick="addTransition()" style="margin: 5px; padding: 20px;">Übergang 🔥</button>
-            <button onclick="addVFX()" style="margin: 5px; padding: 20px;">Effekte 💥</button>
-            <button onclick="addBesttake()" style="margin: 5px; padding: 20px;">Beste Take 🤎</button>
-            <button id="sync-button" onclick="sync()" style="margin: 5px; padding: 20px;">Sync 🎬</button>            
+            <button onclick="addComment()" style="margin: 5px; padding: 40px;">Neuer Kommentar ✍️</button>
+            <button onclick="addStart()" style="margin: 5px; padding: 40px;">Start ▶️</button>
+            <button onclick="addCut()" style="margin: 5px; padding: 40px;">Pause ✂️</button>
+            <button onclick="addContinue()" style="margin: 5px; padding: 40px;">Fortsetzen 🚶‍♀️</button>
+            <button onclick="addAgain()" style="margin: 5px; padding: 40px;">Wiederholen 🔁</button>
+            <button onclick="addOuttake()" style="margin: 5px; padding: 40px;">Outtake 🤣</button>
+            <button onclick="addEnd()" style="margin: 5px; padding: 40px;">Ende ✋</button>
+            <button onclick="addCheckforerror()" style="margin: 5px; padding: 40px;">Fehler markieren 🚨</button>
+            <button onclick="addSlomo()" style="margin: 5px; padding: 40px;">Geschwindigkeit verändern 🐢/🐇</button>
+            <button onclick="addTransition()" style="margin: 5px; padding: 40px;">Übergang 🔥</button>
+            <button onclick="addVFX()" style="margin: 5px; padding: 40px;">Effekte 💥</button>
+            <button onclick="addBesttake()" style="margin: 5px; padding: 40px;">Beste Take 🤎</button>
+            <button id="sync-button" onclick="sync()" style="margin: 5px; padding: 40px;">Sync 🎬</button>            
 
         </td>
     </tr>
@@ -451,7 +451,7 @@ window.addEventListener("load", populateDropdown);
     <div>
       <ul id="comment-list"></ul>      
     </div>
-    <div><button onclick="downloadList()">💾 Download EDL</button></div>
+    <div><button onclick="downloadList()" style="margin: 5px; padding: 40px;">💾 Download EDL</button></div>
         
   
 <script>
