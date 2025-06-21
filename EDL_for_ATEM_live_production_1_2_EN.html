@@ -251,7 +251,7 @@ function renderList() {
             ></div>
             <input style="width: 110px" type="text" value="${timecode}" id="timecode_${id}" onblur="editComment(${id})">
             <input style="width: 70%" type="text" value="${comment}" id="comment_${id}" onblur="editComment(${id})">
-            <button style="width: 10px" onclick="deleteComment(${id})">x</button>
+            <button style="width: 0px" onclick="deleteComment(${id})">x</button>
         </li>`;
     });
     document.getElementById("comment-list").innerHTML = listHTML;
@@ -429,17 +429,22 @@ function getColorForComment(comment) {
 
 function resolveColorToHex(resolveColor) {
   const map = {
-    "ResolveColorBlue": "#3A78C3",
-    "ResolveColorFuchsia": "#D557A0",
-    "ResolveColorPink": "#EC8C99",
-    "ResolveColorYellow": "#F5D76E",
-    "ResolveColorGreen": "#3AC36D",
-    "ResolveColorCyan": "#5AD2F4",
-    "ResolveColorSand": "#D6C199",
-    "ResolveColorRed": "#E74C3C",
-    "ResolveColorCocoa": "#9B6E5C",
+    "ResolveColorBlue": "#007FE3",
+    "ResolveColorCyan": "#01B7BA",
+    "ResolveColorGreen": "#4EC057",
+    "ResolveColorYellow": "#F3D241",
+    "ResolveColorRed": "#ED3023",
+    "ResolveColorPink": "#F199B0",
+    "ResolveColorFuchsia": "#FF44C8",
     "ResolveColorLavender": "#C299FF",
-    "ResolveColorSky": "#8AD3FF"
+    "ResolveColorSky": "#8AD3FF",
+    "ResolveColorSand": "#D6C199",
+    "ResolveColorCocoa": "#6E5143",
+    "ResolveColorPurple": "#9B59B6",
+    "ResolveColorRose": "#F78DA7",
+    "ResolveColorMint": "#B9E269",
+    "ResolveColorLemon": "#FFF176",
+    "ResolveColorCream": "#F5EBE1"
   };
   return map[resolveColor] || "#3A78C3";
 }
@@ -448,11 +453,26 @@ function changeColor(id) {
   let existing = document.getElementById("color-picker");
   if (existing) existing.remove();
 
-  const colors = [
-    "ResolveColorBlue", "ResolveColorFuchsia", "ResolveColorPink", "ResolveColorYellow",
-    "ResolveColorGreen", "ResolveColorCyan", "ResolveColorSand", "ResolveColorRed",
-    "ResolveColorCocoa", "ResolveColorLavender", "ResolveColorSky"
-  ];
+  
+const colors = [
+  "ResolveColorBlue",
+  "ResolveColorCyan",
+  "ResolveColorGreen",
+  "ResolveColorYellow",
+  "ResolveColorRed",
+  "ResolveColorPink",
+  "ResolveColorPurple",
+  "ResolveColorFuchsia",
+  "ResolveColorRose",
+  "ResolveColorLavender",
+  "ResolveColorSky",
+  "ResolveColorMint",
+  "ResolveColorLemon",
+  "ResolveColorSand",
+  "ResolveColorCocoa",
+  "ResolveColorCream"
+];
+
 
   const picker = document.createElement("div");
   picker.id = "color-picker";
@@ -620,6 +640,28 @@ function toggleInfoBox() {
 }
 </script>
 
+
+<script>
+console.log("🟢 App loaded.");
+const originalUpdateTime = updateTime;
+updateTime = function () {
+  try {
+    originalUpdateTime();
+    console.log("⏱ updateTime() called.");
+  } catch (e) {
+    console.error("❌ Error in updateTime:", e);
+  }
+};
+
+const originalRenderList = renderList;
+renderList = function () {
+  try {
+    originalRenderList();
+    console.log("📋 renderList() called.");
+  } catch (e) {
+    console.error("❌ Error in renderList:", e);
+  }
+};
+</script>
 </body>
-  
 </html>
