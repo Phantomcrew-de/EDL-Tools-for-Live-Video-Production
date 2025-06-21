@@ -355,9 +355,19 @@ window.addEventListener("load", populateDropdown);
     </script>
   </head>
   <body onload="setInterval(updateTime, 33.3334)">
+
+<div id="info-button" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;" onclick="toggleInfoBox()">ℹ️</div>
+<div id="info-box" style="display: none; position: fixed; top: 50px; right: 50px; background: white; border: 2px solid gray; padding: 20px; max-width: 500px; z-index: 1000;">
+  <div style="text-align: right;"><button onclick="toggleInfoBox()">❌</button></div>
+  <h4>Was macht diese App?</h4>
+  <p>Die App ermöglicht das Erstellen von Kommentarmarken (Regie, Redaktion, Kapitel) während einer Live-Aufzeichnung. Die erstellten Schnittlisten werden in Timelines mit auf Uhrzeitbasiertem Timecode geladen, z. B. für Produktionen mit dem ATEM Pro/Mini Pro ISO.</p>
+  <h4>Exportieren in Davinci Resolve:</h4>
+  <p>Um die Liste der Kommentare zu speichern, klicken Sie auf „Download EDL“. Das speichert die Liste als EDL-Datei. Öffnen Sie dann Davinci Resolve, laden Sie das Projekt und klicken Sie mit der rechten Maustaste auf die gewünschte Timeline. Wählen Sie „Import“ → „Timeline Marker from edl“ und laden Sie die Datei.</p>
+</div>
+
     <div>
         <h1>Kommentarliste für Liveproduktion</h1>
-        <h5>Die App ermöglicht das Erstellen von Kommentarmarken (Regie, Redaktion, Kapitel) während einer Live-Aufzeichnung. Die erstellten Schnittlisten werden in Timelines mit auf Uhrzeitbasiertem Timecode geladen, für z.B. Produktionen mit dem ATEM Pro/Mini Pro ISO.</h5> 
+         
         <h6>Speichern und wechseln Sie Projekte in Ihrem Browser:</h6> 
         <div style="display: flex; justify-content: left; align-items: left;font-size: 20px"> 
         <input type="text" id="project-title" placeholder="Projektname eingeben..."> 
@@ -442,7 +452,23 @@ window.addEventListener("load", populateDropdown);
       <ul id="comment-list"></ul>      
     </div>
     <div><button onclick="downloadList()">💾 Download EDL</button></div>
-    <h4>Um die Liste der Kommentare zu speichern, klicken Sie auf „Download EDL“. Das speichert die Liste als EDL-Datei, die Sie in Davinci Resolve öffnen können. Öffnen Sie Davinci Resolve, laden Sie das Projekt und klicken Sie mit der rechten Maustaste auf die Timeline, wo Sie die Liste importieren möchten. Wählen Sie „Import“ und dann „Timeline Marker from edl“ und wählen Sie die EDL-Datei aus, um sie zu laden.</h4>    
-  </body>
+        
+  
+<script>
+function toggleInfoBox() {
+  const box = document.getElementById("info-box");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+</script>
+
+
+<script>
+function toggleInfoBox() {
+  const box = document.getElementById("info-box");
+  box.style.display = (box.style.display === "block") ? "none" : "block";
+}
+</script>
+
+</body>
   
 </html>

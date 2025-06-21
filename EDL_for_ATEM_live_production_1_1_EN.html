@@ -396,9 +396,19 @@ window.addEventListener("load", populateDropdown);
     </script>
   </head>
   <body onload="setInterval(updateTime, 33.3334)">
+
+<div id="info-button" style="position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px;" onclick="toggleInfoBox()">ℹ️</div>
+<div id="info-box" style="display: none; position: fixed; top: 50px; right: 50px; background: white; border: 2px solid gray; padding: 20px; max-width: 500px; z-index: 1000;">
+  <div style="text-align: right;"><button onclick="toggleInfoBox()">❌</button></div>
+  <h4>About this App</h4>
+  <p>This web application is a simple timecode tracker that allows you to insert comment markers (for editing, directing, chapter markers) during a live production. The generated lists can be imported into timelines with timecode, for example in productions using the ATEM Pro/Mini Pro ISO.</p>
+  <h4>Export to DaVinci Resolve:</h4>
+  <p>To download the list of comments, click the "Download EDL" button. This will download the list as an EDL file. In DaVinci Resolve, open your project, right-click the timeline, select “Import” → “Timeline Markers from EDL” and choose the downloaded file.</p>
+</div>
+
     <div>
         <h1>Edit List for Live Productions</h1>
-        <h5>This web application is a simple timecode tracker that allows you to keep track of comments or notes with a timestamp.</h5> 
+         
         <h6>Save and switch projects in your browser:</h6> 
         <div style="display: flex; justify-content: left; align-items: left;font-size: 20px"> 
         <input type="text" id="project-title" placeholder="Enter a project title"> 
@@ -486,10 +496,26 @@ window.addEventListener("load", populateDropdown);
       <ul id="comment-list"></ul>      
     </div>
     <div><button onclick="downloadList()">💾 Download EDL</button></div>
-    <h4>To download the list of comments, click the "Download EDL" button. This will download the list as EDL formatted file that you can open with Davinci Resolve that supports this format. Open Davinci Resolve and load the desired project. Right-click on the timeline where you want to import the editlist. In the menu, select "Timelines" then "Import" and then "Timeline markers from edl". Select the .edl file and load it.</h4>    
+        
 
 
-  </body>
+  
+<script>
+function toggleInfoBox() {
+  const box = document.getElementById("info-box");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+</script>
+
+
+<script>
+function toggleInfoBox() {
+  const box = document.getElementById("info-box");
+  box.style.display = (box.style.display === "block") ? "none" : "block";
+}
+</script>
+
+</body>
   
 </html>
 
