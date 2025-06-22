@@ -147,15 +147,6 @@
   user-select: none;
   pointer-events: none;
 }
-  
-/* iOS Safari Fix: Skalierung der Tabs auf 70% */
-@media screen and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) {
-  .tab {
-    font-size: 70%;
-  }
-}
-
-
 </style>
 </head>
 <body>
@@ -495,6 +486,19 @@ window.addEventListener('message', (event) => {
     window.globalEDLText = event.data.edl;
   }
 });
+
+
+
+if (
+  navigator.userAgent.includes("Safari") &&
+  !navigator.userAgent.includes("Chrome") &&
+  /iP(ad|hone|od)/.test(navigator.platform)
+) {
+  document.querySelectorAll('.tab').forEach(el => {
+    el.style.fontSize = '65%';
+  });
+}
+
 </script>
 </body>
 </html>
