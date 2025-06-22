@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/style.css">
+  <title>EDL Color Replacer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      position: relative;
+      background-color: #121212;
+      color: #ffffff;
+    }
+    #colorContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .colorCircle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: bold;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    .colorCircle:hover {
+      transform: scale(1.2);
+    }
+    .tooltip {
+      position: absolute;
+      top: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 5px;
+      display: none;
+      color: #000;
+      white-space: nowrap;
+      z-index: 5;
+    }
+    .colorCircle:hover .tooltip {
+      display: block;
+    }
+    input[type="file"] {
+      margin-bottom: 20px;
+    }
+    .select-popup, .info-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1e1e1e;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .select-popup h3, .info-popup h3 {
+      margin-top: 0;
+    }
+    .color-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+    .color-swatch {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+    #downloadBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+    }
+    #infoIcon {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    #infoPopup {
+      display: none;
+      max-width: 400px;
+    }
+    #infoPopup button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>EDL Color Replacer</h1>
+  <div id="infoIcon" title="Show Info">ℹ️</div>
+  <input type="file" id="fileInput" accept=".edl">
+  <div id="colorContainer"></div>
+  <button id="downloadBtn" style="display:none">💾 Download modified EDL</button>
+
+  <div id="popupContainer" class="select-popup" style="display:none"></div>
+
+  <div id="infoPopup" class="info-popup">
+    <h3>About this tool</h3>
+    <p>
+      This tool lets you upload an EDL (.edl) file from DaVinci Resolve that contains color markers.
+      It visualizes which Resolve colors are used and how often.
+      You can click on any color to replace it with a different Resolve color.
+      The modified EDL can be downloaded afterward.
+    </p>
+    <button onclick="document.getElementById('infoPopup').style.display='none'">Close</button>
+  </div>
+
+  <script>
+    const colorMap = {
+      ResolveColorBlue:     '#007FE3',
+      ResolveColorCyan:     '#01B7BA',
+      ResolveColorGreen:    '#4EC057',
+      ResolveColorYellow:   '#F3D241',
+      ResolveColorRed:      '#ED3023',
+      ResolveColorPink:     '#F199B0',
+      ResolveColorFuchsia:  '#FF44C8',
+      ResolveColorLavender: '#C299FF',
+      ResolveColorSky:      '#8AD3FF',
+      ResolveColorSand:     '#D6C199',
+      ResolveColorCocoa:    '#6E5143',
+      ResolveColorPurple:   '#9B59B6',
+      ResolveColorRose:     '#F78DA7',
+      ResolveColorMint:     '#B9E269',
+      ResolveColorLemon:    '#FFF176',
+      ResolveColorCream:    '#F5EBE1'
+    };
+
+    let edlText = '';
+    let colorCounts = {};
+    let modifiedEDL = '';
+
+    document.getElementById('infoIcon').addEventListener('click', () => {
+      document.getElementById('infoPopup').style.display = 'block';
+    });
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        edlText = event.target.result;
+        modifiedEDL = edlText;
+        parseColors(modifiedEDL);
+      };
+      reader.readAsText(file);
+    });
+
+    function parseColors(text) {
+      const newCounts = {};
+      for (const color of Object.keys(colorMap)) {
+        const regex = new RegExp(color, 'g');
+        const matches = text.match(regex);
+        if (matches) {
+          newCounts[color] = matches.length;
+        }
+      }
+
+      colorCounts = newCounts;
+      renderCircles();
+      document.getElementById('downloadBtn').style.display = 'inline-block';
+    }
+
+    function renderCircles() {
+      const container = document.getElementById('colorContainer');
+      container.innerHTML = '';
+      const sortedColors = Object.entries(colorCounts)
+        .filter(([color, count]) => count > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+      for (const [color, count] of sortedColors) {
+        const div = document.createElement('div');
+        div.className = 'colorCircle';
+        div.style.backgroundColor = colorMap[color];
+        div.textContent = count;
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.textContent = color;
+        div.appendChild(tooltip);
+
+        div.addEventListener('click', () => showColorPopup(color));
+        container.appendChild(div);
+      }
+    }
+
+    function showColorPopup(fromColor) {
+      const popup = document.getElementById('popupContainer');
+      popup.innerHTML = `<h3>Replace color: ${fromColor}</h3>`;
+      for (const key in colorMap) {
+        const row = document.createElement('div');
+        row.className = 'color-option';
+        const swatch = document.createElement('div');
+        swatch.className = 'color-swatch';
+        swatch.style.backgroundColor = colorMap[key];
+        const label = document.createElement('span');
+        label.textContent = key;
+        row.appendChild(swatch);
+        row.appendChild(label);
+        row.addEventListener('click', () => {
+          modifiedEDL = modifiedEDL.replaceAll(fromColor, key);
+          parseColors(modifiedEDL);
+          popup.style.display = 'none';
+        });
+        popup.appendChild(row);
+      }
+      popup.style.display = 'block';
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const blob = new Blob([modifiedEDL], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'modified.edl';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
