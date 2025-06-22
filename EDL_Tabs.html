@@ -223,7 +223,7 @@ if(!window.location.hash || window.location.hash === "#") {
 
 // Rest vom Script:
 window.globalEDLText = "";
-let tabOrder = ["atem","resolve","offset","help"];
+let tabOrder = ["atem", "resolve", "offset", "color", "help"];
 let currentTab = "atem";
 let switchingTab = false;
 
@@ -267,10 +267,38 @@ function setAtemLang(lang, updateUrl=true) {
   localStorage.setItem("lastAtemLang", lang);
   document.getElementById('iframe-atem-de').classList.toggle('active', lang === "DE");
   document.getElementById('iframe-atem-en').classList.toggle('active', lang === "EN");
-  document.querySelectorAll('.atem-lang-btn').forEach(btn => {
+  
+document.querySelectorAll('#tab-color .atem-lang-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    setColorLang(btn.dataset.lang, true);
+  });
+});
+
+document.querySelectorAll('.atem-lang-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
   });
   if (updateUrl) setAtemLangQuery(lang);
+}
+
+
+let currentColorLang = localStorage.getItem("lastColorLang") || "EN";
+function setColorLangQuery(lang) {
+  const { tab, params } = getHashTabAndQuery();
+  if (tab !== "color") return;
+  const newParams = { ...params, lang: lang.toLowerCase() };
+  setHash(tab, newParams);
+}
+function setColorLang(lang, updateUrl=true) {
+  lang = (lang === "EN") ? "EN" : "DE";
+  currentColorLang = lang;
+  localStorage.setItem("lastColorLang", lang);
+  document.getElementById('iframe-color').src = (lang === "DE")
+    ? "EDL_Color_Replace_1_2_DE.html"
+    : "EDL_Color_Replace_1_2_EN.html";
+  document.querySelectorAll('#tab-color .atem-lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  if (updateUrl) setColorLangQuery(lang);
 }
 
 // ---- RESOLVE Language Switch ----
@@ -300,6 +328,13 @@ function setResolveLang(lang, updateUrl=true) {
 document.querySelectorAll('#tab-resolve .atem-lang-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
     setResolveLang(btn.dataset.lang, true);
+  });
+});
+
+
+document.querySelectorAll('#tab-color .atem-lang-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    setColorLang(btn.dataset.lang, true);
   });
 });
 
@@ -347,6 +382,13 @@ document.querySelectorAll('.tab').forEach(tab => {
 
       if (nextTab === "resolve") {
         const { params: hashParams } = getHashTabAndQuery();
+    if (nextTab === "color") {
+      const { params: hashParams } = getHashTabAndQuery();
+      let newLang = getResolveLangFromParams(hashParams);
+      if (!newLang) newLang = localStorage.getItem("lastColorLang") || "EN";
+      setColorLang(newLang, false);
+    }
+
         let newLang = getResolveLangFromParams(hashParams);
         if (!newLang) newLang = localStorage.getItem("lastResolveLang") || "DE";
         setResolveLang(newLang, false);
@@ -375,6 +417,13 @@ document.querySelectorAll('.tab').forEach(tab => {
 
       if (nextTab === "resolve") {
         const { params: hashParams } = getHashTabAndQuery();
+    if (nextTab === "color") {
+      const { params: hashParams } = getHashTabAndQuery();
+      let newLang = getResolveLangFromParams(hashParams);
+      if (!newLang) newLang = localStorage.getItem("lastColorLang") || "EN";
+      setColorLang(newLang, false);
+    }
+
         let newLang = getResolveLangFromParams(hashParams);
         if (!newLang) newLang = localStorage.getItem("lastResolveLang") || "DE";
         setResolveLang(newLang, false);
@@ -397,6 +446,12 @@ function activateTabFromHash() {
 
   if (tab === "resolve") {
     let newLang = getResolveLangFromParams(params);
+  if (tab === "color") {
+    let newLang = getResolveLangFromParams(params);
+    if (!newLang) newLang = localStorage.getItem("lastColorLang") || "EN";
+    setTimeout(() => setColorLang(newLang, false), 120);
+  }
+
     if (!newLang) newLang = localStorage.getItem("lastResolveLang") || "DE";
     setTimeout(() => setResolveLang(newLang, false), 120);
   }
