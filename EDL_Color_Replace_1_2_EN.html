@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-    <link rel="stylesheet" href="css/style.css">
-  <title>EDL Color Replacer 2.0</title>
-  <style>
+<meta charset="utf-8"/>
+<link href="css/style.css" rel="stylesheet"/>
+<title>EDL Color Replacer 2.0</title>
+<style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
@@ -105,19 +106,31 @@
   </style>
 </head>
 <body>
-  <h1>EDL Color Replacer 2.0</h1>
-  <input type="file" id="fileInput" accept=".edl">
-  <div id="colorContainer"></div>
-  <button id="downloadBtn" style="display:none">📂 Download modified EDL</button>
-  <div id="popupContainer" class="select-popup"></div>
-  <table id="entryTable" style="display:none">
-    <thead>
-      <tr><th>Color</th><th>Timecode</th><th>Comment</th></tr>
-    </thead>
-    <tbody id="entryBody"></tbody>
-  </table>
-
-  <script>
+<div id="infoBtn" style="position: fixed; top: 10px; right: 10px; cursor: pointer; font-size: 24px; color: white; z-index: 1001;" title="Info">ℹ️</div>
+<div id="infoPopup" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background-color: #1e1e1e; color: white; padding: 20px; border: 1px solid #555; border-radius: 8px;
+  max-width: 400px; z-index: 1002; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+<h2>What does this tool do?</h2>
+<p>This tool helps you visualize and change marker colors in DaVinci Resolve EDL files (.edl).</p>
+<ul>
+<li>Upload an .edl file</li>
+<li>Click on a color to replace it</li>
+<li>Download the modified file</li>
+</ul>
+<button onclick="document.getElementById('infoPopup').style.display='none'">Close</button>
+</div>
+<h1>EDL Color Replacer 2.0</h1>
+<input accept=".edl" id="fileInput" type="file"/>
+<div id="colorContainer"></div>
+<button id="downloadBtn" style="display:none">📂 Download modified EDL</button>
+<div class="select-popup" id="popupContainer"></div>
+<table id="entryTable" style="display:none">
+<thead>
+<tr><th>Color</th><th>Timecode</th><th>Comment</th></tr>
+</thead>
+<tbody id="entryBody"></tbody>
+</table>
+<script>
     const colorMap = {
       ResolveColorBlue:'#007FE3', ResolveColorCyan:'#01B7BA', ResolveColorGreen:'#4EC057',
       ResolveColorYellow:'#F3D241', ResolveColorRed:'#ED3023', ResolveColorPink:'#F199B0',
@@ -188,34 +201,55 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
       }
     }
 
-    function renderEntryTable() {
-      const tbody = document.getElementById('entryBody');
-      tbody.innerHTML = '';
-      entries.forEach((entry, index) => {
-        const row = document.createElement('tr');
-        const colorCell = document.createElement('td');
-        const colorBox = document.createElement('div');
-        colorBox.className = 'color-box';
-        colorBox.style.backgroundColor = colorMap[entry.color];
-        colorBox.title = entry.color;
-        colorBox.addEventListener('click', () => showColorPopup(entry.color, index));
-        colorCell.appendChild(colorBox);
-        row.appendChild(colorCell);
+    
+function renderEntryTable() {
+  const tbody = document.getElementById('entryBody');
+  tbody.innerHTML = '';
+  entries.forEach((entry, index) => {
+    const row = document.createElement('tr');
 
-        const timeCell = document.createElement('td');
-        timeCell.textContent = entry.timecode;
-        row.appendChild(timeCell);
+    // Farbkreis
+    const colorCell = document.createElement('td');
+    const colorBox = document.createElement('div');
+    colorBox.className = 'color-box';
+    colorBox.style.backgroundColor = colorMap[entry.color];
+    colorBox.title = entry.color;
+    colorBox.addEventListener('click', () => showColorPopup(entry.color, index));
+    colorCell.appendChild(colorBox);
+    row.appendChild(colorCell);
 
-        const commentCell = document.createElement('td');
-        commentCell.textContent = entry.comment;
-        row.appendChild(commentCell);
+    // Timecode-Eingabefeld
+    const timeCell = document.createElement('td');
+    const timeInput = document.createElement('input');
+    timeInput.type = 'text';
+    timeInput.value = entry.timecode;
+    timeInput.style.width = '100%';
+    timeInput.addEventListener('input', (e) => {
+      entries[index].timecode = e.target.value;
+      updateEDLText();
+    });
+    timeCell.appendChild(timeInput);
+    row.appendChild(timeCell);
 
-        tbody.appendChild(row);
-      });
-      document.getElementById('entryTable').style.display = 'table';
-    }
+    // Kommentar-Eingabefeld
+    const commentCell = document.createElement('td');
+    const commentInput = document.createElement('input');
+    commentInput.type = 'text';
+    commentInput.value = entry.comment;
+    commentInput.style.width = '100%';
+    commentInput.addEventListener('input', (e) => {
+      entries[index].comment = e.target.value;
+      updateEDLText();
+    });
+    commentCell.appendChild(commentInput);
+    row.appendChild(commentCell);
 
-    function showColorPopup(currentColor, entryIndex = null) {
+    tbody.appendChild(row);
+  });
+  document.getElementById('entryTable').style.display = 'table';
+}
+
+function showColorPopup(currentColor, entryIndex = null) {
       const popup = document.getElementById('popupContainer');
       popup.innerHTML = '<h3>Choose new color</h3>';
       for (const [color, hex] of Object.entries(colorMap)) {
@@ -244,20 +278,31 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
       popup.style.display = 'block';
     }
 
-    function updateEDLText() {
-      let lines = edlText.split('\n');
-      entries.forEach(entry => {
-        lines = lines.map(line => {
-          if (line === entry.original) {
-            return line.replace(/ResolveColor\w+/, entry.color);
-          }
-          return line;
-        });
-      });
-      modifiedEDL = lines.join('\n');
-    }
+    
+function updateEDLText() {
+  let lines = edlText.split('\n');
+  entries.forEach(entry => {
+    lines = lines.map((line, i, arr) => {
+      if (line === entry.original) {
+        let newLine = line.replace(/ResolveColor\\w+/, entry.color);
+        if (newLine.includes('|M:')) {
+          newLine = newLine.replace(/\|M:[^|]*/, '|M:' + entry.comment);
+        } else {
+          newLine += ' |M:' + entry.comment;
+        }
+        const timeMatch = arr[i - 1]?.match(/(\d{2}:\d{2}:\d{2}:\d{2})/);
+        if (timeMatch) {
+          arr[i - 1] = arr[i - 1].replace(timeMatch[1], entry.timecode);
+        }
+        return newLine;
+      }
+      return line;
+    });
+  });
+  modifiedEDL = lines.join('\n');
+}
 
-    document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', () => {
       const blob = new Blob([modifiedEDL], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -268,6 +313,11 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     });
-  </script>
+  
+
+document.getElementById('infoBtn').addEventListener('click', function() {
+  document.getElementById('infoPopup').style.display = 'block';
+});
+</script>
 </body>
 </html>
