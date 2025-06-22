@@ -148,12 +148,15 @@
   pointer-events: none;
 }
   
-/* iOS Safari Fix: Skalierung der Tabs auf 80% */
+/* iOS Safari Fix: Skalierung der Tabs auf 70% */
 @media screen and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) {
-  .tab {
-    font-size: 80%;
+  @supports (-webkit-touch-callout: none) and (not (translate: none)) {
+    .tab {
+      font-size: 70%;
+    }
   }
 }
+
 
 </style>
 </head>
