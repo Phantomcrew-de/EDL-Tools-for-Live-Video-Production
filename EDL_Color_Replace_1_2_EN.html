@@ -129,10 +129,13 @@
 
     let edlText = '', modifiedEDL = '', entries = [];
 
-    document.getElementById('fileInput').addEventListener('change', function(e) {
+    let originalFilename = '';
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
-      const reader = new FileReader();
+      originalFilename = file.name.replace(/\.edl$/i, '');
+  const reader = new FileReader();
       reader.onload = function(event) {
         edlText = event.target.result;
         modifiedEDL = edlText;
@@ -259,7 +262,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'modified.edl';
+      a.download = originalFilename + '_modified.edl';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
