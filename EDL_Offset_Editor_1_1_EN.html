@@ -5,23 +5,126 @@
     <link rel="stylesheet" href="css/style.css">
   <title>EDL Offset Editor</title>
   <style>
-    body { font-family: Arial; margin: 20px; background: #0b0b3b; color: white; }
-    .controls { margin: 10px 0; }
-    .entry { background: #1a1a4c; padding: 10px; margin: 10px 0; border-radius: 8px; display: flex; gap: 10px; align-items: center; }
-    .entry input { padding: 5px; border-radius: 5px; border: none; width: 40%; }
-    .entry button { background: #ff4d4d; border: none; color: white; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
-    .entry button:hover { background: #e60000; }
-    #downloadBtn { margin-top: 20px; background: #4CAF50; padding: 10px 20px; border: none; border-radius: 5px; color: white; cursor: pointer; }
-    #downloadBtn:hover { background: #45a049; }
-	@media (max-width: 1024px) {
-body {
-	padding-left: 5%;
-	padding-right: 5%;
-}
-  </style>
+    body {
+      font-family: Arial;
+      margin: 20px;
+      background: #0b0b3b;
+      color: white;
+    }
 
+    .controls {
+      margin: 10px 0;
+    }
+
+    .entry {
+      background: #1a1a4c;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .entry input {
+      padding: 5px;
+      border-radius: 5px;
+      border: none;
+      width: 40%;
+    }
+
+    .entry button {
+      background: #ff4d4d;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .entry button:hover {
+      background: #e60000;
+    }
+
+    #downloadBtn {
+      margin-top: 20px;
+      background: #4CAF50;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+    }
+
+    #downloadBtn:hover {
+      background: #45a049;
+    }
+
+    #infoBtn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: white;
+      cursor: pointer;
+    }
+
+    #infoPopup {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      width: 400px;
+      max-width: 95%;
+      background: rgba(20, 20, 40, 0.95);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      z-index: 1000;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    #infoPopup h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    #closeInfo {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      cursor: pointer;
+      color: #ccc;
+      font-size: 20px;
+    }
+
+    #closeInfo:hover {
+      color: white;
+    }
+
+    @media (max-width: 1024px) {
+      body {
+        padding-left: 5%;
+        padding-right: 5%;
+      }
+    }
+  </style>
 </head>
 <body>
+
+<button id="infoBtn" onclick="toggleInfo()">ℹ️</button>
+
+<div id="infoPopup">
+  <div id="closeInfo" onclick="toggleInfo()">✖</div>
+  <h3>Hilfe & Anleitung</h3>
+  <p>📂 Lade eine EDL-Datei mit dem Button oben.</p>
+  <p>🕒 Gib einen Offset im Format HH:MM:SS:FF ein.</p>
+  <p>➕ Mit „Offset anwenden“ wird der Zeitcode angepasst (Addition/Subtraktion je nach Vorzeichen).</p>
+  <p>🔁 Bei aktivierter „Wrap bei 24h“-Option werden Timecodes bei 24h zurückgesetzt.</p>
+  <p>📂 Danach kannst du die geänderte Datei wieder herunterladen.</p>
+</div>
 
 <h2>EDL Offset Editor</h2>
 
@@ -41,6 +144,11 @@ let originalFilename = "export";
 let originalEntries = [];
 let originalLines = [];
 
+function toggleInfo() {
+  const popup = document.getElementById('infoPopup');
+  popup.style.display = (popup.style.display === 'block') ? 'none' : 'block';
+}
+
 function parseEDL(content) {
   originalLines = content.split(/\r?\n/);
   const entries = [];
@@ -48,14 +156,9 @@ function parseEDL(content) {
 
   for (let i = 0; i < originalLines.length; i++) {
     const line = originalLines[i];
-    // Suche nach Timecode-Zeile
     const match = line.match(/(\d{2}:\d{2}:\d{2}:\d{2})/);
-    if (match) {
-      lastTimecode = match[1];
-    }
-    // Suche nach Kommentarzeile mit |M:
+    if (match) lastTimecode = match[1];
     if (line.includes('|M:')) {
-      // Kommentar extrahieren (alles nach |M:, bis zum nächsten | oder Zeilenende)
       const commentMatch = line.match(/\|M:([^|]*)/);
       const comment = commentMatch ? commentMatch[1].trim() : '';
       if (lastTimecode) {
@@ -72,28 +175,23 @@ function toFrames(tc, fps) {
   return ((h * 3600 + m * 60 + s) * fps + f);
 }
 
-
 function fromFrames(frames, fps, wrap24) {
   if (wrap24) {
     const maxFrames = 24 * 3600 * fps;
     frames = ((frames % maxFrames) + maxFrames) % maxFrames;
   }
-
-  frames = Math.max(0, frames);  // verhindert negative Timecodes
+  frames = Math.max(0, frames);
   const totalSeconds = Math.floor(frames / fps);
-  const f = Math.floor(frames % fps);  // BUGFIX: keine Rundung über Framegrenze
+  const f = Math.floor(frames % fps);
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
-
   return [h, m, s, f].map(x => String(x).padStart(2, '0')).join(':');
 }
-
 
 function showEntries(entries) {
   const container = document.getElementById('entries');
   container.innerHTML = '';
-
   entries.forEach((entry, index) => {
     const div = document.createElement('div');
     div.className = 'entry';
@@ -125,10 +223,6 @@ function deleteEntry(index) {
   showEntries(entries);
 }
 
-function clearFields() {
-  document.getElementById('entries').innerHTML = '';
-}
-
 document.getElementById('edlFile').addEventListener('change', function() {
   const file = this.files[0];
   if (!file) return;
@@ -153,47 +247,36 @@ function parseOffsetTC(tc) {
   return sign * ((h * 3600 + m * 60 + s) * parseFloat(document.getElementById('fps').value) + f);
 }
 
-
 function applyOffset() {
   const offsetFrames = parseOffsetTC(document.getElementById('offset').value);
   const fps = parseFloat(document.getElementById('fps').value);
   const wrap24 = document.getElementById('wrap24').checked;
-
-  // Nutze den aktuellen Zustand, nicht originalEntries!
   const currentEntries = getEntries();
   const updated = currentEntries.map(e => {
     const newFrames = toFrames(e.timecode, fps) + offsetFrames;
     return {
-      comment: e.comment, // Kommentar bleibt unverändert!
+      comment: e.comment,
       timecode: fromFrames(newFrames, fps, wrap24)
     };
   });
   showEntries(updated);
 }
 
-
 function downloadEDL() {
   const entries = getEntries();
   const updatedLines = [...originalLines];
   let entryIndex = 0;
-
   for (let i = 0; i < updatedLines.length; i++) {
     const line = updatedLines[i];
-
-    // Ersetze Timecode-Zeile, falls Eintrag vorhanden
     if (line.match(/(\d{2}:\d{2}:\d{2}:\d{2})/) && entryIndex < entries.length) {
-      // Ersetze alle Timecodes in dieser Zeile durch den aktuellen Timecode aus dem Editor
       updatedLines[i] = line.replace(/(\d{2}:\d{2}:\d{2}:\d{2})/g, entries[entryIndex].timecode);
-      continue; // Gehe zur nächsten Zeile
+      continue;
     }
-
-    // Ersetze Kommentar in |M:-Zeile, falls Eintrag vorhanden
     if (line.includes('|M:') && entryIndex < entries.length) {
       updatedLines[i] = line.replace(/\|M:([^|]*)/, '|M:' + entries[entryIndex].comment);
       entryIndex++;
     }
   }
-
   const edlContent = updatedLines.join('\n');
   const blob = new Blob([edlContent], { type: 'text/plain' });
   const link = document.createElement('a');
@@ -203,7 +286,6 @@ function downloadEDL() {
   link.click();
   document.body.removeChild(link);
 }
-
 </script>
 
 </body>
