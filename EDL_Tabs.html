@@ -148,6 +148,21 @@
   pointer-events: none;
 }
 </style>
+<script>
+// Nur iOS Safari erkennen
+(function () {
+  const isIOS = /iP(hone|od|ad)/.test(navigator.platform);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  if (isIOS && isSafari) {
+    document.querySelectorAll('.tab').forEach(el => {
+      el.style.transform = 'scale(0.5)';
+      el.style.transformOrigin = 'top left';
+    });
+  }
+})();
+</script>
+
 </head>
 <body>
   <div class="tab-container">
@@ -486,18 +501,6 @@ window.addEventListener('message', (event) => {
     window.globalEDLText = event.data.edl;
   }
 });
-
-
-
-if (
-  navigator.userAgent.includes("Safari") &&
-  !navigator.userAgent.includes("Chrome") &&
-  /iP(ad|hone|od)/.test(navigator.platform)
-) {
-  document.querySelectorAll('.tab').forEach(el => {
-    el.style.fontSize = '65%';
-  });
-}
 
 </script>
 </body>
