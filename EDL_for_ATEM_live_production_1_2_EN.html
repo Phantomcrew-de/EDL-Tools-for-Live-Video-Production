@@ -40,7 +40,56 @@ body {
   display: flex;
   flex-wrap: nowrap;
 }
-    </style>
+    
+<style>
+  .btn-cut { border: 4px solid #F199B0 !important; }
+  .btn-start { border: 4px solid #F3D241 !important; }
+  .btn-end { border: 4px solid #ED3023 !important; }
+  .btn-sync { border: 4px solid #4EC057 !important; }
+  .btn-continue { border: 4px solid #01B7BA !important; }
+  .btn-outtake { border: 4px solid #FF44C8 !important; }
+  .btn-again { border: 4px solid #D6C199 !important; }
+  .btn-check { border: 4px solid #6E5143 !important; }
+  .btn-slomo { border: 4px solid #8AD3FF !important; }
+  .btn-transition { border: 4px solid #3A78C3 !important; }
+  .btn-vfx { border: 4px solid #3A78C3 !important; }
+  .btn-besttake { border: 4px solid #C299FF !important; }
+  .btn-comment { border: 4px solid #3A78C3 !important; }
+
+<style>
+.btn-cut { border: 4px solid #F199B0 !important; background-color: #c07a8c !important; }
+.btn-start { border: 4px solid #F3D241 !important; background-color: #c2a834 !important; }
+.btn-end { border: 4px solid #ED3023 !important; background-color: #bd261c !important; }
+.btn-sync { border: 4px solid #4EC057 !important; background-color: #3e9945 !important; }
+.btn-continue { border: 4px solid #01B7BA !important; background-color: #009294 !important; }
+.btn-outtake { border: 4px solid #FF44C8 !important; background-color: #cc36a0 !important; }
+.btn-again { border: 4px solid #D6C199 !important; background-color: #ab9a7a !important; }
+.btn-check { border: 4px solid #6E5143 !important; background-color: #584035 !important; }
+.btn-slomo { border: 4px solid #8AD3FF !important; background-color: #6ea8cc !important; }
+.btn-transition { border: 4px solid #3A78C3 !important; background-color: #2e609c !important; }
+.btn-vfx { border: 4px solid #3A78C3 !important; background-color: #2e609c !important; }
+.btn-besttake { border: 4px solid #C299FF !important; background-color: #9b7acc !important; }
+.btn-comment { border: 4px solid #3A78C3 !important; background-color: #2e609c !important; }
+</style>
+</style>
+
+
+<style>
+.btn-cut { border: 4px solid #F199B0 !important; background-color: #c07a8c !important; }
+.btn-start { border: 4px solid #F3D241 !important; background-color: #c2a834 !important; }
+.btn-end { border: 4px solid #ED3023 !important; background-color: #bd261c !important; }
+.btn-sync { border: 4px solid #4EC057 !important; background-color: #3e9945 !important; }
+.btn-continue { border: 4px solid #01B7BA !important; background-color: #009294 !important; }
+.btn-outtake { border: 4px solid #FF44C8 !important; background-color: #cc36a0 !important; }
+.btn-again { border: 4px solid #D6C199 !important; background-color: #ab9a7a !important; }
+.btn-check { border: 4px solid #6E5143 !important; background-color: #584035 !important; }
+.btn-slomo { border: 4px solid #8AD3FF !important; background-color: #6ea8cc !important; }
+.btn-transition { border: 4px solid #3A78C3 !important; background-color: #2e609c !important; }
+.btn-vfx { border: 4px solid #3A78C3 !important; background-color: #2e609c !important; }
+.btn-besttake { border: 4px solid #C299FF !important; background-color: #9b7acc !important; }
+.btn-comment { border: 4px solid #3A78C3 !important; background-color: #2e609c !important; }
+</style>
+</style>
     
     <script>
     
@@ -597,19 +646,19 @@ const colors = [
             <tr>
               <td> 
                 <div style="display: flex; justify-content: center; align-items: center;"></div>
-            <button onclick="addComment()" style="margin: 5px; padding: 40px;">Add a new Comment ✍️</button>
-            <button onclick="addStart()" style="margin: 5px; padding: 40px;">Start ▶️</button>
-            <button onclick="addCut()" style="margin: 5px; padding: 40px;">Cut ✂️</button>
-            <button onclick="addContinue()" style="margin: 5px; padding: 40px;">Continue 🚶‍♀️</button>
-            <button onclick="addAgain()" style="margin: 5px; padding: 40px;">Again 🔁</button>
-            <button onclick="addOuttake()" style="margin: 5px; padding: 40px;">Outtake 🤣</button>
-            <button onclick="addEnd()" style="margin: 5px; padding: 40px;">End ✋</button>
-            <button onclick="addCheckforerror()" style="margin: 5px; padding: 40px;">Check for Error 🚨</button>
-            <button onclick="addSlomo()" style="margin: 5px; padding: 40px;">Speed change 🐢/🐇</button>
-            <button onclick="addTransition()" style="margin: 5px; padding: 40px;">Transition 🔥</button>
-            <button onclick="addVFX()" style="margin: 5px; padding: 40px;">Effect 💥</button>
-            <button onclick="addBesttake()" style="margin: 5px; padding: 40px;">Best Take 🤎</button>
-            <button id="sync-button" onclick="sync()" style="margin: 5px; padding: 40px;">Sync 🎬</button>            
+            <button class="btn-comment" onclick="addComment()" style="margin: 5px; padding: 40px;">Add a new Comment ✍️</button>
+            <button class="btn-start" onclick="addStart()" style="margin: 5px; padding: 40px;">Start ▶️</button>
+            <button class="btn-cut" onclick="addCut()" style="margin: 5px; padding: 40px;">Cut ✂️</button>
+            <button class="btn-continue" onclick="addContinue()" style="margin: 5px; padding: 40px;">Continue 🚶‍♀️</button>
+            <button class="btn-again" onclick="addAgain()" style="margin: 5px; padding: 40px;">Again 🔁</button>
+            <button class="btn-outtake" onclick="addOuttake()" style="margin: 5px; padding: 40px;">Outtake 🤣</button>
+            <button class="btn-end" onclick="addEnd()" style="margin: 5px; padding: 40px;">End ✋</button>
+            <button class="btn-check" onclick="addCheckforerror()" style="margin: 5px; padding: 40px;">Check for Error 🚨</button>
+            <button class="btn-slomo" onclick="addSlomo()" style="margin: 5px; padding: 40px;">Speed change 🐢/🐇</button>
+            <button class="btn-transition" onclick="addTransition()" style="margin: 5px; padding: 40px;">Transition 🔥</button>
+            <button class="btn-vfx" onclick="addVFX()" style="margin: 5px; padding: 40px;">Effect 💥</button>
+            <button class="btn-besttake" onclick="addBesttake()" style="margin: 5px; padding: 40px;">Best Take 🤎</button>
+            <button class="btn-sync" id="sync-button" onclick="sync()" style="margin: 5px; padding: 40px;">Sync 🎬</button>
 
         </td>
     </tr>
