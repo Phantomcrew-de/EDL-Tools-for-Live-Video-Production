@@ -148,29 +148,6 @@
   pointer-events: none;
 }
 </style>
-
-<script>
-// Zuverlässigere Erkennung von Safari auf iOS
-(function () {
-  const ua = window.navigator.userAgent;
-  const isIOS = /iP(hone|ad|od)/.test(ua) || 
-                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS
-  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-
-  if (isIOS && isSafari) {
-    console.log("✅ iOS Safari erkannt – Tabs werden skaliert");
-    document.querySelectorAll('.tab').forEach(el => {
-      el.style.transform = 'scale(0.5)';
-      el.style.transformOrigin = 'top left';
-      el.style.display = 'inline-block'; // wichtig bei flex layouts
-    });
-  } else {
-    console.log("❌ Kein iOS Safari:", ua);
-  }
-})();
-</script>
-
-
 </head>
 <body>
   <div class="tab-container">
@@ -510,6 +487,25 @@ window.addEventListener('message', (event) => {
   }
 });
 
+</script>
+	<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const ua = window.navigator.userAgent;
+  const isIOS = /iP(hone|ad|od)/.test(ua) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+
+  if (isIOS && isSafari) {
+    console.log("✅ iOS Safari erkannt – Tabs werden skaliert");
+    document.querySelectorAll('.tab').forEach(el => {
+      el.style.transform = 'scale(0.5)';
+      el.style.transformOrigin = 'top left';
+      el.style.display = 'inline-block';
+    });
+  } else {
+    console.log("❌ Nicht iOS Safari:", ua);
+  }
+});
 </script>
 </body>
 </html>
