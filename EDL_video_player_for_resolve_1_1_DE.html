@@ -272,7 +272,7 @@ function twoDigits(number) {
         }
 
         function downloadEDL() {
-            var edlContent = `TITLE: Edit list for ${videos[currentVideo].name}\nFCM: NON-DROP FRAME\n\n`;
+            var edlContent = `TITLE: PHANTOMCREW.DE Edit list for ${videos[currentVideo].name}\nFCM: NON-DROP FRAME\n\n`;
             videos[currentVideo].comments.forEach((comment, index) => {
                 var timeCode = formatTime(parseTime(comment.time));
                 edlContent += `00${index + 1}  001      V     C        ${timeCode} ${timeCode} ${timeCode} ${timeCode} \n |C:ResolveColorBlue |M:${comment.comment} |D:1\n\n`;
