@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
     <link rel="stylesheet" href="css/style.css">
-  <title>EDL Color Replacer</title>
+  <title>EDL Color Replacer 2.0</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      position: relative;
       background-color: #121212;
       color: #ffffff;
     }
@@ -55,7 +54,24 @@
     input[type="file"] {
       margin-bottom: 20px;
     }
-    .select-popup, .info-popup {
+    #entryTable {
+      margin-top: 30px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #entryTable th, #entryTable td {
+      border: 1px solid #555;
+      padding: 8px;
+      text-align: left;
+    }
+    .color-box {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-block;
+      cursor: pointer;
+    }
+    #popupContainer, .info-popup {
       position: fixed;
       top: 50%;
       left: 50%;
@@ -67,8 +83,8 @@
       z-index: 1000;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    .select-popup h3, .info-popup h3 {
-      margin-top: 0;
+    #popupContainer {
+      display: none;
     }
     .color-option {
       display: flex;
@@ -86,142 +102,156 @@
       margin-top: 20px;
       padding: 10px 20px;
     }
-    #infoIcon {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 20px;
-      cursor: pointer;
-    }
-    #infoPopup {
-      display: none;
-      max-width: 400px;
-    }
-    #infoPopup button {
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
-  <h1>EDL Color Replacer</h1>
-  <div id="infoIcon" title="Show Info">ℹ️</div>
+  <h1>EDL Color Replacer 2.0</h1>
   <input type="file" id="fileInput" accept=".edl">
   <div id="colorContainer"></div>
-  <button id="downloadBtn" style="display:none">💾 Download modified EDL</button>
-
-  <div id="popupContainer" class="select-popup" style="display:none"></div>
-
-  <div id="infoPopup" class="info-popup">
-    <h3>About this tool</h3>
-    <p>
-      This tool lets you upload an EDL (.edl) file from DaVinci Resolve that contains color markers.
-      It visualizes which Resolve colors are used and how often.
-      You can click on any color to replace it with a different Resolve color.
-      The modified EDL can be downloaded afterward.
-    </p>
-    <button onclick="document.getElementById('infoPopup').style.display='none'">Close</button>
-  </div>
+  <button id="downloadBtn" style="display:none">📂 Download modified EDL</button>
+  <div id="popupContainer" class="select-popup"></div>
+  <table id="entryTable" style="display:none">
+    <thead>
+      <tr><th>Color</th><th>Timecode</th><th>Comment</th></tr>
+    </thead>
+    <tbody id="entryBody"></tbody>
+  </table>
 
   <script>
     const colorMap = {
-      ResolveColorBlue:     '#007FE3',
-      ResolveColorCyan:     '#01B7BA',
-      ResolveColorGreen:    '#4EC057',
-      ResolveColorYellow:   '#F3D241',
-      ResolveColorRed:      '#ED3023',
-      ResolveColorPink:     '#F199B0',
-      ResolveColorFuchsia:  '#FF44C8',
-      ResolveColorLavender: '#C299FF',
-      ResolveColorSky:      '#8AD3FF',
-      ResolveColorSand:     '#D6C199',
-      ResolveColorCocoa:    '#6E5143',
-      ResolveColorPurple:   '#9B59B6',
-      ResolveColorRose:     '#F78DA7',
-      ResolveColorMint:     '#B9E269',
-      ResolveColorLemon:    '#FFF176',
-      ResolveColorCream:    '#F5EBE1'
+      ResolveColorBlue:'#007FE3', ResolveColorCyan:'#01B7BA', ResolveColorGreen:'#4EC057',
+      ResolveColorYellow:'#F3D241', ResolveColorRed:'#ED3023', ResolveColorPink:'#F199B0',
+      ResolveColorFuchsia:'#FF44C8', ResolveColorLavender:'#C299FF', ResolveColorSky:'#8AD3FF',
+      ResolveColorSand:'#D6C199', ResolveColorCocoa:'#6E5143', ResolveColorPurple:'#9B59B6',
+      ResolveColorRose:'#F78DA7', ResolveColorMint:'#B9E269', ResolveColorLemon:'#FFF176',
+      ResolveColorCream:'#F5EBE1'
     };
 
-    let edlText = '';
-    let colorCounts = {};
-    let modifiedEDL = '';
-
-    document.getElementById('infoIcon').addEventListener('click', () => {
-      document.getElementById('infoPopup').style.display = 'block';
-    });
+    let edlText = '', modifiedEDL = '', entries = [];
 
     document.getElementById('fileInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(event) {
         edlText = event.target.result;
         modifiedEDL = edlText;
-        parseColors(modifiedEDL);
+        parseMarkers();
+        renderColorCircles();
+        renderEntryTable();
+        document.getElementById('downloadBtn').style.display = 'inline-block';
       };
       reader.readAsText(file);
     });
 
-    function parseColors(text) {
-      const newCounts = {};
-      for (const color of Object.keys(colorMap)) {
-        const regex = new RegExp(color, 'g');
-        const matches = text.match(regex);
-        if (matches) {
-          newCounts[color] = matches.length;
+    function parseMarkers() {
+      entries = [];
+      const lines = modifiedEDL.split('\n');
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.includes('|C:ResolveColor')) {
+          const timeLine = lines[i - 1];
+          const timeMatch = timeLine.match(/(\d{2}:\d{2}:\d{2}:\d{2})/);
+          const colorMatch = line.match(/\|C:(ResolveColor\w+)/);
+          const commentMatch = line.match(/\|M:([^|]+)/);
+          if (timeMatch && colorMatch) {
+            entries.push({
+              original: line,
+              timecode: timeMatch[1],
+              comment: commentMatch ? commentMatch[1].trim() : '',
+              color: colorMatch[1]
+            });
+          }
         }
       }
-
-      colorCounts = newCounts;
-      renderCircles();
-      document.getElementById('downloadBtn').style.display = 'inline-block';
     }
 
-    function renderCircles() {
+    function renderColorCircles() {
       const container = document.getElementById('colorContainer');
       container.innerHTML = '';
-      const sortedColors = Object.entries(colorCounts)
-        .filter(([color, count]) => count > 0)
-        .sort((a, b) => b[1] - a[1]);
-
-      for (const [color, count] of sortedColors) {
+      const countMap = {};
+      entries.forEach(e => countMap[e.color] = (countMap[e.color] || 0) + 1);
+      for (const [color, count] of Object.entries(countMap)) {
         const div = document.createElement('div');
         div.className = 'colorCircle';
         div.style.backgroundColor = colorMap[color];
         div.textContent = count;
-
         const tooltip = document.createElement('div');
         tooltip.className = 'tooltip';
         tooltip.textContent = color;
         div.appendChild(tooltip);
-
         div.addEventListener('click', () => showColorPopup(color));
         container.appendChild(div);
       }
     }
 
-    function showColorPopup(fromColor) {
+    function renderEntryTable() {
+      const tbody = document.getElementById('entryBody');
+      tbody.innerHTML = '';
+      entries.forEach((entry, index) => {
+        const row = document.createElement('tr');
+        const colorCell = document.createElement('td');
+        const colorBox = document.createElement('div');
+        colorBox.className = 'color-box';
+        colorBox.style.backgroundColor = colorMap[entry.color];
+        colorBox.title = entry.color;
+        colorBox.addEventListener('click', () => showColorPopup(entry.color, index));
+        colorCell.appendChild(colorBox);
+        row.appendChild(colorCell);
+
+        const timeCell = document.createElement('td');
+        timeCell.textContent = entry.timecode;
+        row.appendChild(timeCell);
+
+        const commentCell = document.createElement('td');
+        commentCell.textContent = entry.comment;
+        row.appendChild(commentCell);
+
+        tbody.appendChild(row);
+      });
+      document.getElementById('entryTable').style.display = 'table';
+    }
+
+    function showColorPopup(currentColor, entryIndex = null) {
       const popup = document.getElementById('popupContainer');
-      popup.innerHTML = `<h3>Replace color: ${fromColor}</h3>`;
-      for (const key in colorMap) {
-        const row = document.createElement('div');
-        row.className = 'color-option';
+      popup.innerHTML = '<h3>Choose new color</h3>';
+      for (const [color, hex] of Object.entries(colorMap)) {
+        const option = document.createElement('div');
+        option.className = 'color-option';
         const swatch = document.createElement('div');
         swatch.className = 'color-swatch';
-        swatch.style.backgroundColor = colorMap[key];
+        swatch.style.backgroundColor = hex;
         const label = document.createElement('span');
-        label.textContent = key;
-        row.appendChild(swatch);
-        row.appendChild(label);
-        row.addEventListener('click', () => {
-          modifiedEDL = modifiedEDL.replaceAll(fromColor, key);
-          parseColors(modifiedEDL);
+        label.textContent = color;
+        option.appendChild(swatch);
+        option.appendChild(label);
+        option.addEventListener('click', () => {
+          if (entryIndex !== null) {
+            entries[entryIndex].color = color;
+          } else {
+            entries.forEach(e => { if (e.color === currentColor) e.color = color; });
+          }
+          updateEDLText();
+          renderColorCircles();
+          renderEntryTable();
           popup.style.display = 'none';
         });
-        popup.appendChild(row);
+        popup.appendChild(option);
       }
       popup.style.display = 'block';
+    }
+
+    function updateEDLText() {
+      let lines = edlText.split('\n');
+      entries.forEach(entry => {
+        lines = lines.map(line => {
+          if (line === entry.original) {
+            return line.replace(/ResolveColor\w+/, entry.color);
+          }
+          return line;
+        });
+      });
+      modifiedEDL = lines.join('\n');
     }
 
     document.getElementById('downloadBtn').addEventListener('click', () => {
