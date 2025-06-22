@@ -240,7 +240,7 @@ function downloadList() {
 let projectTitle = document.getElementById("project-title").value;
 let edlFileName = `${date}_${time}_${projectTitle.replace("ä","ae").replace("ü","ue").replace("ö","oe").replace(/[^a-zA-Z0-9]/g, "_")}.edl`;
   let commentNr = "1"
-  let listString = `TITLE: ${projectTitle} | created in edl webapp by JULIUS-VIDEO.DE \nFCM: NON-DROP FRAME\n\n`;
+  let listString = `TITLE: ${projectTitle} | created in edl webapp by PHANTOMCREW.DE \nFCM: NON-DROP FRAME\n\n`;
   timecodeList.forEach(({timecode, comment}) => {
     let colorCode = "ResolveColorBlue";
     if (comment === "Outtake") {
