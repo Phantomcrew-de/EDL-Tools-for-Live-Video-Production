@@ -488,7 +488,8 @@ window.addEventListener('message', (event) => {
 });
 
 </script>
-	<script>
+	
+<script>
 document.addEventListener("DOMContentLoaded", function () {
   const ua = window.navigator.userAgent;
   const isIOS = /iP(hone|ad|od)/.test(ua) ||
@@ -496,16 +497,25 @@ document.addEventListener("DOMContentLoaded", function () {
   const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
 
   if (isIOS && isSafari) {
-    console.log("✅ iOS Safari erkannt – Tabs werden skaliert");
+    console.log("✅ iOS Safari erkannt – Tabs werden kompakter gestylt");
+
     document.querySelectorAll('.tab').forEach(el => {
-      el.style.transform = 'scale(0.5)';
-      el.style.transformOrigin = 'top left';
-      el.style.display = 'inline-block';
+      el.style.fontSize = '12px';          // kleinerer Text
+      el.style.padding = '6px 10px';       // engeres Padding
+      el.style.gap = '4px';                // weniger Platz zw. Icon/Text
+      el.style.minWidth = 'auto';          // keine feste Mindestbreite
+      el.style.flex = '0 1 auto';          // schrumpfbar
     });
-  } else {
-    console.log("❌ Nicht iOS Safari:", ua);
+
+    // Damit alles in eine Zeile passt:
+    const tabContainer = document.querySelector('.tab-container');
+    if (tabContainer) {
+      tabContainer.style.flexWrap = 'nowrap';
+      tabContainer.style.overflowX = 'auto';
+    }
   }
 });
 </script>
+
 </body>
 </html>
