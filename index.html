@@ -29,6 +29,7 @@
       werden.
     */
     html, body {
+      position: relative;
       font-family: 'Inter', sans-serif;
       background: transparent; /* vorher: #151843 */
       color: var(--pc-text-dark);
@@ -46,7 +47,9 @@
 
     /* ---------- WAVE BACKGROUND (aus wave.html übernommen) ---------- */
     .wave-container {
-      position: fixed;
+      position: absolute;
+      top: 0;
+      left: 0;
       background-color: #1F2465;        /* vollflächig hinter allen Inhalten */
       width: 100%;
       height: 100%;
@@ -323,6 +326,13 @@
     display: block;
   }
 }
+
+@supports (-webkit-touch-callout: none) {
+  .wave-container {
+    transform: translateZ(0);
+  }
+}
+
 </style>
 </head>
 <body>
@@ -371,9 +381,9 @@
 </div>
 </section><div class="smartphone-viewer" id="viewer" style="display: none;">
 <button id="closeViewer" style="position:absolute;top:10px;right:10px;background:#fff;color:#000;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;z-index:10;">×</button>
-<svg class="smartphone" viewbox="0 0 200 400">
-<foreignobject height="400" width="200" x="0" y="0">
-<div class="carousel" xmlns="http://www.w3.org/1999/xhtml">
+<svg class="smartphone" viewBox="0 0 200 400" preserveAspectRatio="xMidYMid meet">
+<foreignObject x="0" y="0" width="100%" height="100%">
+<div class="carousel" xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%;">
 <img src="screens/tool1_1.jpg"/><img src="screens/tool1_2.jpg"/><img src="screens/tool1_3.jpg"/>
 </div>
 </foreignobject>
