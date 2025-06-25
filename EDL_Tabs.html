@@ -147,10 +147,23 @@
   user-select: none;
   pointer-events: none;
 }
+
+#tab-highlight-bar {
+  position: absolute;
+  height: 42px;
+  background: linear-gradient(90deg, #202038, #2b2b4d);
+  border-radius: 12px;
+  transition: left 0.38s cubic-bezier(0.77,0,0.18,1), width 0.38s cubic-bezier(0.77,0,0.18,1);
+  z-index: 0;
+  top: 3px;
+  pointer-events: none;
+}
+
 </style>
 </head>
 <body>
   <div class="tab-container">
+  <div id="tab-highlight-bar"></div>
     <a href="https://phantomcrew.de/" target="_blank" class="logo-link" title="Phantomcrew-Website">
       <img src="graphics/Phantomcrew_Logo_nebeneinander_02_lq.png" class="logo" alt="Phantomcrew Logo" />
     </a>
@@ -485,6 +498,27 @@ window.addEventListener('message', (event) => {
   if (event.data.type === 'EXPORT_RESULT' && typeof event.data.edl === 'string') {
     window.globalEDLText = event.data.edl;
   }
+});
+
+
+function updateHighlightBar() {
+  const activeTab = document.querySelector('.tab.active');
+  const bar = document.getElementById('tab-highlight-bar');
+  if (!activeTab || !bar) return;
+  const rect = activeTab.getBoundingClientRect();
+  const containerRect = document.querySelector('.tab-container').getBoundingClientRect();
+  bar.style.left = (rect.left - containerRect.left) + "px";
+  bar.style.width = rect.width + "px";
+}
+window.addEventListener('DOMContentLoaded', () => {
+  updateHighlightBar();
+  setTimeout(updateHighlightBar, 150);
+});
+window.addEventListener('resize', () => setTimeout(updateHighlightBar, 100));
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    setTimeout(updateHighlightBar, 80);
+  });
 });
 
 </script>
