@@ -44,8 +44,8 @@
     <br>
                
         <form id="comment-form">
-            <input type="text" id="comment-input" placeholder="Add a comment...">
-            <input type="button" value="Add" onclick="addComment()">
+            <input type="text" id="comment-input" placeholder="Schreibe einen Kommentar...">
+            <button id="add-button" type="button" onclick="addComment()">Hinzufügen</button>
         </form>
          
         <ul id="comment-list">
@@ -283,7 +283,7 @@ function twoDigits(number) {
 		// Referenzen (einmal am Anfang setzen)
 var videoPlayer = document.getElementById("video-player");
 var commentInput = document.getElementById("comment-input");
-var addButton = document.querySelector('#comment-form input[type="button"]');
+var addButton = document.getElementById("add-button");
 
 // 1. Pausiere Video, wenn das Kommentarfeld im Fokus ist
 commentInput.addEventListener("focus", function() {
