@@ -167,11 +167,11 @@
     <a href="https://phantomcrew.de/" target="_blank" class="logo-link" title="Phantomcrew-Website">
       <img src="graphics/Phantomcrew_Logo_nebeneinander_02_lq.png" class="logo" alt="Phantomcrew Logo" />
     </a>
-    <div class="tab active" data-target="atem" data-hash="#atem">🎛️ EDL Live</div>
-    <div class="tab" data-target="resolve" data-hash="#resolve">🎬 EDL Player</div>
-    <div class="tab" data-target="offset" data-hash="#offset">📝 EDL Offset</div>
-    <div class="tab" data-target="color" data-hash="#color">🎨 EDL Color</div>
-    <div class="tab" data-target="help" data-hash="#help">📚 Read Me</div>
+    <div class="tab active" data-target="atem" data-hash="#atem">🎛️</div>
+    <div class="tab" data-target="resolve" data-hash="#resolve">🎬</div>
+    <div class="tab" data-target="offset" data-hash="#offset">📝</div>
+    <div class="tab" data-target="color" data-hash="#color">🎨</div>
+    <div class="tab" data-target="help" data-hash="#help">📚</div>
     <a
       class="github-link"
       href="https://github.com/phantomcrew-de/EDL-Tools-for-Live-Video-Production"
@@ -527,6 +527,13 @@ document.querySelectorAll('.tab').forEach(tab => {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const tabs = Array.from(document.querySelectorAll(".tab"));
+  const tabLabelMap = {
+    "atem": "🎛️ EDL Live",
+    "resolve": "🎬 EDL Player",
+    "offset": "📝 EDL Offset",
+    "color": "🎨 EDL Color",
+    "help": "📚 Read Me"
+  }; Array.from(document.querySelectorAll(".tab"));
   const container = document.querySelector(".tab-container");
 
   // Frühzeitig iOS Safari ignorieren (hat eigenes Styling)
@@ -536,14 +543,17 @@ document.addEventListener("DOMContentLoaded", () => {
   if (isIOS && isSafari) return;
 
   // Originaltexte + Emojis merken
+  
   tabs.forEach(tab => {
-    if (!tab.dataset.full) {
-      const full = tab.textContent.trim();
+    const id = tab.dataset.target;
+    if (!tab.dataset.full && tabLabelMap[id]) {
+      const full = tabLabelMap[id];
       const emoji = full.split(" ")[0];
       tab.dataset.full = full;
       tab.dataset.emoji = emoji;
     }
   });
+    
 
   // Breite aller Tabs im Volltext-Modus berechnen
   function calcFullWidth() {
@@ -568,7 +578,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const THRESH_WIDE   = fullWidth + 460;
 
   // Emoji-Modus Zustand merken und laden
-  let emojiMode = localStorage.getItem("emojiMode") === "1";
+  let emojiMode = true;
+  localStorage.setItem("emojiMode", "1");
 
   // Highlight-Bar aktualisieren
   function updateHighlightBar() {
