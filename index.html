@@ -341,6 +341,12 @@
 <header>
 <h1>Phantomcrew EDL Tool Suite</h1>
 <p>Vier schlanke Web-Apps für Live-Marker, Video-Reviews und schnelle EDL-Bearbeitung – optimiert für DaVinci Resolve und deine Produktionen.</p>
+
+<div id="language-switcher" style="position:absolute; top:1rem; right:1rem; z-index:10;">
+  <button data-lang="de" style="font-size: 1.2rem; margin-right: 0.5rem;">🇩🇪</button>
+  <button data-lang="en" style="font-size: 1.2rem;">🇬🇧</button>
+</div>
+
 </header>
 <main class="container"><div class="tool-grid-wrapper"><section class="tool-grid">
 <div class="card" data-tool="tool1">
@@ -460,6 +466,111 @@ document.getElementById('closeViewer').addEventListener('click', () => {
   viewer.style.display = 'none';
   cards.forEach(c => c.classList.remove('active'));
   grid.classList.remove('active-layout');
+});
+</script>
+
+
+<script>
+const translations = {
+  de: {
+    title: "Phantomcrew EDL Tool Suite",
+    subtitle: "Vier schlanke Web-Apps für Live-Marker, Video-Reviews und schnelle EDL-Bearbeitung – optimiert für DaVinci Resolve und deine Produktionen.",
+    tools: [
+      { name: "EDL Live",   desc: "Setze Marker während der Live-Produktion mit präzisem Frame-Timing und exportiere sie sofort als Resolve-kompatible EDL." },
+      { name: "EDL Player", desc: "Spiele Clips ab, füge an jeder Stelle Kommentare hinzu und exportiere deine Anmerkungen als Marker-EDL für den Schnitt." },
+      { name: "EDL Offset", desc: "Korrigiere Timecode-Versätze in bestehenden EDLs – perfekt nach Re-Encodes oder Frame-Rate-Änderungen." },
+      { name: "EDL Color",  desc: "Gib deinen Markern einheitliche Farben oder neue Farbcodes – alles per Klick, inklusive Vorschau." }
+    ],
+    highlightsTitle: "Highlights des Juni-Updates",
+    highlights: [
+      "Komplett vereint in einer Suite mit einheitlichem Look & Feel",
+      "Mobile-optimierte Oberfläche – ideal für Tablet & Smartphone",
+      "Unterstützt Resolve-Markerfarben (|C:) & Kommentare (|M:)",
+      "Direkte Bearbeitung von Kommentaren und Timecodes im Browser",
+      "Integrierte Hilfe-Overlays für einen schnellen Einstieg",
+      "Open Source & kostenlos auf GitHub verfügbar"
+    ],
+    ctaLaunch: "🚀 Suite starten",
+    ctaGithub: "⭐️ GitHub Repo"
+  },
+  en: {
+    title: "Phantomcrew EDL Tool Suite",
+    subtitle: "Four lightweight web apps for live markers, video reviews and fast EDL editing – optimized for DaVinci Resolve and your productions.",
+    tools: [
+      { name: "EDL Live",   desc: "Set markers during live production with precise frame timing and instantly export them as Resolve-compatible EDL." },
+      { name: "EDL Player", desc: "Play clips, add comments anywhere and export your notes as marker EDLs for editing." },
+      { name: "EDL Offset", desc: "Fix timecode offsets in existing EDLs – perfect after re-encodes or frame rate changes." },
+      { name: "EDL Color",  desc: "Apply consistent colors or new color codes to your markers – all with a click, including preview." }
+    ],
+    highlightsTitle: "Highlights of the June Update",
+    highlights: [
+      "Unified in one suite with consistent look & feel",
+      "Mobile-optimized UI – ideal for tablet & smartphone",
+      "Supports Resolve marker colors (|C:) & comments (|M:)",
+      "Edit comments and timecodes directly in the browser",
+      "Integrated help overlays for a quick start",
+      "Open source & free on GitHub"
+    ],
+    ctaLaunch: "🚀 Launch Suite",
+    ctaGithub: "⭐️ GitHub Repo"
+  }
+};
+
+function setLanguage(lang) {
+  if (!translations[lang]) return;
+
+  const t = translations[lang];
+  // Text ersetzen
+  document.querySelector("header h1").textContent = t.title;
+  document.querySelector("header p").textContent = t.subtitle;
+
+  const cards = document.querySelectorAll(".tool-grid .card");
+  cards.forEach((card, i) => {
+    card.querySelector("h3").textContent = t.tools[i].name;
+    card.querySelector("p").textContent = t.tools[i].desc;
+  });
+
+  document.querySelector(".features h2").textContent = t.highlightsTitle;
+
+  const listItems = document.querySelectorAll(".feature-list li");
+  listItems.forEach((li, i) => {
+    li.textContent = t.highlights[i];
+  });
+
+  const ctaButtons = document.querySelectorAll(".cta-section .btn");
+  if (ctaButtons[0]) ctaButtons[0].textContent = t.ctaLaunch;
+  if (ctaButtons[1]) ctaButtons[1].textContent = t.ctaGithub;
+
+  document.documentElement.lang = lang;
+
+  // Flaggen-Opacity anpassen
+  document.querySelectorAll("#language-switcher button").forEach(btn => {
+    btn.style.opacity = (btn.dataset.lang === lang) ? "1" : "0.4";
+  });
+
+  // URL-Parameter aktualisieren (ohne Reload)
+  const url = new URL(window.location);
+  url.searchParams.set("lang", lang);
+  history.replaceState(null, "", url);
+}
+
+// Sprache ermitteln & setzen
+document.addEventListener("DOMContentLoaded", () => {
+  const supported = Object.keys(translations);
+  const urlLang = new URLSearchParams(window.location.search).get("lang");
+
+  let lang = supported.includes(urlLang) ? urlLang : null;
+  if (!lang) {
+    // Browser-Sprache
+    const navLang = (navigator.language || navigator.userLanguage || "de").slice(0,2).toLowerCase();
+    lang = supported.includes(navLang) ? navLang : "de";
+  }
+  setLanguage(lang);
+
+  // Click-Handler für Buttons
+  document.querySelectorAll("#language-switcher button").forEach(btn => {
+    btn.addEventListener("click", () => setLanguage(btn.dataset.lang));
+  });
 });
 </script>
 
