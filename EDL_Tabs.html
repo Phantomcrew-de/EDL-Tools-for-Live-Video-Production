@@ -523,32 +523,29 @@ document.querySelectorAll('.tab').forEach(tab => {
 
 </script>
 	
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+  const tabs = Array.from(document.querySelectorAll(".tab"));
+  const container = document.querySelector(".tab-container");
 
-  /* ───── iOS-Safari ignorieren – dort hast du eigenes Styling ───── */
+  // Frühzeitig iOS Safari ignorieren (hat eigenes Styling)
   const ua = navigator.userAgent;
-  const isIOS    = /iP(hone|ad|od)/.test(ua) ||
-                   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
   if (isIOS && isSafari) return;
 
-  /* ───── Variablen ───── */
-  const tabs      = Array.from(document.querySelectorAll(".tab"));
-  const container = document.querySelector(".tab-container");
-  let   emojiMode = false;        // aktueller Zustand
-
-  /* ───── Originaltexte & Emojis merken ───── */
+  // Originaltexte + Emojis merken
   tabs.forEach(tab => {
     if (!tab.dataset.full) {
-      const full  = tab.textContent.trim();
+      const full = tab.textContent.trim();
       const emoji = full.split(" ")[0];
-      tab.dataset.full  = full;
+      tab.dataset.full = full;
       tab.dataset.emoji = emoji;
     }
   });
 
-  /* ───── Einmal Gesamtbreite der Volltexte bestimmen ───── */
+  // Breite aller Tabs im Volltext-Modus berechnen
   function calcFullWidth() {
     const probe = document.createElement("span");
     probe.style.position = "absolute";
@@ -559,43 +556,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let w = 0;
     tabs.forEach(tab => { probe.textContent = tab.dataset.full; w += probe.offsetWidth; });
+
     const gap = parseInt(getComputedStyle(tabs[0]).gap || "10", 10);
     w += gap * (tabs.length - 1);
-
     document.body.removeChild(probe);
     return w;
   }
+
   const fullWidth = calcFullWidth();
+  const THRESH_NARROW = fullWidth + 440;
+  const THRESH_WIDE   = fullWidth + 460;
 
-  /* ───── Schwellen setzen (Hysterese) ───── */
-  const THRESH_NARROW = fullWidth + 440;   // früher schalten (mehr Puffer)
-  const THRESH_WIDE   = fullWidth + 460;   // weiterhin komfortabel zurückschalten
+  // Emoji-Modus Zustand merken und laden
+  let emojiMode = localStorage.getItem("emojiMode") === "1";
 
+  // Highlight-Bar aktualisieren
+  function updateHighlightBar() {
+    const activeTab = document.querySelector('.tab.active');
+    const bar = document.getElementById('tab-highlight-bar');
+    const container = document.querySelector('.tab-container');
+    if (!activeTab || !bar || !container) return;
+    const rect = activeTab.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    bar.style.left = (rect.left - containerRect.left) + "px";
+    bar.style.width = rect.width + "px";
+  }
 
-  /* ───── Umschalten aller Tabs ───── */
+  // Emoji/Text-Umschalter
   function setEmojiMode(on) {
-  if (emojiMode === on) return;
-  emojiMode = on;
-  tabs.forEach(tab => {
-    tab.textContent         = on ? tab.dataset.emoji : tab.dataset.full;
-    tab.style.justifyContent = on ? "center" : "";
-    tab.title = on ? tab.dataset.full : "";
-  });
-}
+    if (emojiMode === on) return;
+    emojiMode = on;
+    localStorage.setItem("emojiMode", on ? "1" : "0");
+    tabs.forEach(tab => {
+      tab.textContent = on ? tab.dataset.emoji : tab.dataset.full;
+      tab.style.justifyContent = on ? "center" : "";
+      tab.title = on ? tab.dataset.full : "";
+    });
+    requestAnimationFrame(updateHighlightBar);
+  }
 
-  /* ───── Hauptlogik ───── */
+  // Logik zum Umschalten anhand verfügbarer Breite
   function evaluate() {
     const avail = container.clientWidth;
-
     if (!emojiMode && avail < THRESH_NARROW) {
-      setEmojiMode(true);               // nicht genug Platz → Emoji-Mode an
-    }
-    else if (emojiMode && avail > THRESH_WIDE) {
-      setEmojiMode(false);              // wieder viel Platz → Volltext zurück
+      setEmojiMode(true);
+    } else if (emojiMode && avail > THRESH_WIDE) {
+      setEmojiMode(false);
     }
   }
 
-  /* ───── Events ───── */
+  // Events
   let t;
   const debounced = () => { clearTimeout(t); t = setTimeout(evaluate, 120); };
 
@@ -604,11 +614,13 @@ document.addEventListener("DOMContentLoaded", () => {
     new ResizeObserver(debounced).observe(container);
   }
 
-  /* ───── Initial prüfen ───── */
-  evaluate();
+  // Initial auf gespeicherten Zustand setzen
+  setEmojiMode(emojiMode);
+  evaluate(); // prüfen, ob aktueller Platz reicht
+
+  // Highlight-Bar initial setzen
+  setTimeout(updateHighlightBar, 150);
 });
 </script>
-
-
 </body>
 </html>
