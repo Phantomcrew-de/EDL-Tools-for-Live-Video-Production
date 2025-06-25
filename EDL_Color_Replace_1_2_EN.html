@@ -286,36 +286,53 @@ function renderEntryTable() {
   document.getElementById('entryTable').style.display = 'table';
 }
 
-function showColorPopup(currentColor, entryIndex = null) {
-      const popup = document.getElementById('popupContainer');
-      popup.innerHTML = '<h3>Choose new color</h3>';
-      for (const [color, hex] of Object.entries(colorMap)) {
-        const option = document.createElement('div');
-        option.className = 'color-option';
-        const swatch = document.createElement('div');
-        swatch.className = 'color-swatch';
-        swatch.style.backgroundColor = hex;
-        const label = document.createElement('span');
-        label.textContent = color;
-        option.appendChild(swatch);
-        option.appendChild(label);
-        option.addEventListener('click', () => {
-          if (entryIndex !== null) {
-            entries[entryIndex].color = color;
-          } else {
-            entries.forEach(e => { if (e.color === currentColor) e.color = color; });
-          }
-          updateEDLText();
-          renderColorCircles();
-          renderEntryTable();
-          popup.style.display = 'none';
-        });
-        popup.appendChild(option);
-      }
-      popup.style.display = 'block';
-    }
 
-    
+function showColorPopup(currentColor, entryIndex = null) {
+  const popup = document.getElementById('popupContainer');
+  popup.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0;">Choose new color</h3>
+      <button id="closePopupBtn" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">✖</button>
+    </div>
+  `;
+
+  // Build list of colors
+  for (const [color, hex] of Object.entries(colorMap)) {
+    const option = document.createElement('div');
+    option.className = 'color-option';
+    const swatch = document.createElement('div');
+    swatch.className = 'color-swatch';
+    swatch.style.backgroundColor = hex;
+    const label = document.createElement('span');
+    label.textContent = color;
+
+    option.appendChild(swatch);
+    option.appendChild(label);
+
+    option.addEventListener('click', () => {
+      if (entryIndex !== null) {
+        entries[entryIndex].color = color;
+      } else {
+        entries.forEach(e => { if (e.color === currentColor) e.color = color; });
+      }
+      updateEDLText();
+      renderColorCircles();
+      renderEntryTable();
+      popup.style.display = 'none';
+    });
+
+    popup.appendChild(option);
+  }
+
+  // Close button event
+  document.getElementById('closePopupBtn').addEventListener('click', () => {
+    popup.style.display = 'none';
+  });
+
+  popup.style.display = 'block';
+}
+
+
 function updateEDLText() {
   let lines = edlText.split('\n');
   entries.forEach(entry => {
@@ -355,6 +372,25 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 document.getElementById('infoBtn').addEventListener('click', function() {
   document.getElementById('infoPopup').style.display = 'block';
 });
+
+/* Close popup when clicking outside it */
+document.addEventListener('mousedown', function(event) {
+  const popup = document.getElementById('popupContainer');
+  if (!popup) return;
+  const isInsidePopup = popup.contains(event.target);
+
+  function isWithin(target, selector) {
+    return target && target.closest && target.closest(selector);
+  }
+
+  const isColorBox = isWithin(event.target, '.color-box');
+  const isColorCircle = isWithin(event.target, '.colorCircle');
+
+  if (popup.style.display === 'block' && !isInsidePopup && !isColorBox && !isColorCircle) {
+    popup.style.display = 'none';
+  }
+});
+
 </script>
 </body>
 </html>
