@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Phantomcrew EDL Tool Suite – Newsletter</title>
+<link href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<style>
+    :root {
+      --pc-primary: #111827;
+      --pc-secondary: #1e293b;
+      --pc-accent: #6366f1;
+      --pc-bg: #f9fafb;
+      --pc-card: rgba(30, 41, 59, 0.75);
+      --pc-text-dark: #0f172a;
+      --pc-text-light: #e2e8f0;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    /*
+      Die Hintergrundfarbe wurde entfernt, damit nur noch die animierten Waves
+      sichtbar sind. Wenn das Weiß des Browser-Defaults stört, kann alternativ
+      hier eine transparente Farbe oder ein zusätzlicher Farbverlauf verwendet
+      werden.
+    */
+    html, body {
+      font-family: 'Inter', sans-serif;
+      background: transparent; /* vorher: #151843 */
+      color: var(--pc-text-dark);
+      line-height: 1.6;
+      position: relative;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Der ::before‑Pseudo‑Layer wird nicht mehr gebraucht, da der animierte
+       Hintergrund jetzt die komplette Fläche abdeckt. */
+    body::before {
+      content: none;
+    }
+
+    /* ---------- WAVE BACKGROUND (aus wave.html übernommen) ---------- */
+    .wave-container {
+      position: fixed;
+      background-color: #1F2465;        /* vollflächig hinter allen Inhalten */
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      bottom: 0;
+      z-index: -2;
+    }
+    .wave {
+      position: absolute;
+      width: 200%;
+      height: 100%;
+      background: none;
+      animation: waveAnimation 10s ease-in-out infinite alternate;
+    }
+    .wave path {
+      fill: #000436;
+    }
+    .wave:nth-child(2) {
+      opacity: 0.5;
+      animation: waveAnimation 15s ease-in-out infinite alternate;
+      bottom: 10%;
+    }
+    .wave:nth-child(3) {
+      opacity: 0.3;
+      animation: waveAnimation 20s ease-in-out infinite alternate;
+      bottom: 15%;
+    }
+    @keyframes waveAnimation {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    /* ---------- /WAVE BACKGROUND ---------- */
+
+    header {
+      background: transparent;
+      color: var(--pc-text-light);
+      text-align: center;
+      padding: 4rem 1rem 3rem;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    header p {
+      font-size: 1.125rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .container {
+      max-width: 900px;
+      margin: -2rem auto 0;
+      padding: 0 1rem 3rem;
+    }
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    @media (min-width: 600px) and (max-width: 1099px) {
+      .tool-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (min-width: 1100px) {
+      .tool-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .card {
+      background: var(--pc-card);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      padding: 1.75rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+    .card .icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .card h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--pc-text-light);
+    }
+    .card p {
+      font-size: 0.95rem;
+      color: var(--pc-text-light);
+      opacity: 1;
+    }
+    .features {
+      margin-bottom: 2.5rem;
+    }
+    .features h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      text-align: center;
+      color: #f1f5f9;
+    }
+    .feature-list {
+      list-style: none;
+      padding-left: 0;
+      max-width: 680px;
+      margin: 0 auto;
+      color: #f1f5f9;
+    }
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+    }
+    .feature-list li::before {
+      content: "✔";
+      color: var(--pc-accent);
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .cta-section {
+      text-align: center;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.75rem;
+      border-radius: 999px;
+      background: var(--pc-accent);
+      color: #fff;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s ease;
+    }
+    .btn:hover {
+      background: #4f46e5;
+    }
+    .btn.secondary {
+      background: transparent;
+      color: var(--pc-accent);
+      border: 2px solid var(--pc-accent);
+      margin-left: 1rem;
+    }
+    .btn.secondary:hover {
+      background: var(--pc-accent);
+      color: #fff;
+    }
+  
+.smartphone-viewer {
+  width: 240px;
+  flex-shrink: 0;
+  display: none;
+}
+.smartphone-viewer.active {
+  display: block;
+}
+.smartphone-viewer.fixed {
+  position: fixed;
+  right: 2rem;
+  top: 20vh;
+  transform: translateY(0);
+  will-change: transform;
+}
+.smartphone {
+  width: 100%;
+  height: auto;
+  background: #000;
+  border-radius: 20px;
+  padding: 10px;
+}
+.carousel {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  height: 400px;
+  border-radius: 12px;
+}
+.carousel img {
+  width: 100%;
+  flex-shrink: 0;
+  object-fit: cover;
+  animation: slideShow 6s infinite;
+}
+@keyframes slideShow {
+  0%, 33% { transform: translateX(0); }
+  34%, 66% { transform: translateX(-100%); }
+  67%, 100% { transform: translateX(-200%); }
+}
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+  .smartphone-viewer {
+    width: 100%;
+    position: static !important;
+    margin-top: 1rem;
+  }
+  .smartphone-viewer.fixed {
+    position: static;
+  }
+}
+
+/* --- Layout / Animation für Karten & Viewer --- */
+.container {
+  display: flex;
+  gap: 2rem;
+}
+
+.tool-grid.active-layout {
+  flex: 0 0 60%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: all 0.5s ease;
+}
+
+.card.active {
+  outline: 2px solid var(--pc-accent);
+  background-color: #2d3748;
+}
+
+@media (min-width: 769px) {
+  .tool-grid {
+    flex: 0 0 100%;
+  }
+  .tool-grid.active-layout {
+    flex: 0 0 65%;
+  }
+  .smartphone-viewer {
+    position: absolute;
+    top: 20vh;
+    left: 65%;
+    width: 30%;
+    display: none;
+  }
+  .smartphone-viewer.active {
+    display: block;
+  }
+  .container {
+    position: relative;
+  }
+}
+
+/* Mobile fallback bleibt wie zuvor durch bereits vorhandene Regeln */
+
+@media (min-width: 769px) {
+  .container {
+    display: block;
+  }
+  .tool-grid-wrapper {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  .tool-grid.active-layout {
+    flex: 0 0 65%;
+  }
+  .smartphone-viewer {
+    position: absolute;
+    top: 20vh;
+    left: 65%;
+    width: 30%;
+    display: none;
+  }
+  .smartphone-viewer.active {
+    display: block;
+  }
+}
+</style>
+</head>
+<body>
+<!-- Animierter Hintergrund -->
+<div class="wave-container">
+<svg class="wave" preserveaspectratio="none" viewbox="0 0 1200 120">
+<path d="M0 49 C 300,120 900,-20 1200,49 L 1200 130 L 0 130 Z"></path>
+</svg>
+<svg class="wave" preserveaspectratio="none" viewbox="0 0 1200 120">
+<path d="M0 49 C 300,120 900,-20 1200,49 L 1200 130 L 0 130 Z"></path>
+</svg>
+<svg class="wave" preserveaspectratio="none" viewbox="0 0 1200 120">
+<path d="M0 49 C 300,120 900,-20 1200,49 L 1200 130 L 0 130 Z"></path>
+</svg>
+</div>
+<header>
+<h1>Phantomcrew EDL Tool Suite</h1>
+<p>Vier schlanke Web-Apps für Live-Marker, Video-Reviews und schnelle EDL-Bearbeitung – optimiert für DaVinci Resolve und deine Produktionen.</p>
+</header>
+<main class="container"><div class="tool-grid-wrapper"><section class="tool-grid">
+<div class="card" data-tool="tool1">
+<div aria-hidden="true" class="icon">🎛️</div>
+<h3>EDL Live</h3>
+<p>Setze Marker während der Live-Produktion mit präzisem Frame-Timing und exportiere sie sofort als Resolve-kompatible EDL.</p>
+</div>
+<div class="card" data-tool="tool2">
+<div aria-hidden="true" class="icon">🎬</div>
+<h3>EDL Player</h3>
+<p>Spiele Clips ab, füge an jeder Stelle Kommentare hinzu und exportiere deine Anmerkungen als Marker-EDL für den Schnitt.</p>
+</div>
+<div class="card" data-tool="tool3">
+<div aria-hidden="true" class="icon">📝</div>
+<h3>EDL Offset</h3>
+<p>Korrigiere Timecode-Versätze in bestehenden EDLs – perfekt nach Re-Encodes oder Frame-Rate-Änderungen.</p>
+</div>
+<div class="card" data-tool="tool4">
+<div aria-hidden="true" class="icon">🎨</div>
+<h3>EDL Color</h3>
+<p>Gib deinen Markern einheitliche Farben oder neue Farbcodes – alles per Klick, inklusive Vorschau.</p>
+</div>
+</section><div class="smartphone-viewer" id="viewer" style="display: none;">
+<button id="closeViewer" style="position:absolute;top:10px;right:10px;background:#fff;color:#000;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;z-index:10;">×</button>
+<svg class="smartphone" viewbox="0 0 200 400">
+<foreignobject height="400" width="200" x="0" y="0">
+<div class="carousel" xmlns="http://www.w3.org/1999/xhtml">
+<img src="screens/tool1_1.jpg"/><img src="screens/tool1_2.jpg"/><img src="screens/tool1_3.jpg"/>
+</div>
+</foreignobject>
+</svg>
+</div></div>
+
+
+
+<section class="features">
+<h2>Highlights des Juni-Updates</h2>
+<ul class="feature-list">
+<li>Komplett vereint in einer Suite mit einheitlichem Look &amp; Feel</li>
+<li>Mobile-optimierte Oberfläche – ideal für Tablet &amp; Smartphone</li>
+<li>Unterstützt Resolve-Markerfarben (<code>|C:</code>) &amp; Kommentare (<code>|M:</code>)</li>
+<li>Direkte Bearbeitung von Kommentaren und Timecodes im Browser</li>
+<li>Integrierte Hilfe-Overlays für einen schnellen Einstieg</li>
+<li>Open Source &amp; kostenlos auf GitHub verfügbar</li>
+</ul>
+</section><section class="cta-section">
+<a class="btn" href="https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html" rel="noopener noreferrer" target="_blank">🚀 Suite starten</a>
+<a class="btn secondary" href="https://github.com/phantomcrew-de/EDL-Tools-for-Live-Video-Production" rel="noopener noreferrer" target="_blank">⭐️ GitHub Repo</a>
+</section></main>
+
+
+<script>
+const cards = document.querySelectorAll('.card');
+const grid = document.querySelector('.tool-grid');
+const viewer = document.getElementById('viewer');
+const carousel = viewer.querySelector('.carousel');
+
+function isMobile() {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function updateParallax() {
+  if (!isMobile() && viewer.classList.contains('fixed')) {
+    const offset = window.scrollY * 0.1;
+    viewer.style.transform = 'translateY(' + offset + 'px)';
+  }
+}
+
+window.addEventListener('scroll', updateParallax);
+window.addEventListener('resize', () => {
+  if (viewer.classList.contains('active')) {
+    if (isMobile()) {
+      viewer.classList.remove('fixed');
+    } else {
+      viewer.classList.add('fixed');
+      viewer.style.transform = 'translateY(0)';
+    }
+  }
+});
+
+cards.forEach((card, index) => {
+  card.addEventListener('click', () => {
+    grid.classList.add('active-layout');
+    cards.forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+
+    const toolId = card.dataset.tool || 'tool' + (index + 1);
+    carousel.innerHTML = `
+      <img src="screens/${toolId}_1.jpg"/>
+      <img src="screens/${toolId}_2.jpg"/>
+      <img src="screens/${toolId}_3.jpg"/>
+    `;
+
+    // Viewer erst entfernen
+    if (viewer.parentNode) {
+      viewer.parentNode.removeChild(viewer);
+    }
+
+    // Immer nach aktiver Karte einfügen
+    card.insertAdjacentElement('afterend', viewer);
+
+    if (isMobile()) {
+      viewer.classList.remove('fixed');
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      viewer.classList.add('fixed');
+      viewer.style.transform = 'translateY(0)';
+    }
+
+    viewer.style.display = 'block';
+    viewer.classList.add('active');
+  });
+});
+
+document.getElementById('closeViewer').addEventListener('click', () => {
+  viewer.classList.remove('active');
+  viewer.style.display = 'none';
+  cards.forEach(c => c.classList.remove('active'));
+  grid.classList.remove('active-layout');
+});
+</script>
+
+</body>
+</html>
