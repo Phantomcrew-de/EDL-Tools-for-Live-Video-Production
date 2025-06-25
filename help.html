@@ -2,17 +2,60 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Phantomcrew EDL Tools</title>
+  <title>EDL Tools for Live Video Production</title>
+  <style>
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      background-color: #040625;
+      color: #fdfdfd;
+    }
+
+    h1, h2, h3 {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 0.3em;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 0.2em 0.4em;
+      font-family: monospace;
+    }
+
+    pre {
+      background-color: #f4f4f4;
+      padding: 1em;
+      overflow-x: auto;
+    }
+
+    a {
+      color: #007acc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <div id="content">Lade README...</div>
+  <div id="content">README.md wird geladen...</div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     fetch('README.md')
-      .then(response => response.text())
+      .then(response => {
+        if (!response.ok) throw new Error('README.md konnte nicht geladen werden.');
+        return response.text();
+      })
       .then(text => {
         document.getElementById('content').innerHTML = marked.parse(text);
+      })
+      .catch(error => {
+        document.getElementById('content').innerHTML = '<p>Fehler beim Laden des README.md:</p><pre>' + error + '</pre>';
       });
   </script>
 </body>
