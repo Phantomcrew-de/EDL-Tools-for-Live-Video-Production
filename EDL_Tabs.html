@@ -490,32 +490,90 @@ window.addEventListener('message', (event) => {
 </script>
 	
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const ua = window.navigator.userAgent;
-  const isIOS = /iP(hone|ad|od)/.test(ua) ||
-                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* ───── iOS-Safari ignorieren – dort hast du eigenes Styling ───── */
+  const ua = navigator.userAgent;
+  const isIOS    = /iP(hone|ad|od)/.test(ua) ||
+                   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  if (isIOS && isSafari) return;
 
-  if (isIOS && isSafari) {
-    console.log("✅ iOS Safari erkannt – Tabs werden kompakter gestylt");
+  /* ───── Variablen ───── */
+  const tabs      = Array.from(document.querySelectorAll(".tab"));
+  const container = document.querySelector(".tab-container");
+  let   emojiMode = false;        // aktueller Zustand
 
-    document.querySelectorAll('.tab').forEach(el => {
-      el.style.fontSize = '18px';          // kleinerer Text
-      el.style.padding = '8px 14px';       // engeres Padding
-      el.style.gap = '7px';                // weniger Platz zw. Icon/Text
-      el.style.minWidth = 'auto';          // keine feste Mindestbreite
-      el.style.flex = '0 1 auto';          // schrumpfbar
+  /* ───── Originaltexte & Emojis merken ───── */
+  tabs.forEach(tab => {
+    if (!tab.dataset.full) {
+      const full  = tab.textContent.trim();
+      const emoji = full.split(" ")[0];
+      tab.dataset.full  = full;
+      tab.dataset.emoji = emoji;
+    }
+  });
+
+  /* ───── Einmal Gesamtbreite der Volltexte bestimmen ───── */
+  function calcFullWidth() {
+    const probe = document.createElement("span");
+    probe.style.position = "absolute";
+    probe.style.whiteSpace = "nowrap";
+    probe.style.visibility = "hidden";
+    probe.style.font = getComputedStyle(tabs[0]).font;
+    document.body.appendChild(probe);
+
+    let w = 0;
+    tabs.forEach(tab => { probe.textContent = tab.dataset.full; w += probe.offsetWidth; });
+    const gap = parseInt(getComputedStyle(tabs[0]).gap || "10", 10);
+    w += gap * (tabs.length - 1);
+
+    document.body.removeChild(probe);
+    return w;
+  }
+  const fullWidth = calcFullWidth();
+
+  /* ───── Schwellen setzen (Hysterese) ───── */
+  const THRESH_NARROW = fullWidth + 440;   // früher schalten (mehr Puffer)
+  const THRESH_WIDE   = fullWidth + 460;   // weiterhin komfortabel zurückschalten
+
+
+  /* ───── Umschalten aller Tabs ───── */
+  function setEmojiMode(on) {
+    if (emojiMode === on) return;
+    emojiMode = on;
+    tabs.forEach(tab => {
+      tab.textContent         = on ? tab.dataset.emoji : tab.dataset.full;
+      tab.style.justifyContent = on ? "center" : "";
     });
+  }
 
-    // Damit alles in eine Zeile passt:
-    const tabContainer = document.querySelector('.tab-container');
-    if (tabContainer) {
-      tabContainer.style.flexWrap = 'nowrap';
-      tabContainer.style.overflowX = 'auto';
+  /* ───── Hauptlogik ───── */
+  function evaluate() {
+    const avail = container.clientWidth;
+
+    if (!emojiMode && avail < THRESH_NARROW) {
+      setEmojiMode(true);               // nicht genug Platz → Emoji-Mode an
+    }
+    else if (emojiMode && avail > THRESH_WIDE) {
+      setEmojiMode(false);              // wieder viel Platz → Volltext zurück
     }
   }
+
+  /* ───── Events ───── */
+  let t;
+  const debounced = () => { clearTimeout(t); t = setTimeout(evaluate, 120); };
+
+  window.addEventListener("resize", debounced);
+  if (window.ResizeObserver && container) {
+    new ResizeObserver(debounced).observe(container);
+  }
+
+  /* ───── Initial prüfen ───── */
+  evaluate();
 });
 </script>
+
 
 </body>
 </html>
