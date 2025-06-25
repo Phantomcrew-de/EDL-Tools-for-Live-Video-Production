@@ -312,7 +312,7 @@ function renderEntryTable() {
 function showColorPopup(currentColor, entryIndex = null) {
   const popup = document.getElementById('popupContainer');
   popup.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div id="popupHeader" style="display: flex; justify-content: space-between; align-items: center; cursor: move;">
       <h3 style="margin: 0;">Choose new color</h3>
       <button id="closePopupBtn" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">✖</button>
     </div>
@@ -412,6 +412,38 @@ document.addEventListener('mousedown', function(event) {
     popup.style.display = 'none';
   }
 });
+
+
+// Make popup draggable
+(function makePopupDraggable() {
+  const popup = document.getElementById('popupContainer');
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  document.addEventListener('mousedown', function(e) {
+    const header = document.getElementById('popupHeader');
+    if (header && header.contains(e.target)) {
+      isDragging = true;
+      const rect = popup.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      popup.style.transition = 'none';
+    }
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (isDragging) {
+      popup.style.left = e.clientX - offsetX + 'px';
+      popup.style.top = e.clientY - offsetY + 'px';
+      popup.style.transform = 'none';
+    }
+  });
+
+  document.addEventListener('mouseup', function() {
+    isDragging = false;
+  });
+})();
 
 </script>
 </body>
