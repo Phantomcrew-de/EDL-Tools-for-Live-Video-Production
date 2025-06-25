@@ -179,3 +179,11 @@ form {
     font-size: 1.5rem !important;
     color: #3b82f6 !important;
 }
+
+#fps {
+  background: white;
+  border-radius: 8px;
+  color: black;
+  padding: 5px;
+  border: 1px solid #ccc;
+}
