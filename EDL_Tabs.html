@@ -540,13 +540,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ───── Umschalten aller Tabs ───── */
   function setEmojiMode(on) {
-    if (emojiMode === on) return;
-    emojiMode = on;
-    tabs.forEach(tab => {
-      tab.textContent         = on ? tab.dataset.emoji : tab.dataset.full;
-      tab.style.justifyContent = on ? "center" : "";
-    });
-  }
+  if (emojiMode === on) return;
+  emojiMode = on;
+  tabs.forEach(tab => {
+    tab.textContent         = on ? tab.dataset.emoji : tab.dataset.full;
+    tab.style.justifyContent = on ? "center" : "";
+    tab.title = on ? tab.dataset.full : "";
+  });
+}
 
   /* ───── Hauptlogik ───── */
   function evaluate() {
