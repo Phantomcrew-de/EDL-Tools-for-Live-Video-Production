@@ -224,6 +224,7 @@
 .smartphone {
   width: 100%;
   height: auto;
+  display: block;
   background: #000;
   border-radius: 20px;
   padding: 10px;
@@ -232,11 +233,12 @@
   display: flex;
   overflow: hidden;
   width: 100%;
-  height: 400px;
+  height: 100%;
   border-radius: 12px;
 }
 .carousel img {
   width: 100%;
+  height: 100%;
   flex-shrink: 0;
   object-fit: cover;
   animation: slideShow 6s infinite;
@@ -351,12 +353,10 @@
 <header>
 <h1>Phantomcrew EDL Tool Suite</h1>
 <p>Vier schlanke Web-Apps für Live-Marker, Video-Reviews und schnelle EDL-Bearbeitung – optimiert für DaVinci Resolve und deine Produktionen.</p>
-
 <div id="language-switcher" style="position:absolute; top:1rem; right:1rem; z-index:10;">
-  <button data-lang="de" style="font-size: 1.2rem; margin-right: 0.5rem;">🇩🇪</button>
-  <button data-lang="en" style="font-size: 1.2rem;">🇬🇧</button>
+<button data-lang="de" style="font-size: 1.2rem; margin-right: 0.5rem;">🇩🇪</button>
+<button data-lang="en" style="font-size: 1.2rem;">🇬🇧</button>
 </div>
-
 </header>
 <main class="container"><div class="tool-grid-wrapper"><section class="tool-grid">
 <div class="card" data-tool="tool1">
@@ -381,17 +381,14 @@
 </div>
 </section><div class="smartphone-viewer" id="viewer" style="display: none;">
 <button id="closeViewer" style="position:absolute;top:10px;right:10px;background:#fff;color:#000;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;z-index:10;">×</button>
-<svg class="smartphone" viewBox="0 0 200 400" preserveAspectRatio="xMidYMid meet">
-<foreignObject x="0" y="0" width="100%" height="100%">
-<div class="carousel" xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%;">
+<svg class="smartphone" preserveaspectratio="xMidYMid meet" viewbox="0 0 200 400">
+<foreignobject height="100%" width="100%" x="0" y="0">
+<div class="carousel" style="width: 100%; height: 100%;" xmlns="http://www.w3.org/1999/xhtml">
 <img src="screens/tool1_1.jpg"/><img src="screens/tool1_2.jpg"/><img src="screens/tool1_3.jpg"/>
 </div>
 </foreignobject>
 </svg>
 </div></div>
-
-
-
 <section class="features">
 <h2>Highlights des Juni-Updates</h2>
 <ul class="feature-list">
@@ -406,8 +403,6 @@
 <a class="btn" href="https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html" rel="noopener noreferrer" target="_blank">🚀 Suite starten</a>
 <a class="btn secondary" href="https://github.com/phantomcrew-de/EDL-Tools-for-Live-Video-Production" rel="noopener noreferrer" target="_blank">⭐️ GitHub Repo</a>
 </section></main>
-
-
 <script>
 const cards = document.querySelectorAll('.card');
 const grid = document.querySelector('.tool-grid');
@@ -478,8 +473,6 @@ document.getElementById('closeViewer').addEventListener('click', () => {
   grid.classList.remove('active-layout');
 });
 </script>
-
-
 <script>
 const translations = {
   de: {
@@ -583,6 +576,5 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
-
 </body>
 </html>
