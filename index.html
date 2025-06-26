@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Phantomcrew EDL Tool Suite – Newsletter</title>
+<title>Phantomcrew EDL Tool Suite – Showcase</title>
 <link href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -336,7 +336,21 @@
   }
 }
 
-</style>
+
+    .logo-link {
+      position: relative;
+      top: -25px;
+      left: 45%;
+      z-index: 20;
+	  align-items: center; 
+    }
+    .logo-img {
+      height: auto;
+      width: 10%;
+      display: block;
+    }
+
+    </style>
 </head>
 <body>
 <!-- Animierter Hintergrund -->
@@ -352,8 +366,11 @@
 </svg>
 </div>
 <header>
-<h1>Phantomcrew EDL Tool Suite</h1>
-<p>Vier schlanke Web-Apps für Live-Marker, Video-Reviews und schnelle EDL-Bearbeitung – optimiert für DaVinci Resolve und deine Produktionen.</p>
+  <a href="https://phantomcrew.de/" class="logo-link">
+    <img src="https://phantomcrew.de/wp-content/uploads/2023/10/cropped-Phantomcrew-Logo-ohne-Claim.png" alt="Phantomcrew Logo" class="logo-img">
+  </a>
+<h1>EDL Tool Suite</h1>
+<p>Vier schlanke Web-Apps für Live-Marker, Reviews und schnelle EDL Bearbeitung, optimiert für DaVinci Resolve und deine Produktionen</p><br>
 <div id="language-switcher" style="position:absolute; top:1rem; right:1rem; z-index:10;">
 <button data-lang="de" style="font-size: 1.2rem; margin-right: 0.5rem;">🇩🇪</button>
 <button data-lang="en" style="font-size: 1.2rem;">🇬🇧</button>
@@ -363,22 +380,22 @@
 <div class="card" data-tool="tool1">
 <div aria-hidden="true" class="icon">🎛️</div>
 <h3>EDL Live</h3>
-<p>Setze Marker während der Live-Produktion mit präzisem Frame-Timing und exportiere sie sofort als Resolve-kompatible EDL.</p>
+<p>Setze Marker während der Live-Produktion mit präzisem Frame-Timing und exportiere sie sofort als Resolve-kompatible EDL</p>
 </div>
 <div class="card" data-tool="tool2">
 <div aria-hidden="true" class="icon">🎬</div>
 <h3>EDL Player</h3>
-<p>Spiele Clips ab, füge an jeder Stelle Kommentare hinzu und exportiere deine Anmerkungen als Marker-EDL für den Schnitt.</p>
+<p>Spiele Clips ab, füge an jeder Stelle Kommentare hinzu und exportiere deine Anmerkungen als Marker-EDL für den Schnitt</p>
 </div>
 <div class="card" data-tool="tool3">
 <div aria-hidden="true" class="icon">📝</div>
 <h3>EDL Offset</h3>
-<p>Korrigiere Timecode-Versätze in bestehenden EDLs – perfekt nach Re-Encodes oder Frame-Rate-Änderungen.</p>
+<p>Korrigiere Timecode-Versätze in bestehenden EDLs – perfekt nach Re-Encodes oder Frame-Rate-Änderungen</p>
 </div>
 <div class="card" data-tool="tool4">
 <div aria-hidden="true" class="icon">🎨</div>
 <h3>EDL Color</h3>
-<p>Gib deinen Markern einheitliche Farben oder neue Farbcodes – alles per Klick, inklusive Vorschau.</p>
+<p>Gib deinen Markern einheitliche Farben oder neue Farbcodes – alles per Klick, inklusive Vorschau</p>
 </div>
 </section><div class="smartphone-viewer" id="viewer" style="display: none;">
 <button id="closeViewer" style="position:absolute;top:10px;right:10px;background:#fff;color:#000;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;z-index:10;">×</button>
@@ -471,13 +488,13 @@ document.getElementById('closeViewer').addEventListener('click', () => {
 <script>
 const translations = {
   de: {
-    title: "Phantomcrew EDL Tool Suite",
-    subtitle: "Vier schlanke Web-Apps für Live-Marker, Video-Reviews und schnelle EDL-Bearbeitung – optimiert für DaVinci Resolve und deine Produktionen.",
+    title: "EDL Tool Suite",
+    subtitle: "Vier schlanke Web-Apps für Live-Marker, Reviews und schnelle EDL Bearbeitung, optimiert für DaVinci Resolve und deine Produktionen",
     tools: [
-      { name: "EDL Live",   desc: "Setze Marker während der Live-Produktion mit präzisem Frame-Timing und exportiere sie sofort als Resolve-kompatible EDL." },
-      { name: "EDL Player", desc: "Spiele Clips ab, füge an jeder Stelle Kommentare hinzu und exportiere deine Anmerkungen als Marker-EDL für den Schnitt." },
-      { name: "EDL Offset", desc: "Korrigiere Timecode-Versätze in bestehenden EDLs – perfekt nach Re-Encodes oder Frame-Rate-Änderungen." },
-      { name: "EDL Color",  desc: "Gib deinen Markern einheitliche Farben oder neue Farbcodes – alles per Klick, inklusive Vorschau." }
+      { name: "EDL Live",   desc: "Setze Marker während der Live-Produktion mit präzisem Frame-Timing und exportiere sie sofort als Resolve-kompatible EDL" },
+      { name: "EDL Player", desc: "Spiele Clips ab, füge an jeder Stelle Kommentare hinzu und exportiere deine Anmerkungen als Marker-EDL für den Schnitt" },
+      { name: "EDL Offset", desc: "Korrigiere Timecode-Versätze in bestehenden EDLs – perfekt nach Re-Encodes oder Frame-Rate-Änderungen" },
+      { name: "EDL Color",  desc: "Gib deinen Markern einheitliche Farben oder neue Farbcodes – alles per Klick, inklusive Vorschau" }
     ],
     highlightsTitle: "Highlights des Juni-Updates",
     highlights: [
@@ -488,17 +505,17 @@ const translations = {
       "Integrierte Hilfe-Overlays für einen schnellen Einstieg",
       "Open Source & kostenlos auf GitHub verfügbar"
     ],
-    ctaLaunch: "🚀 Suite starten",
+    ctaLaunch: "🚀 EDL Suite starten",
     ctaGithub: "⭐️ GitHub Repo"
   },
   en: {
-    title: "Phantomcrew EDL Tool Suite",
-    subtitle: "Four lightweight web apps for live markers, video reviews and fast EDL editing – optimized for DaVinci Resolve and your productions.",
+    title: "EDL Tool Suite",
+    subtitle: "Four lightweight web apps for live markers, video reviews and fast EDL editing, optimized for DaVinci Resolve and your productions",
     tools: [
-      { name: "EDL Live",   desc: "Set markers during live production with precise frame timing and instantly export them as Resolve-compatible EDL." },
-      { name: "EDL Player", desc: "Play clips, add comments anywhere and export your notes as marker EDLs for editing." },
-      { name: "EDL Offset", desc: "Fix timecode offsets in existing EDLs – perfect after re-encodes or frame rate changes." },
-      { name: "EDL Color",  desc: "Apply consistent colors or new color codes to your markers – all with a click, including preview." }
+      { name: "EDL Live",   desc: "Set markers during live production with precise frame timing and instantly export them as Resolve-compatible EDL" },
+      { name: "EDL Player", desc: "Play clips, add comments anywhere and export your notes as marker EDLs for editing" },
+      { name: "EDL Offset", desc: "Fix timecode offsets in existing EDLs – perfect after re-encodes or frame rate changes" },
+      { name: "EDL Color",  desc: "Apply consistent colors or new color codes to your markers – all with a click, including preview" }
     ],
     highlightsTitle: "Highlights of the June Update",
     highlights: [
@@ -509,7 +526,7 @@ const translations = {
       "Integrated help overlays for a quick start",
       "Open source & free on GitHub"
     ],
-    ctaLaunch: "🚀 Launch Suite",
+    ctaLaunch: "🚀 Launch EDL Suite",
     ctaGithub: "⭐️ GitHub Repo"
   }
 };
