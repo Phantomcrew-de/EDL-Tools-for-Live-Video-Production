@@ -542,19 +542,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
 
 const isIPadOS = (/iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+let applyOrientationEmojiMode;
 // Orientation-specific handling for iPad Safari
 if (isIPadOS && isSafari) {
   window.skipAutoSwitch = true;      // disable width-based auto switch for iPad
-  function applyOrientationEmojiMode() {
+  applyOrientationEmojiMode = function() {
     const isLandscape = window.matchMedia("(orientation: landscape)").matches;
     // Landscape => show text labels (emojiMode false), Portrait => emojis (true)
     if (typeof setEmojiMode === 'function') {
       setEmojiMode(!isLandscape);
     }
   }
-  // initial call
-  applyOrientationEmojiMode();
-  // handle orientation changes
+// handle orientation changes
   window.addEventListener("orientationchange", () => {
     setTimeout(applyOrientationEmojiMode, 100);
   });
@@ -574,6 +573,11 @@ if (isIPadOS && isSafari) {
   });
     
 
+  
+// Jetzt, nachdem die Tab‑Beschriftungen gesetzt sind, erneut den iPad‑Orientation‑Handler ausführen
+if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
+  applyOrientationEmojiMode();
+}
   // Breite aller Tabs im Volltext-Modus berechnen
   function calcFullWidth() {
     const probe = document.createElement("span");
