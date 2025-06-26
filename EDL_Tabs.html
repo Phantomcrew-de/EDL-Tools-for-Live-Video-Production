@@ -540,7 +540,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const ua = navigator.userAgent;
   const isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-  if (isIOS && isSafari) return;
+  if (/iPhone/.test(ua) && isSafari) return;
 
   // Originaltexte + Emojis merken
   
@@ -633,29 +633,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(updateHighlightBar, 150);
 });
 </script>
-
-<!-- iPad Textmode Patch -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const ua = navigator.userAgent;
-  const isIPad = (/iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
-  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-  if (isIPad && isSafari) {
-    // Force label (Text) mode
-    try {
-      localStorage.setItem('emojiMode', '0');
-      if (typeof setEmojiMode === 'function') setEmojiMode(false);
-    } catch(e) {}
-    // remove auto-switch on resize if debounced listener exists
-    try {
-      if (typeof debounced === 'function') {
-        window.removeEventListener('resize', debounced);
-      }
-    } catch(e) {}
-  }
-});
-</script>
-<!-- end iPad Textmode Patch -->
-
 </body>
 </html>
