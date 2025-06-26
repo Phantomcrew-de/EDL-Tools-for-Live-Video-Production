@@ -219,27 +219,30 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
       reader.readAsText(file);
     });
 
-    function parseMarkers() {
-      entries = [];
-      const lines = modifiedEDL.split('\n');
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i];
-        if (line.includes('|C:ResolveColor')) {
-          const timeLine = lines[i - 1];
-          const timeMatch = timeLine.match(/(\d{2}:\d{2}:\d{2}:\d{2})/);
-          const colorMatch = line.match(/\|C:(ResolveColor\w+)/);
-          const commentMatch = line.match(/\|M:([^|]+)/);
-          if (timeMatch && colorMatch) {
-            entries.push({
-              original: line,
-              timecode: timeMatch[1],
-              comment: commentMatch ? commentMatch[1].trim() : '',
-              color: colorMatch[1]
-            });
-          }
-        }
+    
+function parseMarkers() {
+  entries = [];
+  const lines = modifiedEDL.split('\n');
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.includes('|C:ResolveColor')) {
+      const timeLine = lines[i - 1];
+      const timeMatch = timeLine.match(/(\d{2}:\d{2}:\d{2}:\d{2})/);
+      const colorMatch = line.match(/\|C:(ResolveColor\w+)/);
+      const commentMatch = line.match(/\|M:([^|]+)/);
+      if (timeMatch && colorMatch) {
+        entries.push({
+          timeIndex: i - 1,
+          markerIndex: i,
+          timecode: timeMatch[1],
+          comment: commentMatch ? commentMatch[1].trim() : '',
+          color: colorMatch[1]
+        });
       }
     }
+  }
+}
+
 
     function renderColorCircles() {
       const container = document.getElementById('colorContainer');
@@ -355,28 +358,29 @@ function showColorPopup(currentColor, entryIndex = null) {
 }
 
 
+
 function updateEDLText() {
   let lines = edlText.split('\n');
   entries.forEach(entry => {
-    lines = lines.map((line, i, arr) => {
-      if (line === entry.original) {
-        let newLine = line.replace(/ResolveColor\\w+/, entry.color);
-        if (newLine.includes('|M:')) {
-          newLine = newLine.replace(/\|M:[^|]*/, '|M:' + entry.comment);
-        } else {
-          newLine += ' |M:' + entry.comment;
-        }
-        const timeMatch = arr[i - 1]?.match(/(\d{2}:\d{2}:\d{2}:\d{2})/);
-        if (timeMatch) {
-          arr[i - 1] = arr[i - 1].replace(timeMatch[1], entry.timecode);
-        }
-        return newLine;
-      }
-      return line;
-    });
+    // Update Marker-Zeile (Farbe und Kommentar)
+    let markerLine = lines[entry.markerIndex];
+    markerLine = markerLine.replace(/ResolveColor\w+/, entry.color);
+    if (markerLine.includes('|M:')) {
+      markerLine = markerLine.replace(/\|M:[^|]*/, '|M:' + entry.comment);
+    } else {
+      markerLine += ' |M:' + entry.comment;
+    }
+    lines[entry.markerIndex] = markerLine;
+
+    // Update Timecode-Zeile
+    const timeMatch = lines[entry.timeIndex].match(/(\d{2}:\d{2}:\d{2}:\d{2})/);
+    if (timeMatch) {
+      lines[entry.timeIndex] = lines[entry.timeIndex].replace(timeMatch[1], entry.timecode);
+    }
   });
   modifiedEDL = lines.join('\n');
 }
+
 
 document.getElementById('downloadBtn').addEventListener('click', () => {
       const blob = new Blob([modifiedEDL], { type: 'text/plain;charset=utf-8' });
