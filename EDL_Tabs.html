@@ -540,6 +540,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const ua = navigator.userAgent;
   const isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+
+const isIPadOS = (/iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+// Orientation-specific handling for iPad Safari
+if (isIPadOS && isSafari) {
+  window.skipAutoSwitch = true;      // disable width-based auto switch for iPad
+  function applyOrientationEmojiMode() {
+    const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+    // Landscape => show text labels (emojiMode false), Portrait => emojis (true)
+    if (typeof setEmojiMode === 'function') {
+      setEmojiMode(!isLandscape);
+    }
+  }
+  // initial call
+  applyOrientationEmojiMode();
+  // handle orientation changes
+  window.addEventListener("orientationchange", () => {
+    setTimeout(applyOrientationEmojiMode, 100);
+  });
+}
   if (/iPhone/.test(ua) && isSafari) return;
 
   // Originaltexte + Emojis merken
@@ -608,6 +627,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Logik zum Umschalten anhand verfügbarer Breite
   function evaluate() {
+    if (window.skipAutoSwitch) return;
     const avail = container.clientWidth;
     if (!emojiMode && avail < THRESH_NARROW) {
       setEmojiMode(true);
