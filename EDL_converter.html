@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/style.css">
+  <title>EDL ⇄ Label‑Konverter</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;margin:2rem;max-width:740px}
+    h1{margin-top:0}
+    label,select,input[type=file]{font-size:1rem}
+    button{margin-top:1rem;padding:.5rem 1rem;font-size:1rem;cursor:pointer}
+    #downloadLinks a{display:block;margin-top:1rem}
+    fieldset{margin-bottom:1.5rem}
+  </style>
+</head>
+<body>
+  <h1>EDL ⇄ Audition / Audacity Label Konverter</h1>
+
+  <!-- Eingabedateien -->
+  <fieldset>
+    <legend><strong>Dateien wählen</strong></legend>
+    <input type="file" id="files" multiple accept=".edl,.csv,.txt">
+    <br><br>
+    <label for="fileFilter">Dateityp:</label>
+    <select id="fileFilter" onchange="updateFileAccept()">
+      <option value="all" selected>Alle unterstützten Formate (*.edl, *.csv, *.txt)</option>
+      <option value="edl">Nur EDL (*.edl)</option>
+      <option value="csv">Nur Audition CSV (*.csv)</option>
+      <option value="txt">Nur Audacity TXT (*.txt)</option>
+    </select>
+  </fieldset>
+
+  <!-- Richtung -->
+  <fieldset>
+    <legend><strong>Konvertierungsrichtung</strong></legend>
+    <label><input type="radio" name="direction" value="edl2label" checked> EDL ➜ Labels (Audition/Audacity)</label><br>
+    <label><input type="radio" name="direction" value="label2edl"> Labels (Audition/Audacity) ➜ EDL (Resolve‑Blue)</label>
+  </fieldset>
+
+  <!-- Framerate & Zielformat für Label‑Seite -->
+  <fieldset id="settingsEDL2Label">
+    <legend><strong>EDL ➜ Label Einstellungen</strong></legend>
+    <label for="fps">Framerate:</label>
+    <select id="fps">
+      <option value="24">24&nbsp;fps</option>
+      <option value="25" selected>25&nbsp;fps (Standard)</option>
+      <option value="30">30&nbsp;fps</option>
+      <option value="48">48&nbsp;fps</option>
+      <option value="50">50&nbsp;fps</option>
+      <option value="60">60&nbsp;fps</option>
+      <option value="120">120&nbsp;fps</option>
+    </select>
+    &nbsp;&nbsp;
+    <label for="format">Zielformat:</label>
+    <select id="format">
+      <option value="csv">Adobe Audition (CSV)</option>
+      <option value="txt">Audacity (TXT)</option>
+    </select>
+  </fieldset>
+
+  <!-- Framerate für Label->EDL -->
+  <fieldset id="settingsLabel2EDL" style="display:none">
+    <legend><strong>Label ➜ EDL Einstellungen</strong></legend>
+    <label for="fpsBack">Framerate:</label>
+    <select id="fpsBack">
+      <option value="24">24&nbsp;fps</option>
+      <option value="25" selected>25&nbsp;fps (Standard)</option>
+      <option value="30">30&nbsp;fps</option>
+      <option value="48">48&nbsp;fps</option>
+      <option value="50">50&nbsp;fps</option>
+      <option value="60">60&nbsp;fps</option>
+      <option value="120">120&nbsp;fps</option>
+    </select>
+  </fieldset>
+
+  <button onclick="process()">Konvertieren & Herunterladen</button>
+  <div id="downloadLinks"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js">  updateFileAccept();
+</script>
+
+  <script>
+    // ========== UI‑Helfer ==========
+    function updateFileAccept() {
+      const filter = document.getElementById('fileFilter').value;
+      const input  = document.getElementById('files');
+      switch (filter) {
+        case 'edl': input.accept = '.edl'; break;
+        case 'csv': input.accept = '.csv'; break;
+        case 'txt': input.accept = '.txt'; break;
+        default:    input.accept = '.edl,.csv,.txt'; break;
+      }
+    }
+
+    document.querySelectorAll('input[name="direction"]').forEach(r=>r.addEventListener('change',()=>{
+      const dir=document.querySelector('input[name="direction"]:checked').value;
+      document.getElementById('settingsEDL2Label').style.display=dir==='edl2label'?"block":"none";
+      document.getElementById('settingsLabel2EDL').style.display=dir==='label2edl'?"block":"none";
+    }));
+
+    // ========== Zeitcode‑Utilities ==========
+    const pad = n=>String(n).padStart(2,'0');
+    const tcToSeconds=(tc,fps)=>{const[p0,p1,p2,p3]=tc.split(/[:;]/).map(Number);if([p0,p1,p2,p3].some(isNaN))return null;return p0*3600+p1*60+p2+(p3||0)/fps};
+    const secondsToTC=(sec,fps)=>{sec=Math.max(0,sec);const h=Math.floor(sec/3600);const m=Math.floor((sec%3600)/60);const s=Math.floor(sec%60);const fr=Math.round((sec-Math.floor(sec))*fps);return `${pad(h)}:${pad(m)}:${pad(s)}:${pad(fr)}`};
+
+    // ========== Parser / Builder ==========
+    function parseEDL(text,fps){const lines=text.split(/\r?\n/);const res=[];for(let i=0;i<lines.length;i++){const l=lines[i];const tcs=l.match(/\d\d:\d\d:\d\d[:;]\d\d/g);if(tcs&&tcs.length>=4){const recIn=tcs[2],recOut=tcs[3];const markerLine=lines[i+1]||"";const mtext=markerLine.match(/\|M:(.*?)\s*(\||$)/i);const label=mtext?mtext[1].trim():"Marker";res.push({start:tcToSeconds(recIn,fps),end:tcToSeconds(recOut,fps),label});i++;}}return res;}
+
+    function parseLabel(text){const rows=text.trim().split(/\r?\n/);const out=[];if(rows[0].includes(',')){for(let i=1;i<rows.length;i++){const [s,e,...lab]=rows[i].split(',');if(!s||!e)continue;out.push({start:parseFloat(s),end:parseFloat(e),label:lab.join(',').replace(/^"|"$/g,'')});}}else{for(const r of rows){const [s,e,...lab]=r.split(/\t+/);if(!s||!e)continue;out.push({start:parseFloat(s),end:parseFloat(e),label:lab.join(' ').trim()});}}return out;}
+
+    function buildEDL(markers,fps,title='labels'){
+      let edl=`TITLE: ${title}\nFCM: NON-DROP FRAME\n`;
+      markers.forEach((m,idx)=>{
+        const n=pad(idx+1),reel='001',recIn=secondsToTC(m.start,fps);const recOut=secondsToTC(m.end>m.start?m.end:m.start+1/fps,fps);
+        edl+=`\n${n}  ${reel}      V     C        ${recIn} ${recOut} ${recIn} ${recOut}  \n |C:ResolveColorBlue |M:${m.label} |D:1\n`;});
+      return edl;}
+
+    // ========== Download Helper ==========
+    function saveAs(blob,filename){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.style.display='none';a.href=url;a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},100);}
+
+    function downloadBlob(content,name,isBlob=false){const blob=isBlob?content:new Blob([content],{type:'text/plain;charset=utf-8'});saveAs(blob,name);
+      // optional Link für Benutzer‑Historie
+      const link=document.createElement('a');link.href='#';link.textContent=`✓ ${name} gespeichert`;link.style.pointerEvents='none';document.getElementById('downloadLinks').appendChild(link);
+    }
+
+    // ========== Main ==========
+    async function process(){const files=document.getElementById('files').files;if(!files.length){alert('Bitte Dateien auswählen.');return;}
+      const dir=document.querySelector('input[name="direction"]:checked').value;const multi=files.length>1;const zip=multi?new JSZip():null;
+      const now=new Date();const timestamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+      document.getElementById('downloadLinks').innerHTML='';
+
+      for(const f of files){const txt=await f.text();if(dir==='edl2label'){const fps=Number(document.getElementById('fps').value),format=document.getElementById('format').value;const markers=parseEDL(txt,fps);
+          const out=format==='csv'?`Start (sec),End (sec),Label\n${markers.map(m=>`${m.start.toFixed(3)},${m.end.toFixed(3)},"${m.label.replace(/"/g,'""')}"`).join('\n')}`:markers.map(m=>`${m.start.toFixed(3)}\t${m.end.toFixed(3)}\t${m.label}`).join('\n');
+          const base=f.name.replace(/\.edl$/i,'');const outName=`${base}_${format==='csv'?'Audition.csv':'Audacity.txt'}`;multi?zip.file(outName,out):downloadBlob(out,outName);
+        }else{const fps=Number(document.getElementById('fpsBack').value);const markers=parseLabel(txt);const edl=buildEDL(markers,fps,f.name);const base=f.name.replace(/\.(csv|txt)$/i,'');const outName=`${base}_Resolve.edl`;multi?zip.file(outName,edl):downloadBlob(edl,outName);} }
+
+      if(multi){downloadBlob(await zip.generateAsync({type:'blob'}),`${timestamp}_converted.zip`,true);} }
+  </script>
+</body>
+</html>
