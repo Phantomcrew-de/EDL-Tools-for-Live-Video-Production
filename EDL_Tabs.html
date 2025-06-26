@@ -597,8 +597,7 @@ if (isIPadOS && isSafari) {
   const THRESH_WIDE   = fullWidth + 429;
 
   // Emoji-Modus Zustand merken und laden
-  let emojiMode = true;
-  localStorage.setItem("emojiMode", "1");
+  let emojiMode = localStorage.getItem("emojiMode") !== "0";
 
   // Highlight-Bar aktualisieren
   function updateHighlightBar() {
@@ -614,19 +613,18 @@ if (isIPadOS && isSafari) {
 
   // Emoji/Text-Umschalter
   function setEmojiMode(on) {
-    if (emojiMode === on) return;
-    emojiMode = on;
-    localStorage.setItem("emojiMode", on ? "1" : "0");
-    tabs.forEach(tab => {
-      tab.textContent = on ? tab.dataset.emoji : tab.dataset.full;
-      tab.style.justifyContent = on ? "center" : "";
-      tab.title = on ? tab.dataset.full : "";
-    });
-    requestAnimationFrame(updateHighlightBar);
-  }
+  // Immer UI aktualisieren – auch wenn der Modus gleich bleibt
+  emojiMode = !!on;
+  localStorage.setItem("emojiMode", emojiMode ? "1" : "0");
+  tabs.forEach(tab => {
+    tab.textContent = emojiMode ? tab.dataset.emoji : tab.dataset.full;
+    tab.style.justifyContent = emojiMode ? "center" : "";
+    tab.title = emojiMode ? tab.dataset.full : "";
+  });
+  requestAnimationFrame(updateHighlightBar);
+}
 
-  // Logik zum Umschalten anhand verfügbarer Breite
-  function evaluate() {
+function evaluate() {
     if (window.skipAutoSwitch) return;
     const avail = container.clientWidth;
     if (!emojiMode && avail < THRESH_NARROW) {
