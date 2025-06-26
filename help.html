@@ -10,54 +10,8 @@
       max-width: 800px;
       margin: 2rem auto;
       padding: 0 1rem;
-      background-color: #1F2465;
+      background-color: #0b0c23;
       color: #fdfdfd;
-      position: relative;
-      z-index: 0;
-    }
-
-    .wave-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1; /* Hinter allen Inhalten */
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .wave {
-      position: absolute;
-      width: 200%;
-      height: 100%;
-      background: none;
-      animation: waveAnimation 10s ease-in-out infinite alternate;
-    }
-
-    .wave path {
-      fill: #000436;
-    }
-
-    .wave:nth-child(2) {
-      opacity: 0.5;
-      animation: waveAnimation 15s ease-in-out infinite alternate;
-      bottom: 10%;
-    }
-
-    .wave:nth-child(3) {
-      opacity: 0.3;
-      animation: waveAnimation 20s ease-in-out infinite alternate;
-      bottom: 15%;
-    }
-
-    @keyframes waveAnimation {
-      0% {
-        transform: translateX(0);
-      }
-      100% {
-        transform: translateX(-50%);
-      }
     }
 
     h1, h2, h3 {
@@ -88,20 +42,6 @@
   </style>
 </head>
 <body>
-  <!-- Hintergrundwellen -->
-  <div class="wave-container">
-    <svg class="wave" viewBox="0 0 1200 120" preserveAspectRatio="none">
-      <path d="M0 49 C 300,120 900,-20 1200,49 L 1200 130 L 0 130 Z"></path>
-    </svg>
-    <svg class="wave" viewBox="0 0 1200 120" preserveAspectRatio="none">
-      <path d="M0 49 C 300,120 900,-20 1200,49 L 1200 130 L 0 130 Z"></path>
-    </svg>
-    <svg class="wave" viewBox="0 0 1200 120" preserveAspectRatio="none">
-      <path d="M0 49 C 300,120 900,-20 1200,49 L 1200 130 L 0 130 Z"></path>
-    </svg>
-  </div>
-
-  <!-- Inhalt -->
   <div id="content">README.md wird geladen...</div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
