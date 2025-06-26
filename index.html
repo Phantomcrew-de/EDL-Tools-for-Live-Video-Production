@@ -444,8 +444,8 @@ function isMobile() {
 }
 
 function updateParallax() {
-  if (viewer.classList.contains('fixed')) {
-    const offset = window.scrollY * 0.1;
+  if (viewer.classList.contains('fixed') && viewer.style.display !== 'none') {
+    const offset = -window.scrollY * 0.25;
     viewer.style.transform = 'translateY(' + offset + 'px)';
   }
 }
@@ -500,6 +500,7 @@ cards.forEach((card, index) => {
 });
 
 closeBtn.addEventListener('click', (e) => {
+  viewer.style.transform = 'translateY(0)';
   e.stopPropagation();
   viewer.classList.remove('animate-in');
   viewer.classList.add('animate-out');
@@ -512,6 +513,15 @@ closeBtn.addEventListener('click', (e) => {
   }, 500);
 });
 
+
+
+viewer.addEventListener('animationend', (e) => {
+  if (e.animationName === 'slideInUp') {
+    viewer.classList.remove('animate-in');
+  } else if (e.animationName === 'slideOutDown') {
+    viewer.classList.remove('animate-out');
+  }
+});
 </script>
 <script>
 const translations = {
