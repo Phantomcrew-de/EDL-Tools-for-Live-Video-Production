@@ -540,9 +540,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const ua = navigator.userAgent;
   const isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+let applyOrientationEmojiMode = null;
 
 const isIPadOS = (/iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
-let applyOrientationEmojiMode;
 // Orientation-specific handling for iPad Safari
 if (isIPadOS && isSafari) {
   window.skipAutoSwitch = true;      // disable width-based auto switch for iPad
@@ -571,13 +571,14 @@ if (isIPadOS && isSafari) {
       tab.dataset.emoji = emoji;
     }
   });
-    
 
-  
-// Jetzt, nachdem die Tab‑Beschriftungen gesetzt sind, erneut den iPad‑Orientation‑Handler ausführen
+// Nach dem Setzen von dataset.full & .emoji -> iPad‑Orientation‑Modus anwenden
 if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
   applyOrientationEmojiMode();
 }
+
+    
+
   // Breite aller Tabs im Volltext-Modus berechnen
   function calcFullWidth() {
     const probe = document.createElement("span");
@@ -601,7 +602,8 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
   const THRESH_WIDE   = fullWidth + 429;
 
   // Emoji-Modus Zustand merken und laden
-  let emojiMode = localStorage.getItem("emojiMode") !== "0";
+  let emojiMode = true;
+  localStorage.setItem("emojiMode", "1");
 
   // Highlight-Bar aktualisieren
   function updateHighlightBar() {
@@ -617,7 +619,7 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
 
   // Emoji/Text-Umschalter
   function setEmojiMode(on) {
-  // Immer UI aktualisieren – auch wenn der Modus gleich bleibt
+  // Immer UI aktualisieren
   emojiMode = !!on;
   localStorage.setItem("emojiMode", emojiMode ? "1" : "0");
   tabs.forEach(tab => {
@@ -628,7 +630,8 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
   requestAnimationFrame(updateHighlightBar);
 }
 
-function evaluate() {
+  // Logik zum Umschalten anhand verfügbarer Breite
+  function evaluate() {
     if (window.skipAutoSwitch) return;
     const avail = container.clientWidth;
     if (!emojiMode && avail < THRESH_NARROW) {
