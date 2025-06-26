@@ -438,6 +438,7 @@ const grid = document.querySelector('.tool-grid');
 const viewer = document.getElementById('viewer');
 const carousel = viewer.querySelector('.carousel');
 const closeBtn = document.getElementById('closeViewer');
+let parallaxStart = 0;          // ✨ neuer Start-Offset
 
 function isMobile() {
   return window.matchMedia('(max-width: 768px)').matches;
@@ -445,7 +446,7 @@ function isMobile() {
 
 function updateParallax() {
   if (viewer.classList.contains('fixed') && viewer.style.display !== 'none') {
-    const offset = -window.scrollY * 0.25;
+    const offset = -(window.scrollY - parallaxStart) * 0.25;
     viewer.style.transform = 'translateY(' + offset + 'px)';
   }
 }
@@ -458,6 +459,7 @@ window.addEventListener('resize', () => {
       viewer.classList.remove('fixed');
     } else {
       viewer.classList.add('fixed');
+      parallaxStart = window.scrollY;      // ✨ Basis setzen
       viewer.style.transform = 'translateY(0)';
     }
   }
@@ -489,6 +491,7 @@ cards.forEach((card, index) => {
       card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
       viewer.classList.add('fixed');
+      parallaxStart = window.scrollY;      // ✨ Basis setzen
       viewer.style.transform = 'translateY(0)';
     }
 
@@ -521,8 +524,7 @@ viewer.addEventListener('animationend', (e) => {
   } else if (e.animationName === 'slideOutDown') {
     viewer.classList.remove('animate-out');
   }
-});
-</script>
+});</script>
 <script>
 const translations = {
   de: {
