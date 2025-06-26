@@ -210,6 +210,9 @@
   width: 240px;
   flex-shrink: 0;
   display: none;
+
+  position: relative;
+  z-index: 1000;
 }
 .smartphone-viewer.active {
   display: block;
@@ -220,8 +223,10 @@
   top: 20vh;
   transform: translateY(0);
   will-change: transform;
+  z-index: 1000;
 }
 .smartphone {
+  position: relative;
   width: 100%;
   max-width: 440px;
   aspect-ratio: 9 / 18;
@@ -350,7 +355,19 @@
       display: block;
     }
 
-    </style>
+    
+@keyframes slideInUp {
+  from { transform: translateY(100vh); opacity: 0;}
+  to { transform: translateY(0); opacity: 1;}
+}
+@keyframes slideOutDown {
+  from { transform: translateY(0); opacity: 1;}
+  to { transform: translateY(100vh); opacity: 0;}
+}
+.smartphone-viewer.animate-in { animation: slideInUp 0.5s ease-out forwards;}
+.smartphone-viewer.animate-out { animation: slideOutDown 0.5s ease-in forwards;}
+
+</style>
 </head>
 <body>
 <!-- Animierter Hintergrund -->
@@ -398,8 +415,7 @@
 <p>Gib deinen Markern einheitliche Farben oder neue Farbcodes – alles per Klick, inklusive Vorschau</p>
 </div>
 </section><div class="smartphone-viewer" id="viewer" style="display: none;">
-<button id="closeViewer" style="position:absolute;top:10px;right:10px;background:#fff;color:#000;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;z-index:10;">×</button>
-<div class="smartphone"><div class="carousel"><img src="screens/tool1_1.jpg"/><img src="screens/tool1_2.jpg"/><img src="screens/tool1_3.jpg"/></div></div>
+<div class="smartphone"><button id="closeViewer" style="position:absolute;top:10px;right:10px;background:#fff;color:#000;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;z-index:10;">×</button><div class="carousel"><img src="screens/tool1_1.jpg"/><img src="screens/tool1_2.jpg"/><img src="screens/tool1_3.jpg"/></div></div>
 </div></div>
 <section class="features">
 <h2>Highlights des Juni-Updates</h2>
@@ -416,23 +432,26 @@
 <a class="btn secondary" href="https://github.com/phantomcrew-de/EDL-Tools-for-Live-Video-Production" rel="noopener noreferrer" target="_blank">⭐️ GitHub Repo</a>
 </section></main>
 <script>
+
 const cards = document.querySelectorAll('.card');
 const grid = document.querySelector('.tool-grid');
 const viewer = document.getElementById('viewer');
 const carousel = viewer.querySelector('.carousel');
+const closeBtn = document.getElementById('closeViewer');
 
 function isMobile() {
   return window.matchMedia('(max-width: 768px)').matches;
 }
 
 function updateParallax() {
-  if (!isMobile() && viewer.classList.contains('fixed')) {
+  if (viewer.classList.contains('fixed')) {
     const offset = window.scrollY * 0.1;
     viewer.style.transform = 'translateY(' + offset + 'px)';
   }
 }
 
 window.addEventListener('scroll', updateParallax);
+
 window.addEventListener('resize', () => {
   if (viewer.classList.contains('active')) {
     if (isMobile()) {
@@ -457,12 +476,12 @@ cards.forEach((card, index) => {
       <img src="screens/${toolId}_3.jpg"/>
     `;
 
-    // Viewer erst entfernen
+    // Remove viewer if already in DOM
     if (viewer.parentNode) {
       viewer.parentNode.removeChild(viewer);
     }
 
-    // Immer nach aktiver Karte einfügen
+    // Insert viewer after active card
     card.insertAdjacentElement('afterend', viewer);
 
     if (isMobile()) {
@@ -474,16 +493,25 @@ cards.forEach((card, index) => {
     }
 
     viewer.style.display = 'block';
-    viewer.classList.add('active');
+    viewer.classList.remove('animate-out');
+    void viewer.offsetWidth; // trigger reflow for animation restart
+    viewer.classList.add('active', 'animate-in');
   });
 });
 
-document.getElementById('closeViewer').addEventListener('click', () => {
-  viewer.classList.remove('active');
-  viewer.style.display = 'none';
+closeBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  viewer.classList.remove('animate-in');
+  viewer.classList.add('animate-out');
   cards.forEach(c => c.classList.remove('active'));
   grid.classList.remove('active-layout');
+
+  setTimeout(() => {
+    viewer.classList.remove('active', 'animate-out');
+    viewer.style.display = 'none';
+  }, 500);
 });
+
 </script>
 <script>
 const translations = {
