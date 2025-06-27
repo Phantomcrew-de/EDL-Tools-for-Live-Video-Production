@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>P2P Comment Board</title>
+
+  <!-- 1️⃣ Minimal‑Style -->
+  <style>
+    :root { font-family: system-ui, sans-serif; }
+    body   { max-width: 42rem; margin: 3rem auto; padding: 0 1rem; }
+    h1     { margin-top: 0; }
+    ul     { padding-left: 1.5rem; }
+    li     { margin: .3rem 0; }
+    input, button { font-size: 1rem; padding: .45rem .7rem; }
+    #controls { margin-bottom: 1rem; display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+    #share { margin-left: auto; }
+    #warning { background: #ffe7e7; border: 1px solid #ff9a9a; padding: .8rem; margin-bottom: 1rem; display:none; }
+  </style>
+</head>
+
+<body>
+  <h1>🕸️ P2P Comments</h1>
+
+  <div id="warning"></div>
+
+  <!-- Raumwahl + Verbinden + Teilen -->
+  <div id="controls">
+    <label>Raum
+      <input id="room" value="demo-room" autocomplete="off" />
+    </label>
+    <button id="join">Beitreten</button>
+    <button id="share" title="Link teilen">🔗 Teilen</button>
+  </div>
+
+  <!-- Synchronisierte Liste -->
+  <ul id="list"></ul>
+
+  <!-- Neuen Kommentar hinzufügen -->
+  <input id="text" placeholder="Dein Kommentar …" autocomplete="off" />
+  <button id="send">➕</button>
+
+  <!-- 2️⃣ App‑Logik als ES‑Modul -->
+  <script type="module">
+    import * as Y from 'https://cdn.jsdelivr.net/npm/yjs@13/+esm';
+    import { WebrtcProvider } from 'https://cdn.jsdelivr.net/npm/y-webrtc@10/+esm';
+
+    /* ───────── Hilfsfunktionen ───────── */
+    const $ = (id) => document.getElementById(id);
+
+    let ydoc, provider, comments;
+    const secure = window.isSecureContext;
+
+    if (!secure) {
+      // Hinweis anzeigen, wie man die Datei korrekt startet
+      const warn = $('warning');
+      warn.style.display = 'block';
+      warn.innerHTML =
+        `⚠️ Diese Datei wird als <code>file://</code> geöffnet. ` +
+        `WebRTC‑Funktionen benötigen jedoch eine <strong>sichere Herkunft</strong> (https:// oder http://localhost).<br>` +
+        `Starte z. B. im Ordner dieser Datei einen kleinen Webserver und öffne dann die Seite dort:<br>` +
+        `<pre>python -m http.server 5500</pre>`;
+    }
+
+    /** Liste neu zeichnen */
+    function render() {
+      const ul = $('list');
+      ul.innerHTML = '';
+      comments.toArray().forEach((text) => {
+        ul.insertAdjacentHTML('beforeend', `<li>${text}</li>`);
+      });
+    }
+
+    /** URL an aktuellen Raum anpassen */
+    function updateURL(room) {
+      if (secure) {
+        history.replaceState(null, '', `${location.pathname}?room=${encodeURIComponent(room)}`);
+      }
+    }
+
+    /** Raum betreten / wechseln */
+    function joinRoom() {
+      provider?.destroy();
+
+      const room = $('room').value.trim();
+      if (!room) return;
+      updateURL(room);
+
+      ydoc = new Y.Doc();
+      if (secure) {
+        provider = new WebrtcProvider(room, ydoc, {
+          signaling: ['wss://signaling.yjs.dev'],
+        });
+      } else {
+        provider = null; // Offline‑/lokaler Modus
+      }
+
+      comments = ydoc.getArray('comments');
+      comments.observe(render);
+      render();
+    }
+
+    /** Kommentar hinzufügen */
+    function addComment() {
+      const txt = $('text').value.trim();
+      if (txt && comments) {
+        comments.push([txt]);
+        $('text').value = '';
+      }
+    }
+
+    /* ───────── Event‑Handler ───────── */
+    $('join').addEventListener('click', joinRoom);
+
+    $('share').addEventListener('click', () => {
+      const room = $('room').value.trim();
+      if (!room) return;
+      const url = `${location.origin}${location.pathname}?room=${encodeURIComponent(room)}`;
+      if (navigator.share) {
+        navigator.share({ title: 'P2P Comments', text: `Beitrete meinem Raum "${room}"`, url });
+      } else {
+        navigator.clipboard.writeText(url).then(() => alert('Link kopiert!'));
+      }
+    });
+
+    $('send').addEventListener('click', addComment);
+    $('text').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addComment();
+    });
+
+    /* ───────── Auto‑Join bei ?room=… ───────── */
+    const params = new URLSearchParams(location.search);
+    const initialRoom = params.get('room');
+    if (initialRoom) $('room').value = initialRoom;
+    joinRoom();
+  </script>
+</body>
+</html>
