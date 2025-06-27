@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+  <link rel="stylesheet" href="css/style.css">
+<title>EDL → Ardour Marker Converter</title>
+<style>
+ body{font-family:sans-serif;margin:2rem;max-width:65rem}
+ label{align-items:center;margin:.4rem 0; flex-wrap: nowrap}
+ input[type=file]{margin-left:.4rem}
+ textarea{width:100%;height:14rem;margin-top:0.2rem;font-family:monospace}
+ button{padding:.6rem 1rem;margin-top:1rem}
+ .small{font-size:.9rem;color:#555}
+</style>
+</head>
+<body>
+<h1>Resolve EDL → Ardour Marker Converter</h1>
+
+<label>EDL Datei<input type="file" id="edlInput" accept=".edl,.txt"></label>
+<label>Ardour Projekt<input type="file" id="ardourInput" accept=".ardour,.xml"></label>
+<label>Framerate (fps) <input id="fps" type="number" value="30" step="0.001"></label>
+
+<label><input type="checkbox" id="lockedBox"><span role="img" aria-label="Locked">Locked 🔒</span> </label>
+<label><input type="checkbox" id="cueBox"><span role="img" aria-label="Cue-Marker">Cue-Marker 📌</span> </label>
+
+<button id="run">Konvertieren</button>
+<p>Bestehende Marker bleiben erhalten</p>
+
+<h2>Vorschau</h2>
+<textarea id="preview" readonly></textarea><br>
+<a id="dl" href="#" style="display:none"><button>Geänderte .ardour laden</button></a>
+
+<script>
+const TICKS_PER_SEC = 282240000; // Ardour-Ticks
+const esc = s => s.replace(/[&"<]/g, c => ({'&':'&amp;','"':'&quot;','<':'&lt;'}[c]));
+
+function tcToTicks(tc,fps){
+  const [hh,mm,ss,ff] = tc.split(':').map(Number);
+  return Math.round(((hh*3600+mm*60+ss)+ff/fps) * TICKS_PER_SEC);
+}
+
+function parseEDL(edl,fps){
+  const ln = edl.split(/\r?\n/), out = [];
+  for(let i=0;i<ln.length;i++){
+    let m = ln[i].match(/\*\s+LOC:\s+(\d{2}:\d{2}:\d{2}:\d{2})\s+(.*)/i);
+    if(m){ out.push({ticks:tcToTicks(m[1],fps), txt:esc(m[2].trim())}); continue; }
+    if(/^\d+\s/.test(ln[i]) && ln[i+1] && ln[i+1].includes('|M:')){
+      const parts = ln[i].trim().split(/\s+/);
+      if(parts.length>=7){
+        const rec = parts[6];
+        const k   = ln[i+1].match(/\|M:([^|]+)/);
+        if(rec && k) out.push({ticks:tcToTicks(rec,fps), txt:esc(k[1].trim())});
+      }
+    }
+  }
+  return out;
+}
+
+document.getElementById('run').onclick = () => {
+  const eFile = document.getElementById('edlInput').files[0];
+  const aFile = document.getElementById('ardourInput').files[0];
+  if(!eFile || !aFile){ alert('EDL + Ardour wählen'); return; }
+
+  const fps       = parseFloat(document.getElementById('fps').value) || 30;
+  const lockedVal = document.getElementById('lockedBox').checked ? '1' : '0';
+  const cueVal    = document.getElementById('cueBox').checked    ? '1' : '0';
+
+  const r1 = new FileReader(), r2 = new FileReader();
+
+  r1.onload = e => {
+    const markers = parseEDL(e.target.result, fps);
+    if(!markers.length){ alert('Keine Marker'); return; }
+
+    r2.onload = a => {
+      let xml = a.target.result,
+          NL  = xml.includes('\r\n') ? '\r\n' : '\n';
+
+      const ids = [], keys = new Set();
+      xml.replace(/<Location[^>]*id="(\d+)"[^>]*name="([^"]+)"[^>]*start="a(\d+)"/g,
+                  (_,id,n,s)=>{ ids.push(+id); keys.add(n+'|'+s); });
+      let next = Math.max(100, ...ids) + 4;
+
+      const newLines = [];
+      markers.forEach(m => {
+        const key = m.txt+'|'+m.ticks;
+        if(keys.has(key)) return;
+        newLines.push(
+          '    <Location id="'+next+
+          '" name="'+m.txt+
+          '" start="a'+m.ticks+
+          '" end="a'+m.ticks+
+          '" flags="IsMark" locked="'+lockedVal+
+          '" timestamp="0" cue="'+cueVal+'"/>'
+        );
+        next += 4;
+      });
+      if(!newLines.length){ alert('Alle Marker vorhanden'); return; }
+
+      xml = /<Locations>[\s\S]*?<\/Locations>/.test(xml)
+           ? xml.replace(/(<\/Locations>)/, NL+newLines.join(NL)+NL+'$1')
+           : xml.replace(/(<Session[^>]*>)/,
+                         '$1'+NL+'<Locations>'+NL+newLines.join(NL)+NL+'</Locations>'+NL);
+
+      document.getElementById('preview').value = newLines.join(NL);
+
+      const blob = new Blob([xml], {type:'application/xml'});
+      const url  = URL.createObjectURL(blob);
+      const dl   = document.getElementById('dl');
+      dl.href = url;
+      dl.download = aFile.name.replace(/\.ardour$/, '_markers.ardour');
+      dl.style.display = 'inline';
+    };
+    r2.readAsText(aFile, 'utf-8');
+  };
+  r1.readAsText(eFile, 'utf-8');
+};
+</script>
+</body>
+</html>
