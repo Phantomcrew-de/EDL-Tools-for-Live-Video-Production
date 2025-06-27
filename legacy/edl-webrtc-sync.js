@@ -99,12 +99,31 @@ function connectRoom(room){
   provider?.destroy();
   ydoc?.destroy();
 
-  ydoc = new Y.Doc();
-  provider = new WebrtcProvider(room, ydoc, {
-    signaling: ['wss://signaling.yjs.dev'],
-    maxConns: 20,
-    filterBcConns: false
-  });
+ydoc = new Y.Doc(); 
+provider = new WebrtcProvider(room, ydoc, {
+  signaling: [
+    'wss://signaling.yjs.dev',
+    'wss://y-webrtc-signaling-eu.herokuapp.com',
+    'wss://y-webrtc-signaling-us.herokuapp.com'
+  ],
+  peerOpts: {
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
+      ]
+    }
+  },
+  maxConns: 20,
+  filterBcConns: false
+});
+
   logDebug('WebRTC-Provider erzeugt, warte auf Status …');
   updatePeerCount(1);
 
