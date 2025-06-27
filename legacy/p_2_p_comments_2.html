@@ -85,13 +85,14 @@
       if (!room) return;
       updateURL(room);
 
-      ydoc = new Y.Doc();
-      if (secure) {
-        provider = new WebrtcProvider(room, ydoc, {
-          signaling: ['wss://signaling.simplewebrtc.com'],
-        });
-      } else {
-        provider = null; // Offline‑/lokaler Modus
+  ydoc = new Y.Doc();
+  provider = new WebrtcProvider(room, ydoc, {
+    signaling: ['wss://signaling.simplewebrtc.com'],
+    peerOpts: {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' }
+        ]
       }
 
       comments = ydoc.getArray('comments');
