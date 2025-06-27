@@ -88,7 +88,7 @@
       ydoc = new Y.Doc();
       if (secure) {
         provider = new WebrtcProvider(room, ydoc, {
-          signaling: ['wss://signaling.yjs.dev'],
+          signaling: ['wss://signaling.simplewebrtc.com'],
         });
       } else {
         provider = null; // Offline‑/lokaler Modus
