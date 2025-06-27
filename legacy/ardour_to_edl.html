@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Ardour → EDL Marker Converter (DaVinci-kompatibel)</title>
+  <style>
+    :root {
+      font-family: system-ui, sans-serif;
+      line-height: 1.4;
+      background: #f7f7f7;
+      color: #222;
+    }
+    body {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    h1 {margin: 0 0 1.2rem;font-size: 1.9rem}
+    label {display:flex;align-items:center;gap:.6rem;margin:.6rem 0}
+    input[type="file"] {margin-left:.4rem}
+    textarea {width:100%;height:16rem;margin-top:.4rem;font-family:monospace}
+    button {padding:.7rem 1.2rem;margin-top:1rem;font-size:1rem;cursor:pointer}
+    #stats {margin:.8rem 0;font-weight:600}
+    .small {font-size:.85rem;color:#666}
+  </style>
+</head>
+<body>
+  <h1>Ardour → EDL Marker Converter (DaVinci-kompatibel)</h1>
+
+  <label>Ardour‑Session Datei (.ardour)<input id="ardourInput" type="file" accept=".ardour,.xml"></label>
+  <label>Video‑Framerate (fps) <input id="fps" type="number" value="25" step="0.001"></label>
+  <label><input type="checkbox" id="includeRanges"> Auch "Range"‑Marker exportieren</label>
+
+  <button id="runBtn">EDL erstellen</button>
+  <span id="stats"></span>
+  <p class="small">Timecode‑Berechnung: Ardour‑Ticks → hh:mm:ss:ff (NON‑DROP).<br>
+  Marker‑Kriterien: <strong>IsMark</strong>* ohne „range“‑Flag oder <code>start == end</code>. Checkbox fügt alle Location‑Typen hinzu.</p>
+
+  <h2>EDL‑Vorschau</h2>
+  <textarea id="preview" readonly placeholder="Hier erscheint die EDL …"></textarea><br>
+  <a id="dl" href="#" style="display:none"><button>EDL herunterladen</button></a>
+
+<script>
+const TICKS_PER_SEC = 282240000;
+
+function ticksToTC(ticks, fps) {
+  const totalSec = ticks / TICKS_PER_SEC;
+  const hh = Math.floor(totalSec / 3600);
+  const mm = Math.floor((totalSec % 3600) / 60);
+  const ss = Math.floor(totalSec % 60);
+  const ff = Math.round((totalSec - Math.floor(totalSec)) * fps);
+  return [hh, mm, ss, ff].map(v => String(v).padStart(2, '0')).join(':');
+}
+
+function parseArdour(xmlTxt, includeRanges) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlTxt, 'application/xml');
+  const session = doc.querySelector('Session');
+  const sessionName = session?.getAttribute('name') || 'ARDOUR_SESSION';
+
+  const locations = Array.from(doc.querySelectorAll('Location'));
+  const markers = [];
+
+  locations.forEach(loc => {
+    const flags = (loc.getAttribute('flags') || '').toLowerCase();
+    const isRange = /range/.test(flags);
+    if (isRange && !includeRanges) return;
+
+    const name = loc.getAttribute('name') || 'Marker';
+    const startAttr = loc.getAttribute('start') || 'a0';
+    const ticks = parseInt(startAttr.replace(/^a/i, '').trim(), 10);
+
+    if (!includeRanges) {
+      if (!flags && loc.getAttribute('end') === loc.getAttribute('start')) {
+        // ok
+      } else if (/mark/.test(flags) && !/range/.test(flags)) {
+        // ok
+      } else {
+        return;
+      }
+    }
+
+    markers.push({ tc: ticksToTC(ticks, fpsVal), name: isRange ? name + ' [Range]' : name });
+  });
+
+  return { sessionName, markers };
+}
+
+const runBtn = document.getElementById('runBtn');
+const ardourIn = document.getElementById('ardourInput');
+const preview = document.getElementById('preview');
+const dlLink = document.getElementById('dl');
+const statsTxt = document.getElementById('stats');
+const includeRangesBox = document.getElementById('includeRanges');
+
+let fpsVal = 25;
+
+document.getElementById('fps').addEventListener('change', e => {
+  fpsVal = parseFloat(e.target.value) || 25;
+});
+
+runBtn.addEventListener('click', () => {
+  const file = ardourIn.files[0];
+  if (!file) {
+    alert('Bitte eine Ardour‑Datei auswählen');
+    return;
+  }
+
+  fpsVal = parseFloat(document.getElementById('fps').value) || 25;
+  const includeRanges = includeRangesBox.checked;
+
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const xmlTxt = evt.target.result;
+      const { sessionName, markers } = parseArdour(xmlTxt, includeRanges);
+      if (!markers.length) {
+        statsTxt.textContent = 'Keine Marker gefunden.';
+        preview.value = '';
+        dlLink.style.display = 'none';
+        return;
+      }
+
+      const lines = [];
+      lines.push('TITLE: ' + sessionName);
+      lines.push('FCM: NON-DROP FRAME');
+      lines.push('');
+
+      markers.forEach((m, i) => {
+        const id = String(i + 1).padStart(3, '0');
+        lines.push(`${id}  001      V     C        ${m.tc} ${m.tc} ${m.tc} ${m.tc}  `);
+        lines.push(` |C:ResolveColorBlue |M:${m.name} |D:1`);
+        lines.push('');
+      });
+
+      const edlTxt = lines.join('\r\n');
+      preview.value = edlTxt;
+      statsTxt.textContent = markers.length + ' Marker exportiert.';
+
+      const blob = new Blob([edlTxt], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      dlLink.href = url;
+      dlLink.download = sessionName.replace(/[^\w.-]+/g, '_') + '.edl';
+      dlLink.style.display = 'inline';
+    } catch (err) {
+      console.error(err);
+      alert('Fehler beim Parsen der Datei');
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+});
+</script>
+</body>
+</html>
