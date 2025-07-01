@@ -367,6 +367,42 @@
 .smartphone-viewer.animate-in { animation: slideInUp 0.5s ease-out forwards;}
 .smartphone-viewer.animate-out { animation: slideOutDown 0.5s ease-in forwards;}
 
+
+/* ---------- NEWSLETTER POP-UP ---------- */
+#newsletterModal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 3000;
+}
+#newsletterModal .modal-content {
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+  height: 75vh;
+  background: #fff;
+  border-radius: 12px;
+  overflow: auto;
+}
+#newsletterModal iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+#newsletterClose {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
 </style>
 </head>
 <body>
@@ -628,5 +664,51 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
+
+<!-- Newsletter-Pop-up -->
+<div id="newsletterModal">
+  <div class="modal-content">
+    <button id="newsletterClose" aria-label="Pop-up schließen">×</button>
+    <iframe
+      src="https://seu2.cleverreach.com/f/380847-413132/"
+      loading="lazy"
+      title="Newsletter-Anmeldung">
+    </iframe>
+  </div>
+</div>
+
+<script>
+(function () {
+  const modal   = document.getElementById('newsletterModal');
+  const closeBt = document.getElementById('newsletterClose');
+
+  function showModal () {
+    modal.style.display = 'flex';
+  }
+
+  function hideModal () {
+    modal.style.display = 'none';
+    let shownCount = parseInt(localStorage.getItem('newsletterModalShownCount') || '0');
+    localStorage.setItem('newsletterModalShownCount', (shownCount + 1).toString());
+  }
+
+  // Besuchszähler lesen / erhöhen
+  let visits = parseInt(localStorage.getItem('visitCount') || '0') + 1;
+  localStorage.setItem('visitCount', visits.toString());
+
+  let shownCount = parseInt(localStorage.getItem('newsletterModalShownCount') || '0');
+
+  // Nur beim 2. und 3. Besuch anzeigen (aber nur max. 2x insgesamt)
+  if ((visits === 2 || visits === 3) && shownCount < 2) {
+    setTimeout(showModal, 3000);
+  }
+
+  closeBt.addEventListener('click', hideModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) hideModal();
+  });
+})();
+</script>
+
 </body>
 </html>
