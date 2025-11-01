@@ -120,6 +120,20 @@ table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrollin
   .row, .panel, .controls, .toolbar { max-width: 100%; }
 }
 
+
+/* --- Mobile fix v3: prevent tall comment input caused by flex-basis --- */
+@media (max-width: 700px){
+  #comment-form { align-items: stretch; }
+  #comment-input{
+    flex: 0 1 auto !important;   /* don't use 400px flex-basis in column layout */
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 48px !important;
+    padding: 8px 10px !important;
+    line-height: 1.2 !important;
+  }
+}
+
 </style>
     
 </head>
