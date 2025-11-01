@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>EDL Review Player · YouTube &amp; Dateien (Fix)</title>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"></script>
-<style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>EDL Review Player · YouTube & Dateien (v4, smooth titles)</title>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"></script>
+  <style>
     :root { --gap: 12px; --radius: 10px; --bg:#0f1220; --panel:#151a2d; --text:#f2f5ff; --muted:#a7b0c3; --warn:#ffb84d; }
     *{box-sizing:border-box}
     body{ margin:0; font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); }
@@ -32,313 +31,356 @@
     .tc{ width:120px; }
     .idx{ width:72px; }
     #comments input{ min-width:0; }
-
     footer{ padding:16px; text-align:center; color:var(--muted) }
-    #logs { white-space:pre-wrap; font:12px ui-monospace,monospace; background:#090d1a; border:1px solid #273055; border-radius:8px; padding:8px; max-height:140px; overflow:auto; }
+    #resolver-host{ position:absolute; width:0; height:0; overflow:hidden; opacity:0; pointer-events:none; }
   </style>
 </head>
 <body>
 <header>
-<div class="row">
-<h1 id="t_title">EDL Review Player · YouTube &amp; Dateien</h1>
-<div class="row">
-<label for="yt-url" id="t_ytlabel">YouTube URL (Video/Playlist/Live)</label>
-<input id="yt-url" placeholder="https://youtu.be/… | /watch?v=… | /playlist?list=… | /live/… | /shorts/…" type="text"/>
-<button id="add-url" type="button">Hinzufügen</button>
-<button id="yt-selftest" title="Lädt ein offizielles YouTube-Demo-Video zum Test" type="button">YT‑Test</button>
-</div>
-<div class="row">
-<label for="file-input" id="t_filelabel">Datei(en) hinzufügen</label>
-<input accept="video/*" id="file-input" multiple="" type="file"/>
-</div>
-<div class="row">
-<label id="t_sourcelabel">Quelle wählen</label>
-<select id="source-select"></select>
-
-
-<span class="badge" id="diag" style="display:none"></span>
-</div>
-<div class="banner" id="fileproto">Hinweis: Du öffnest die Datei über <span class="badge">file://</span>. Der YouTube-Player kann so Fehler (<code>2</code>, <code>5</code>) werfen. Starte die Datei besser über einen lokalen Webserver (z. B. <span class="badge">python -m http.server</span>) oder lege sie auf http(s).</div>
-</div>
-<div class="top-right">
-<button id="lang-toggle" title="Switch UI language" type="button">EN</button>
-</div>
+  <div class="row">
+    <h1 id="t_title">EDL Review Player · YouTube & Dateien</h1>
+    <div class="row">
+      <label for="yt-url" id="t_ytlabel">YouTube URL (Video/Playlist/Live)</label>
+      <input id="yt-url" type="text" placeholder="https://youtu.be/… | /watch?v=… | /playlist?list=… | /live/… | /shorts/…"/>
+      <button id="add-url" type="button">Hinzufügen</button>
+      <!-- <button id="yt-selftest" type="button" title="Lädt ein offizielles YouTube-Demo-Video zum Test">YT‑Test</button> -->
+    </div>
+    <div class="row">
+      <label for="file-input" id="t_filelabel">Datei(en) hinzufügen</label>
+      <input id="file-input" type="file" accept="video/*" multiple/>
+    </div>
+    <div class="row">
+      <label id="t_sourcelabel">Quelle wählen</label>
+      <select id="source-select"></select>
+      <span id="diag" class="badge" style="display:none"></span>
+    </div>
+    <div class="row">
+      <label id="t_edlimport">.edl Marker importieren</label>
+      <input id="edl-input" type="file" accept=".edl,text/plain"/>
+    </div>
+    <div id="fileproto" class="banner">
+      Hinweis: Du öffnest die Datei über <span class="badge">file://</span>.
+      Der YouTube-Player kann so Fehler (<code>2</code>, <code>5</code>) werfen.
+      Starte die Datei besser über einen lokalen Webserver (z. B. <span class="badge">python -m http.server</span>) oder lege sie auf http(s).
+    </div>
+  </div>
+  <div class="top-right">
+    <button id="lang-toggle" type="button" title="Switch UI language">EN</button>
+  </div>
 </header>
 <main class="stack" style="padding:16px">
-<section class="panel stack">
-<div id="player-wrap">
-<div id="player"></div>
-<video controls="" id="file-player"></video>
-</div>
-<form class="row" id="comment-form" onsubmit="return false">
-<input id="comment-input" placeholder="Kommentar hinzufügen…" type="text"/>
-<button id="add-comment" type="button">Add</button>
-<span id="clip-info" style="font-size:12px;color:var(--muted)"></span>
-</form>
-<ul class="panel" id="comments" style="list-style:none; margin:0"></ul>
-<div class="row">
-<div class="stack" style="flex:1">
-<label id="t_edlimport">.edl Marker importieren</label>
-<input id="edl-input" type="file"/>
-</div>
-<button id="download-edl" type="button">💾 EDL exportieren</button>
-<button id="clear-comments" type="button">🗑️ Alle löschen</button>
-</div>
-<div class="stack">
-<strong>Konsole</strong>
-<div id="logs"></div>
-</div>
-</section>
+  <section class="panel stack">
+    <div id="player-wrap">
+      <div id="player"></div>
+      <video id="file-player" controls></video>
+      <div id="resolver-host"></div>
+    </div>
+    <form id="comment-form" class="row" onsubmit="return false">
+      <input id="comment-input" type="text" placeholder="Kommentar hinzufügen…"/>
+      <button id="add-comment" type="button">Add</button>
+      <span id="clip-info" style="font-size:12px;color:var(--muted)"></span>
+    </form>
+    <ul id="comments" class="panel" style="list-style:none; margin:0"></ul>
+    <div class="row">
+      <button id="download-edl" type="button">💾 EDL exportieren</button>
+      <button id="clear-comments" type="button">🗑️ Alle löschen</button>
+    </div>
+  </section>
 </main>
 <footer>PHANTOMCREW · EDL Tools</footer>
+
 <script>
-  (function(){
-    const $ = (id)=>document.getElementById(id);
-    const logs=$('logs');
-    const log=(...a)=>{ const line=a.map(x=>typeof x==='object'?JSON.stringify(x):String(x)).join(' '); logs.textContent+=line+'\n'; console.log(...a); };
+(function(){
+  const $ = (id)=>document.getElementById(id);
+  document.addEventListener('DOMContentLoaded', init);
 
-    document.addEventListener('DOMContentLoaded', init);
+  function init(){
+    const urlInput=$('yt-url'), addUrlBtn=$('add-url'), fileInput=$('file-input'), selectEl=$('source-select');
+    const commentInput=$('comment-input'), addCommentBtn=$('add-comment');
+    const commentsEl=$('comments'), downloadBtn=$('download-edl'), clearBtn=$('clear-comments');
+    const edlInput=$('edl-input'), fileVideo=$('file-player'), langToggle=$('lang-toggle');
+    const diag=$('diag'), fileBanner=$('fileproto'), clipInfo=$('clip-info'), resolverHost=$('resolver-host');
 
-    function init(){
+    // ---------- State ----------
+    const sources=[]; // {type:'video'|'file', id, title, comments, fileUrl, fileName}
+    let current=0; let ytPlayer=null; let ytReady=false;
+    let resolver=null; let resolverReady=false;
+    const titleCache=new Map(); // id -> title
+
+    // ---------- i18n ----------
+    let LANG='de';
+    const I18N={
+      de:{ title:'EDL Review Player · YouTube & Dateien', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Datei(en) hinzufügen', sourcelabel:'Quelle wählen', add:'Hinzufügen', addComment:'Kommentar hinzufügen…', edlimport:'.edl Marker importieren', export:'💾 EDL exportieren', clear:'🗑️ Alle löschen' },
+      en:{ title:'EDL Review Player · YouTube & Files', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Add file(s)', sourcelabel:'Select source', add:'Add', addComment:'Add a comment…', edlimport:'Import .edl markers', export:'💾 Export EDL', clear:'🗑️ Clear all' }
+    };
+    function applyLang(){
+      const t=I18N[LANG];
+      $('t_title').textContent=t.title; $('t_ytlabel').textContent=t.ytlabel; $('t_filelabel').textContent=t.filelabel; $('t_sourcelabel').textContent=t.sourcelabel;
+      addUrlBtn.textContent=t.add; addCommentBtn.textContent=t.add; commentInput.placeholder=t.addComment; $('t_edlimport').textContent=t.edlimport; downloadBtn.textContent=t.export; clearBtn.textContent=t.clear;
+      langToggle.textContent=(LANG==='de'?'EN':'DE'); document.documentElement.lang=LANG;
+    }
+    applyLang();
+    langToggle.addEventListener('click',()=>{ LANG=LANG==='de'?'en':'de'; applyLang(); });
+
+    // ---------- Helpers ----------
+    const two=n=>n<10?('0'+n):(''+n);
+    function formatEDL(seconds){ const fps=30; const h=Math.floor(seconds/3600),m=Math.floor((seconds%3600)/60),s=Math.floor(seconds%60),f=Math.floor((seconds%1)*fps); return `${two(h)}:${two(m)}:${two(s)}:${two(f)}`; }
+    function parseEDLTime(tc){ const [hh,mm,ss,ff]=tc.split(':').map(x=>parseInt(x,10)); const fps=30; if([hh,mm,ss,ff].some(isNaN)) return 0; return hh*3600+mm*60+ss+(ff/fps); }
+    function isValidVideoId(id){ return /^[A-Za-z0-9_-]{11}$/.test(id||''); }
+    function sourceLabel(src){ return src.title || (src.type==='file'?src.fileName: `YouTube ${src.id}`); }
+    function showFilePlayer(show){ $('file-player').style.display=show?'block':'none'; $('player').style.display=show?'none':'block'; }
+
+    function getYouTubeId(u){
       try{
-        const urlInput=$('yt-url'), addUrlBtn=$('add-url'), ytTestBtn=$('yt-selftest'), fileInput=$('file-input'), selectEl=$('source-select');
-        const commentInput=$('comment-input'), addCommentBtn=$('add-comment');
-        const commentsEl=$('comments'), downloadBtn=$('download-edl'), clearBtn=$('clear-comments');
-        const edlInput=$('edl-input'), fileVideo=$('file-player'), langToggle=$('lang-toggle');
-        const diag=$('diag'), fileBanner=$('fileproto'), clipInfo=$('clip-info');
-
-        // State
-        const sources=[]; // {type:'video'|'file', id, title, comments, fileUrl, fileName}
-        let current=0; let ytPlayer=null; let ytReady=false; let usingFile=false;
-
-        // Inject YT IFrame API
-        const tag=document.createElement('script'); tag.src="https://www.youtube.com/iframe_api"; document.head.appendChild(tag);
-
-        // i18n
-        let LANG='de';
-        const I18N={
-          de:{ title:'EDL Review Player · YouTube & Dateien', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Datei(en) hinzufügen', sourcelabel:'Quelle wählen', add:'Hinzufügen', addComment:'Kommentar hinzufügen…', edlimport:'.edl Marker importieren', export:'💾 EDL exportieren', clear:'🗑️ Alle löschen' },
-          en:{ title:'EDL Review Player · YouTube & Files', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Add file(s)', sourcelabel:'Select source', add:'Add', addComment:'Add a comment…', edlimport:'Import .edl markers', export:'💾 Export EDL', clear:'🗑️ Clear all' }
-        };
-        function applyLang(){
-          const t=I18N[LANG];
-          $('t_title').textContent=t.title; $('t_ytlabel').textContent=t.ytlabel; $('t_filelabel').textContent=t.filelabel; $('t_sourcelabel').textContent=t.sourcelabel;
-          addUrlBtn.textContent=t.add; addCommentBtn.textContent=t.add; commentInput.placeholder=t.addComment; $('t_edlimport').textContent=t.edlimport; downloadBtn.textContent=t.export; clearBtn.textContent=t.clear;
-          langToggle.textContent=(LANG==='de'?'EN':'DE'); document.documentElement.lang=LANG;
+        const url=new URL(u); const host=url.hostname.replace(/^www\./,'');
+        const clean=v=>(v||'').replace(/[^a-zA-Z0-9_-]/g,'');
+        const list=url.searchParams.get('list'); if(list) return {type:'playlist', id:clean(list)};
+        if(host==='youtu.be'){ const id=clean(url.pathname.substring(1)); if(id) return {type:'video', id}; }
+        const v=url.searchParams.get('v'); if(v) return {type:'video', id:clean(v)};
+        if(host.endsWith('youtube.com')){
+          const p=url.pathname.split('/').filter(Boolean);
+          if(p[0]==='live'&&p[1]) return {type:'video', id:clean(p[1])};
+          if(p[0]==='shorts'&&p[1]) return {type:'video', id:clean(p[1])};
+          if(p[0]==='playlist'){ const pl=url.searchParams.get('list'); if(pl) return {type:'playlist', id:clean(pl)}; }
+          if(p[0]==='videoseries'){ const pl=url.searchParams.get('list'); if(pl) return {type:'playlist', id:clean(pl)}; }
         }
-        applyLang();
-        langToggle.addEventListener('click',()=>{ LANG=LANG==='de'?'en':'de'; applyLang(); });
+      }catch(e){}
+      return null;
+    }
 
-        // Helpers
-        const two=n=>n<10?('0'+n):(''+n);
-        function formatEDL(seconds){ const fps=30; const h=Math.floor(seconds/3600),m=Math.floor((seconds%3600)/60),s=Math.floor(seconds%60),f=Math.floor((seconds%1)*fps); return `${two(h)}:${two(m)}:${two(s)}:${two(f)}`; }
-        function parseEDLTime(tc){ const [hh,mm,ss,ff]=tc.split(':').map(x=>parseInt(x,10)); const fps=30; if([hh,mm,ss,ff].some(isNaN)) return 0; return hh*3600+mm*60+ss+(ff/fps); }
-        function isValidVideoId(id){ return /^[A-Za-z0-9_-]{11}$/.test(id||''); }
-        function getYouTubeId(u){
-          try{
-            const url=new URL(u); const host=url.hostname.replace(/^www\./,''); const clean=v=>(v||'').replace(/[^a-zA-Z0-9_-]/g,'');
-            const list=url.searchParams.get('list'); if(list) return {type:'playlist', id:clean(list)};
-            if(host==='youtu.be'){ const id=clean(url.pathname.substring(1)); if(id) return {type:'video', id}; }
-            const v=url.searchParams.get('v'); if(v) return {type:'video', id:clean(v)};
-            if(host.endsWith('youtube.com')){
-              const p=url.pathname.split('/').filter(Boolean);
-              if(p[0]==='live'&&p[1]) return {type:'video', id:clean(p[1])};
-              if(p[0]==='shorts'&&p[1]) return {type:'video', id:clean(p[1])};
-              if(p[0]==='playlist'){ const pl=url.searchParams.get('list'); if(pl) return {type:'playlist', id:clean(pl)}; }
-              if(p[0]==='videoseries'){ const pl=url.searchParams.get('list'); if(pl) return {type:'playlist', id:clean(pl)}; }
-            }
-          }catch(e){}
-          return null;
-        }
-        function sourceLabel(src){ return src.title || (src.type==='file'?src.fileName: `YouTube ${src.id}`); }
-        function showFilePlayer(show){ usingFile=show; fileVideo.style.display=show?'block':'none'; $('player').style.display=show?'none':'block'; }
+    // ---------- Background title resolver (no flicker) ----------
+    function ensureResolver(){
+      if(resolver || !window.YT || !YT.Player) return;
+      const pv={ rel:0, controls:0, disablekb:1, modestbranding:1, iv_load_policy:3, playsinline:1 };
+      resolver=new YT.Player('resolver-host',{ width:'0', height:'0', playerVars:pv, events:{
+        onReady:()=>{ resolverReady=true; processTitleQueue(); },
+        onError:()=>{ /* ignore resolver errors */ }
+      }});
+    }
 
-        // YT API callbacks
-        window.onYouTubeIframeAPIReady=function(){
-          const playerVars={ rel:0, modestbranding:1, iv_load_policy:3, enablejsapi:1, playsinline:1 };
-          if(location.protocol.startsWith('http')){ playerVars.origin=location.origin; } else { fileBanner.style.display='block'; }
-          ytPlayer=new YT.Player('player',{ width:'100%', height:'100%', playerVars, events:{ onReady:onYTReady, onStateChange:onYTState, onError:onYTError } });
-          log('YT API ready.');
-        };
-        function onYTReady(){ ytReady=true; log('YT ready'); if(sources[current]) cueCurrent(); }
-        function onYTState(){ /* no-op */ }
-        function onYTError(e){ const code=e?.data; diag.style.display='inline-block'; diag.textContent='YT err '+code; if(location.protocol==='file:') fileBanner.style.display='block'; }
-
-        // Building sources
-        function addVideoById(id, title=''){
-          if(!isValidVideoId(id)){ alert((LANG==='de'?'Ungültige Video-ID: ':'Invalid video ID: ')+id); return; }
-          const src={type:'video', id, title, comments:[]};
-          sources.push(src);
-          const opt=document.createElement('option'); opt.textContent=sourceLabel(src); $('source-select').add(opt);
-        }
-
-        async function expandPlaylistToVideos(playlistId){
-          if(!ytReady || !ytPlayer){ log('expand: yt not ready'); return; }
-          try{
-            ytPlayer.cuePlaylist({ listType:'playlist', list:playlistId, index:0 });
-            // Give it a moment to load the playlist
-            await new Promise(r=>setTimeout(r, 800));
-            const ids = (ytPlayer.getPlaylist && ytPlayer.getPlaylist()) || [];
-            if(!ids.length){ alert(LANG==='de'?'Playlist konnte nicht geladen werden.':'Could not load playlist.'); return; }
-            // Create entries for each video ID
-            const startIdx = sources.length;
-            ids.forEach(id=> addVideoById(id, ''));
-            if($('source-select').selectedIndex<0){ $('source-select').selectedIndex=0; current=0; }
-
-            // Resolve titles by stepping through the playlist quickly
-            for(let i=0;i<ids.length;i++){
-              ytPlayer.playVideoAt(i);
-              await new Promise(r=>setTimeout(r, 700));
-              try{
-                const data=ytPlayer.getVideoData?.()||{};
-                const title=data.title||'';
-                const src=sources[startIdx+i];
-                if(src && title && !src.title){
-                  src.title=title;
-                  const opt=$('source-select').options[startIdx+i];
-                  if(opt) opt.textContent=sourceLabel(src);
-                }
-                ytPlayer.pauseVideo?.();
-              }catch(_e){}
-            }
-            // After resolving titles, cue first selected
-            cueCurrent();
-          }catch(err){
-            log('expand error', err);
+    async function getTitleById(id){
+      if(titleCache.has(id)) return titleCache.get(id);
+      if(!resolverReady) await waitFor(()=>resolverReady, 2000);
+      if(!resolver) return '';
+      const attempts=[300,600,900,1200,1500];
+      try{
+        resolver.cueVideoById({videoId:id});
+      }catch(e){ return ''; }
+      for(const wait of attempts){
+        await delay(wait);
+        try{
+          const data = resolver.getVideoData ? resolver.getVideoData() : null;
+          const t = data && data.title ? String(data.title) : '';
+          if(t){
+            titleCache.set(id, t);
+            return t;
           }
+        }catch(e){ /* try again */ }
+      }
+      return '';
+    }
+
+    function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+    function waitFor(cond, timeout=2000){
+      return new Promise((res)=>{
+        const start=Date.now();
+        (function tick(){
+          if(cond()) return res(true);
+          if(Date.now()-start>=timeout) return res(false);
+          setTimeout(tick,50);
+        })();
+      });
+    }
+
+    // ---------- Title queue ----------
+    const titleQueue=[];
+    let titleBusy=false;
+    async function processTitleQueue(){
+      if(titleBusy) return;
+      titleBusy=true;
+      ensureResolver();
+      while(titleQueue.length){
+        const idx=titleQueue.shift();
+        const src=sources[idx];
+        if(!src || src.type!=='video' || src.title) continue;
+        const title = await getTitleById(src.id);
+        if(title){
+          src.title=title;
+          const opt=selectEl.options[idx];
+          if(opt) opt.textContent=sourceLabel(src);
         }
+      }
+      titleBusy=false;
+    }
 
-        function addSourceFromUrl(u){
-          const meta=getYouTubeId(u);
-          if(!meta){ alert(LANG==='de'?'Ungültige YouTube-URL':'Invalid YouTube URL'); return; }
-          diag.style.display='inline-block'; diag.textContent=(meta.type==='video'?'VID:':'PL:')+meta.id;
-          if(meta.type==='video'){
-            addVideoById(meta.id,'');
-            if(sources.length===1){ $('source-select').selectedIndex=0; current=0; cueCurrent(); }
-          } else {
-            // Expand playlist into individual entries
-            expandPlaylistToVideos(meta.id);
-          }
-        }
+    // ---------- YouTube IFrame API ----------
+    const tag=document.createElement('script'); tag.src="https://www.youtube.com/iframe_api"; document.head.appendChild(tag);
+    window.onYouTubeIframeAPIReady=function(){
+      const playerVars={ rel:0, modestbranding:1, iv_load_policy:3, enablejsapi:1, playsinline:1 };
+      if(location.protocol.startsWith('http')){ playerVars.origin=location.origin; } else { fileBanner.style.display='block'; }
+      ytPlayer=new YT.Player('player',{ width:'100%', height:'100%', playerVars, events:{ onReady:onYTReady, onStateChange:onYTState, onError:onYTError } });
+      ensureResolver();
+    };
+    function onYTReady(){ ytReady=true; if(sources[current]) cueCurrent(false); }
+    function onYTState(){ /* no longer used for title loading to avoid flicker */ }
+    function onYTError(e){
+      const code=e?.data;
+      diag.style.display='inline-block';
+      diag.textContent='YT err '+code;
+      if(location.protocol==='file:') fileBanner.style.display='block';
+    }
 
-        addUrlBtn.addEventListener('click',()=>{ const u=urlInput.value.trim(); if(!u) return; addSourceFromUrl(u); urlInput.value=''; });
-        urlInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); addUrlBtn.click(); }});
+    // ---------- Build sources ----------
+    function addVideoById(id, title=''){
+      if(!isValidVideoId(id)){ alert((LANG==='de'?'Ungültige Video-ID: ':'Invalid video ID: ')+id); return; }
+      const src={type:'video', id, title, comments:[]};
+      sources.push(src);
+      const opt=document.createElement('option'); opt.textContent=sourceLabel(src); selectEl.add(opt);
+      if(!title){ titleQueue.push(sources.length-1); processTitleQueue(); }
+      if(selectEl.selectedIndex<0){ selectEl.selectedIndex=0; current=0; }
+      cueCurrent(false);
+    }
 
-        ytTestBtn.addEventListener('click',()=>{
-          addVideoById('M7lc1UVf-VE', 'YouTube IFrame API Demo');
-          $('source-select').selectedIndex=sources.length-1; current=sources.length-1; cueCurrent();
-        });
-
-        // files
-        fileInput.addEventListener('change',()=>{
-          if(fileInput.files?.length){
-            for(const f of fileInput.files){
-              const url=URL.createObjectURL(f);
-              const src={type:'file', id:url, fileUrl:url, fileName:f.name, title:f.name, comments:[]};
-              sources.push(src);
-              const opt=document.createElement('option'); opt.textContent=sourceLabel(src); $('source-select').add(opt);
-            }
-            if($('source-select').selectedIndex<0){ $('source-select').selectedIndex=0; current=0; }
-            cueCurrent();
-          }
-        });
-
-        // select change
-        $('source-select').addEventListener('change',()=>{ current=$('source-select').selectedIndex; cueCurrent(); });
-
-        function showFilePlayer(show){ usingFile=show; fileVideo.style.display=show?'block':'none'; $('player').style.display=show?'none':'block'; }
-
-        function cueCurrent(){
-          const src=sources[current]; if(!src) return;
-          if(src.type==='file'){
-            showFilePlayer(true); ytPlayer?.stopVideo?.(); fileVideo.src=src.fileUrl; fileVideo.pause(); updateCommentList(); clipInfo.textContent='';
-            return;
-          }
-          if(!ytReady||!ytPlayer){ log('cue: yt not ready'); return; }
-          showFilePlayer(false);
-          try{
-            ytPlayer.cueVideoById({videoId:src.id});
-            setTimeout(()=>{
-              ytPlayer.pauseVideo?.();
-              try{
-                const data=ytPlayer.getVideoData?.(); const title=data?.title||'';
-                if(title && !src.title){ src.title=title; const opt=$('source-select').options[current]; if(opt) opt.textContent=sourceLabel(src); }
-              }catch(e){}
-            }, 400);
-          }catch(err){ log('cue error', err); diag.style.display='inline-block'; diag.textContent='cue error'; }
-          updateCommentList();
-          clipInfo.textContent='';
-        }
-
-        // Comments
-        function updateCommentList(){
-          const src=sources[current]; if(!src) return;
-          commentsEl.innerHTML='';
-          (src.comments||[]).forEach((c,i)=>commentsEl.appendChild(formatCommentItem(c,i)));
-          downloadBtn.disabled=(src.comments||[]).length===0;
-        }
-        function formatCommentItem(obj, idx){
-          const li=document.createElement('li');
-          const text=document.createElement('input'); text.type='text'; text.value=obj.comment||''; text.addEventListener('input',()=>{ obj.comment=text.value; hardPause(); });
-          const time=document.createElement('input'); time.type='text'; time.value=obj.time||'00:00:00:00'; time.className='tc'; time.addEventListener('input',()=>{ obj.time=time.value; });
-          const gotoBtn=document.createElement('button'); gotoBtn.type='button'; gotoBtn.textContent='Go To';
-          gotoBtn.onclick=()=>{
-            const seconds=parseEDLTime(obj.time||'00:00:00:00'); const src=sources[current];
-            if(src.type==='file'){ fileVideo.currentTime=seconds; fileVideo.pause(); }
-            else { const was=ytPlayer.getPlayerState?.()===1; ytPlayer.seekTo(seconds,true); if(!was) ytPlayer.pauseVideo?.(); }
-          };
-          const delBtn=document.createElement('button'); delBtn.type='button'; delBtn.textContent='Delete'; delBtn.onclick=()=>removeCommentAt(idx);
-          li.append(text,time,gotoBtn,delBtn);
-          return li;
-        }
-        function removeCommentAt(i){ const src=sources[current]; if(!src) return; src.comments.splice(i,1); updateCommentList(); }
-        function addComment(){
-          const src=sources[current]; if(!src) return;
-          const text=commentInput.value.trim(); if(!text) return; hardPause();
-          const seconds = src.type==='file' ? (fileVideo.currentTime||0) : (ytPlayer?.getCurrentTime?.()||0);
-          src.comments.push({ comment:text, time:formatEDL(seconds) });
-          commentInput.value=''; updateCommentList();
-        }
-        function hardPause(){ const src=sources[current]; if(!src) return; if(src.type==='file'){ if(!fileVideo.paused) fileVideo.pause(); } else if(ytPlayer && ytPlayer.pauseVideo){ try{ ytPlayer.pauseVideo(); }catch(e){} } }
-        addCommentBtn.addEventListener('click',()=>{ addComment(); resumePlayback(); });
-        commentInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); addComment(); resumePlayback(); } });
-        function resumePlayback(){ const src=sources[current]; if(!src) return; if(src.type==='file'){ fileVideo.play?.(); } else if(ytPlayer && ytPlayer.playVideo){ try{ ytPlayer.playVideo(); }catch(e){} } }
-        $('comment-form').addEventListener('pointerdown', hardPause, {capture:true});
-
-        clearBtn.addEventListener('click',()=>{
-          const msg= LANG==='de'? 'Alle Kommentare für die aktuelle Quelle löschen?' : 'Delete all comments for the current source?';
-          if(!confirm(msg)) return; const src=sources[current]; if(!src) return; src.comments=[]; updateCommentList();
-        });
-
-        edlInput.addEventListener('change', ()=>{ const file=edlInput.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>parseEDL(e.target.result); reader.readAsText(file); });
-        function parseEDL(content){
-          const src=sources[current]; if(!src) return;
-          const lines=content.split(/\r?\n/); let lastTime='';
-          for(const line of lines){
-            if(line.includes('V     C        ')){ lastTime=line.split('V     C        ')[1].split(' ')[0].trim(); }
-            else if(line.includes('|M:')){ const commentText=line.split('|M:')[1].split('|')[0].trim(); if(!lastTime) continue; src.comments.push({ comment:commentText, time:lastTime }); lastTime=''; }
-          }
-          updateCommentList();
-        }
-
-        downloadBtn.addEventListener('click', ()=>{
-          const src=sources[current]; if(!src) return;
-          const title= src.title || (src.type==='file'? src.fileName : src.id);
-          let edl=`TITLE: PHANTOMCREW.DE Edit list for ${title}\nFCM: NON-DROP FRAME\n\n`;
-          let i=1;
-          const write=(c)=>{ const tc=formatEDL(parseEDLTime(c.time)); edl+=`00${two(i++)}  001      V     C        ${tc} ${tc} ${tc} ${tc} \n |C:ResolveColorBlue |M:${c.comment} |D:1\n\n`; };
-          for(const c of (src.comments||[])) write(c);
-          const blob=new Blob([edl],{type:'text/plain;charset=utf-8'});
-          const safeName=(title||'session').replace(/[^a-z0-9_\-]+/gi,'_');
-          saveAs(blob, `${safeName}.edl`);
-        });
-
-        log('UI wired. Ready.');
-      }catch(e){
-        logs.textContent+='FATAL JS-Fehler: '+(e && (e.stack||e.message||e))+'\n';
+    async function expandPlaylistToVideos(playlistId){
+      if(!ytReady || !ytPlayer){ alert(LANG==='de'?'YouTube-API noch nicht bereit.':'YouTube API not ready yet.'); return; }
+      try{
+        ytPlayer.cuePlaylist({ listType:'playlist', list:playlistId, index:0 });
+        await new Promise(r=>setTimeout(r, 800));
+        const ids = (ytPlayer.getPlaylist && ytPlayer.getPlaylist()) || [];
+        if(!ids.length){ alert(LANG==='de'?'Playlist konnte nicht geladen werden.':'Could not load playlist.'); return; }
+        const startIdx = sources.length;
+        ids.forEach(id=> addVideoById(id, ''));
+        // queue background title resolution for all
+        for(let i=0;i<ids.length;i++){ titleQueue.push(startIdx+i); }
+        processTitleQueue();
+      }catch(err){
+        diag.style.display='inline-block';
+        diag.textContent='PL err';
       }
     }
-  })();
+
+    function addSourceFromUrl(u){
+      const meta=getYouTubeId(u);
+      if(!meta){ alert(LANG==='de'?'Ungültige YouTube-URL':'Invalid YouTube URL'); return; }
+      diag.style.display='inline-block'; diag.textContent=(meta.type==='video'?'VID:':'PL:')+meta.id;
+      if(meta.type==='video'){ addVideoById(meta.id,''); }
+      else { expandPlaylistToVideos(meta.id); }
+    }
+
+    addUrlBtn.addEventListener('click',()=>{ const u=urlInput.value.trim(); if(!u) return; addSourceFromUrl(u); urlInput.value=''; });
+    urlInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); addUrlBtn.click(); }});
+
+    // ---------- FILES ----------
+    fileInput.addEventListener('change',()=>{
+      if(fileInput.files?.length){
+        for(const f of fileInput.files){
+          const url=URL.createObjectURL(f);
+          const src={type:'file', id:url, fileUrl:url, fileName:f.name, title:f.name, comments:[]};
+          sources.push(src);
+          const opt=document.createElement('option'); opt.textContent=sourceLabel(src); selectEl.add(opt);
+        }
+        if(selectEl.selectedIndex<0){ selectEl.selectedIndex=0; current=0; }
+        cueCurrent(false);
+      }
+    });
+
+    // ---------- Select change ----------
+    selectEl.addEventListener('change',()=>{ current=selectEl.selectedIndex; cueCurrent(false); });
+
+    function cueCurrent(resetTime){
+      const src=sources[current]; if(!src) return;
+      if(src.type==='file'){
+        showFilePlayer(true);
+        if(resetTime!==false) fileVideo.currentTime = 0;
+        fileVideo.src=src.fileUrl;
+        fileVideo.pause();
+        updateCommentList();
+        clipInfo.textContent='';
+        return;
+      }
+      if(!ytReady||!ytPlayer){ return; }
+      showFilePlayer(false);
+      try{
+        ytPlayer.cueVideoById({videoId:src.id});
+        setTimeout(()=>{
+          ytPlayer.pauseVideo?.();
+          // title comes from background resolver to avoid flicker
+        }, 200);
+      }catch(err){
+        diag.style.display='inline-block'; diag.textContent='cue error';
+      }
+      updateCommentList();
+      clipInfo.textContent='';
+    }
+
+    // ---------- Comments ----------
+    function updateCommentList(){
+      const src=sources[current]; if(!src) return;
+      commentsEl.innerHTML='';
+      (src.comments||[]).forEach((c,i)=>commentsEl.appendChild(formatCommentItem(c,i)));
+      downloadBtn.disabled=(src.comments||[]).length===0;
+    }
+    function formatCommentItem(obj, idx){
+      const li=document.createElement('li');
+      const text=document.createElement('input'); text.type='text'; text.value=obj.comment||''; text.addEventListener('input',()=>{ obj.comment=text.value; hardPause(); });
+      const time=document.createElement('input'); time.type='text'; time.value=obj.time||'00:00:00:00'; time.className='tc'; time.addEventListener('input',()=>{ obj.time=time.value; });
+      const gotoBtn=document.createElement('button'); gotoBtn.type='button'; gotoBtn.textContent='Go To';
+      gotoBtn.onclick=()=>{
+        const seconds=parseEDLTime(obj.time||'00:00:00:00'); const src=sources[current];
+        if(src.type==='file'){ fileVideo.currentTime=seconds; fileVideo.pause(); }
+        else { const was=ytPlayer.getPlayerState?.()===1; ytPlayer.seekTo(seconds,true); if(!was) ytPlayer.pauseVideo?.(); }
+      };
+      const delBtn=document.createElement('button'); delBtn.type='button'; delBtn.textContent='Delete'; delBtn.onclick=()=>removeCommentAt(idx);
+      li.append(text,time,gotoBtn,delBtn);
+      return li;
+    }
+    function removeCommentAt(i){ const src=sources[current]; if(!src) return; src.comments.splice(i,1); updateCommentList(); }
+    function addComment(){
+      const src=sources[current]; if(!src) return; const text=commentInput.value.trim(); if(!text) return; hardPause();
+      const seconds = src.type==='file' ? (fileVideo.currentTime||0) : (ytPlayer?.getCurrentTime?.()||0);
+      src.comments.push({ comment:text, time:formatEDL(seconds) });
+      commentInput.value=''; updateCommentList();
+    }
+    function hardPause(){ const src=sources[current]; if(!src) return; if(src.type==='file'){ if(!fileVideo.paused) fileVideo.pause(); } else if(ytPlayer && ytPlayer.pauseVideo){ try{ ytPlayer.pauseVideo(); }catch(e){} } }
+    addCommentBtn.addEventListener('click',()=>{ addComment(); resumePlayback(); });
+    commentInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); addComment(); resumePlayback(); } });
+    function resumePlayback(){ const src=sources[current]; if(!src) return; if(src.type==='file'){ fileVideo.play?.(); } else if(ytPlayer && ytPlayer.playVideo){ try{ ytPlayer.playVideo(); }catch(e){} } }
+    $('comment-form').addEventListener('pointerdown', hardPause, {capture:true});
+
+    clearBtn.addEventListener('click',()=>{
+      const msg= LANG==='de'? 'Alle Kommentare für die aktuelle Quelle löschen?' : 'Delete all comments for the current source?';
+      if(!confirm(msg)) return; const src=sources[current]; if(!src) return; src.comments=[]; updateCommentList();
+    });
+
+    // ---------- EDL Import ----------
+    edlInput.addEventListener('change', ()=>{ const file=edlInput.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>parseEDL(e.target.result); reader.readAsText(file); });
+    function parseEDL(content){
+      const src=sources[current]; if(!src) return;
+      const lines=content.split(/\r?\n/); let lastTime='';
+      for(const line of lines){
+        if(line.includes('V     C        ')){ lastTime=line.split('V     C        ')[1].split(' ')[0].trim(); }
+        else if(line.includes('|M:')){ const commentText=line.split('|M:')[1].split('|')[0].trim(); if(!lastTime) continue; src.comments.push({ comment:commentText, time:lastTime }); lastTime=''; }
+      }
+      updateCommentList();
+    }
+
+    // ---------- EDL Export ----------
+    downloadBtn.addEventListener('click', ()=>{
+      const src=sources[current]; if(!src) return;
+      const title= src.title || (src.type==='file'? src.fileName : src.id);
+      let edl=`TITLE: PHANTOMCREW.DE Edit list for ${title}\nFCM: NON-DROP FRAME\n\n`;
+      let i=1;
+      const write=(c)=>{ const tc=formatEDL(parseEDLTime(c.time)); edl+=`00${two(i++)}  001      V     C        ${tc} ${tc} ${tc} ${tc} \n |C:ResolveColorBlue |M:${c.comment} |D:1\n\n`; };
+      for(const c of (src.comments||[])) write(c);
+      const blob=new Blob([edl],{type:'text/plain;charset=utf-8'});
+      const safeName=(title||'session').replace(/[^a-z0-9_\\-]+/gi,'_');
+      saveAs(blob, `${safeName}.edl`);
+    });
+
+    // ---------- Final ----------
+    if(location.protocol==='file:'){ fileBanner.style.display='block'; }
+  }
+})();
 </script>
 </body>
 </html>
