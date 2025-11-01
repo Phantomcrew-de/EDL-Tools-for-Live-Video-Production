@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>EDL Review Player · YouTube & Dateien (v4, smooth titles)</title>
+  <title>EDL Review Player · YouTube & Dateien</title>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"></script>
   <style>
     :root { --gap: 12px; --radius: 10px; --bg:#0f1220; --panel:#151a2d; --text:#f2f5ff; --muted:#a7b0c3; --warn:#ffb84d; }
@@ -43,7 +43,6 @@
       <label for="yt-url" id="t_ytlabel">YouTube URL (Video/Playlist/Live)</label>
       <input id="yt-url" type="text" placeholder="https://youtu.be/… | /watch?v=… | /playlist?list=… | /live/… | /shorts/…"/>
       <button id="add-url" type="button">Hinzufügen</button>
-      <!-- <button id="yt-selftest" type="button" title="Lädt ein offizielles YouTube-Demo-Video zum Test">YT‑Test</button> -->
     </div>
     <div class="row">
       <label for="file-input" id="t_filelabel">Datei(en) hinzufügen</label>
@@ -250,7 +249,6 @@
         if(!ids.length){ alert(LANG==='de'?'Playlist konnte nicht geladen werden.':'Could not load playlist.'); return; }
         const startIdx = sources.length;
         ids.forEach(id=> addVideoById(id, ''));
-        // queue background title resolution for all
         for(let i=0;i<ids.length;i++){ titleQueue.push(startIdx+i); }
         processTitleQueue();
       }catch(err){
@@ -304,7 +302,6 @@
         ytPlayer.cueVideoById({videoId:src.id});
         setTimeout(()=>{
           ytPlayer.pauseVideo?.();
-          // title comes from background resolver to avoid flicker
         }, 200);
       }catch(err){
         diag.style.display='inline-block'; diag.textContent='cue error';
@@ -344,8 +341,12 @@
     function hardPause(){ const src=sources[current]; if(!src) return; if(src.type==='file'){ if(!fileVideo.paused) fileVideo.pause(); } else if(ytPlayer && ytPlayer.pauseVideo){ try{ ytPlayer.pauseVideo(); }catch(e){} } }
     addCommentBtn.addEventListener('click',()=>{ addComment(); resumePlayback(); });
     commentInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); addComment(); resumePlayback(); } });
-    function resumePlayback(){ const src=sources[current]; if(!src) return; if(src.type==='file'){ fileVideo.play?.(); } else if(ytPlayer && ytPlayer.playVideo){ try{ ytPlayer.playVideo(); }catch(e){} } }
+    // NEW: auto-pause while typing in the comment field
+    commentInput.addEventListener('input', hardPause);
+    // Keep existing pause-on-pointer behavior
     $('comment-form').addEventListener('pointerdown', hardPause, {capture:true});
+
+    function resumePlayback(){ const src=sources[current]; if(!src) return; if(src.type==='file'){ fileVideo.play?.(); } else if(ytPlayer && ytPlayer.playVideo){ try{ ytPlayer.playVideo(); }catch(e){} } }
 
     clearBtn.addEventListener('click',()=>{
       const msg= LANG==='de'? 'Alle Kommentare für die aktuelle Quelle löschen?' : 'Delete all comments for the current source?';
@@ -377,7 +378,6 @@
       saveAs(blob, `${safeName}.edl`);
     });
 
-    // ---------- Final ----------
     if(location.protocol==='file:'){ fileBanner.style.display='block'; }
   }
 })();
