@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>EDL-Tools Roundtrip Suite</title>
-  <style>
+<meta charset="utf-8"/>
+<title>EDL-Tools Roundtrip Suite</title>
+<style>
     html, body { height: 100%; margin: 0; padding: 0; }
     body { background: #181818; color: #eee; margin: 0; font-family: sans-serif; height: 100vh; }
     .tab-container { display: flex; background: #000436; }
@@ -162,72 +163,56 @@
 </style>
 </head>
 <body>
-  <div class="tab-container">
-  <div id="tab-highlight-bar"></div>
-    <a href="https://phantomcrew.de/" target="_blank" class="logo-link" title="Phantomcrew-Website">
-      <img src="graphics/Phantomcrew_Logo_nebeneinander_02_lq.png" class="logo" alt="Phantomcrew Logo" />
-    </a>
-    <div class="tab active" data-target="atem" data-hash="#atem">🎛️</div>
-    <div class="tab" data-target="resolve" data-hash="#resolve">🎬</div>
-    <div class="tab" data-target="offset" data-hash="#offset">📝</div>
-    <div class="tab" data-target="color" data-hash="#color">🎨</div>
-    <div class="tab" data-target="help" data-hash="#help">📚</div>
-    <a
-      class="github-link"
-      href="https://github.com/phantomcrew-de/EDL-Tools-for-Live-Video-Production"
-      target="_blank"
-      title="GitHub Repository"
-      rel="noopener"
-      id="github-link"
-    >
-      <svg viewBox="0 0 16 16">
-        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+<div class="tab-container">
+<div id="tab-highlight-bar"></div>
+<a class="logo-link" href="https://phantomcrew.de/" target="_blank" title="Phantomcrew-Website">
+<img alt="Phantomcrew Logo" class="logo" src="graphics/Phantomcrew_Logo_nebeneinander_02_lq.png"/>
+</a>
+<div class="tab active" data-hash="#atem" data-target="atem">🎛️</div>
+<div class="tab" data-hash="#resolve" data-target="resolve">🎬</div>
+<div class="tab" data-hash="#offset" data-target="offset">📝</div>
+<div class="tab" data-hash="#color" data-target="color">🎨</div>
+<div class="tab" data-hash="#help" data-target="help">📚</div>
+<a class="github-link" href="https://github.com/phantomcrew-de/EDL-Tools-for-Live-Video-Production" id="github-link" rel="noopener" target="_blank" title="GitHub Repository">
+<svg viewbox="0 0 16 16">
+<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
         0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
         0-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
         0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2
         .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15
         0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013
-        8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
-      </svg>
-    </a>
-  </div>
-  <div class="tab-content active" id="tab-atem" style="background:transparent;">
-    <div class="swipe-inner">
-      <div class="atem-lang-switch">
-        <button class="atem-lang-btn" data-lang="DE" title="Deutsch">🇩🇪 DE</button>
-        <button class="atem-lang-btn" data-lang="EN" title="English">🇬🇧 EN</button>
-      </div>
-      <iframe id="iframe-atem-de" class="atem-iframe" src="EDL_for_ATEM_live_production_1_2_DE.html"></iframe>
-      <iframe id="iframe-atem-en" class="atem-iframe" src="EDL_for_ATEM_live_production_1_2_EN.html"></iframe>
-    </div>
-  </div>
-  <div class="tab-content" id="tab-resolve" style="background:transparent;">
-  <div class="swipe-inner">
-    <div class="atem-lang-switch">
-      <button class="atem-lang-btn" data-lang="DE" title="Deutsch">🇩🇪 DE</button>
-      <button class="atem-lang-btn" data-lang="EN" title="English">🇬🇧 EN</button>
-    </div>
-    <iframe id="iframe-resolve-de" class="atem-iframe" src="EDL_video_player_for_resolve_1_1_DE.html"></iframe>
-    <iframe id="iframe-resolve-en" class="atem-iframe" src="EDL_video_player_for_resolve_1_1_EN.html"></iframe>
-  </div>
+        8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+</svg>
+</a>
 </div>
-  <div class="tab-content" id="tab-offset" style="background:transparent;">
-    <div class="swipe-inner">
-      <iframe id="iframe-offset" src="EDL_Offset_Editor_1_1_EN.html"></iframe>
-    </div>
-  </div>
-
-  <div class="tab-content" id="tab-color" style="background:transparent;">
-    <div class="swipe-inner">
-      <iframe id="iframe-color" src="EDL_Color_Replace_1_2_EN.html"></iframe>
-    </div>
-  </div>
-	
-  <div class="tab-content" id="tab-help" style="background:transparent;">
-    <div class="swipe-inner">
-      <iframe id="iframe-help" src="https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/help.html"></iframe>
-    </div>
-  </div>
+<div class="tab-content active" id="tab-atem" style="background:transparent;">
+<div class="swipe-inner">
+<div class="atem-lang-switch">
+<button class="atem-lang-btn" data-lang="DE" title="Deutsch">🇩🇪 DE</button>
+<button class="atem-lang-btn" data-lang="EN" title="English">🇬🇧 EN</button>
+</div>
+<iframe class="atem-iframe" id="iframe-atem-de" src="EDL_for_ATEM_live_production_1_2_DE.html"></iframe>
+<iframe class="atem-iframe" id="iframe-atem-en" src="EDL_for_ATEM_live_production_1_2_EN.html"></iframe>
+</div>
+</div>
+<div class="tab-content" id="tab-resolve" style="background:transparent;">
+<div class="swipe-inner"><iframe class="atem-iframe active" id="iframe-resolve" src="EDL_video_player_for_resolve_2_0_EN_DE.html"></iframe></div>
+</div>
+<div class="tab-content" id="tab-offset" style="background:transparent;">
+<div class="swipe-inner">
+<iframe id="iframe-offset" src="EDL_Offset_Editor_1_1_EN.html"></iframe>
+</div>
+</div>
+<div class="tab-content" id="tab-color" style="background:transparent;">
+<div class="swipe-inner">
+<iframe id="iframe-color" src="EDL_Color_Replace_1_2_EN.html"></iframe>
+</div>
+</div>
+<div class="tab-content" id="tab-help" style="background:transparent;">
+<div class="swipe-inner">
+<iframe id="iframe-help" src="https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/help.html"></iframe>
+</div>
+</div>
 <script>
 // *** DIESE ZEILE ERZÄWGT DEN STANDARD-HASH BEIM ERSTEN AUFRUF ***
 if(!window.location.hash || window.location.hash === "#") {
@@ -522,8 +507,6 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 </script>
-	
-
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const tabs = Array.from(document.querySelectorAll(".tab"));
@@ -657,6 +640,23 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
   // Highlight-Bar initial setzen
   setTimeout(updateHighlightBar, 150);
 });
+</script>
+
+<script>
+(function(){
+  var original = window.setResolveLang;
+  window.setResolveLang = function(lang, updateUrl){
+    lang = (lang === "EN") ? "EN" : "DE";
+    try { localStorage.setItem("lastResolveLang", lang); } catch(e) {}
+    var single = document.getElementById('iframe-resolve');
+    if (single) {
+      // No toggling needed in unified player mode.
+      return;
+    }
+    // Fallback: call original if it exists (dual-iframe mode)
+    if (typeof original === "function") return original(lang, updateUrl);
+  };
+})();
 </script>
 </body>
 </html>
