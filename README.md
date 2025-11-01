@@ -125,6 +125,21 @@ File: `EDL_Offset_Editor_1_1_EN.html`
     └── 🔊 beepsound.mp3
 ```
 
+
+**Changelog 1.1 → 2.0 (EDL Review Player Update)**
+
+* 💡 **Full redesign:** modern dark UI, responsive layout, cleaner code structure.
+* 🌍 **Bilingual UI:** English / German with live toggle.
+* 🎥 **YouTube support:** videos, playlists, lives, shorts — automatic title fetching.
+* 📁 **Local files:** multi-file upload, unified source selector.
+* 💬 **Comments:** editable text/timecode, Go To & Delete buttons, auto-pause while typing.
+* 🗂️ **EDL:** improved import/export, sanitized filenames, correct timecode formatting.
+* ⚠️ **File-mode warning:** shows tips for `file://` usage and YouTube API.
+* ⚙️ **Internals:** async YouTube resolver, title cache, better timecode functions.
+
+> v2.0 = multilingual, YouTube-ready, all-in-one EDL review player with a streamlined workflow.
+
+
 ---
 
 ## 📄 License
