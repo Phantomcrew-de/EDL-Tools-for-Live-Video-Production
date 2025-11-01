@@ -90,7 +90,37 @@
       header{ padding:10px; }
       main{ padding-inline:10px; }
     }
-    </style>
+    
+/* --- Mobile polish v2: no horizontal scroll + compact comment field --- */
+html, body { max-width: 100vw; overflow-x: hidden; }
+#app, #root, main, header, footer { max-width: 100%; }
+img, video, canvas, iframe { max-width: 100%; height: auto; }
+* { box-sizing: border-box; }
+.filename, .clipname, .path, .tc, .idx { overflow-wrap: anywhere; word-break: break-word; }
+
+#player-wrap{ overflow:hidden; }
+
+/* Ensure tables/lists don't force horizontal scroll */
+table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Comment add field compact on mobile */
+@media (max-width: 700px){
+  #comment-form { gap: 8px; }
+  #comment-input, #new-comment, textarea#comment-input {
+    height: 40px;             /* compact height */
+    min-height: 40px;
+    padding: 8px 10px;
+    line-height: 1.2;
+  }
+  /* If it's a textarea, keep it single-line height but allow manual grow */
+  textarea#comment-input { resize: vertical; }
+  /* Buttons inline where space allows; otherwise wrap */
+  #comment-form button { padding: 10px 12px; }
+  /* Avoid nested elements creating wider-than-viewport layouts */
+  .row, .panel, .controls, .toolbar { max-width: 100%; }
+}
+
+</style>
     
 </head>
 <body>
