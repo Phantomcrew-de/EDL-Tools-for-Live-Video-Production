@@ -36,7 +36,7 @@ A browser-based timecode tracker tailored for live production environments (e.g.
 ---
 
 ### 2. **EDL-Enabled Video Commenting Tool for Resolve**
-[Example: EDL Video Player](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html#resolve?lang=en)
+[Example: EDL Video Player](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html#resolve)
 File: `EDL_video_player_for_resolve_1_1_EN.html`
 
 An HTML video player for reviewing media files and adding comments directly at specific timecodes. Designed for editors and directors to review takes collaboratively.
