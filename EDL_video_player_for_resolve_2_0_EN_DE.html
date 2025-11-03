@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>EDL Review Player · YouTube & Dateien</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <title>EDL Review Player</title>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"></script>
   <style>
     :root { --gap: 12px; --radius: 10px; --bg:#0f1220; --panel:#151a2d; --text:#f2f5ff; --muted:#a7b0c3; --warn:#ffb84d; }
@@ -33,25 +33,121 @@
     #comments input{ min-width:0; }
     footer{ padding:16px; text-align:center; color:var(--muted) }
     #resolver-host{ position:absolute; width:0; height:0; overflow:hidden; opacity:0; pointer-events:none; }
-  </style>
+  
+/* --- Mobile Responsive & No-Zoom Pack --- */
+:root{ --gap:16px; --gap-sm:8px; --radius:12px; --bg:#0b1226; --panel:#0f1832; --text:#e7ecff; --muted:#9aacd6; }
+html, body { background:#0b1226; color:var(--text); -webkit-text-size-adjust:100%; text-size-adjust:100%; touch-action: manipulation; }
+
+/* Layout polish */
+main{ padding-inline:16px; }
+.panel{ background:var(--panel); padding:var(--gap); border-radius:var(--radius); box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+.row{ display:flex; gap:var(--gap); align-items:center; flex-wrap:wrap; }
+.stack{ display:grid; gap:var(--gap); }
+
+/* Controls */
+button{ display:inline-flex; align-items:center; justify-content:center; font-size:16px; background:#2a355e; color:var(--text); border:0; border-radius:8px; padding:10px 14px; cursor:pointer; transition:transform .06s ease, opacity .2s ease; }
+button:active{ transform: translateY(1px); }
+a, button, input, select, textarea{ outline:none; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{ box-shadow:0 0 0 3px rgba(51,153,255,.4); border-color:#3399ff; }
+
+/* Player */
+#player-wrap{ aspect-ratio:16/9; width:100%; background:black; border-radius:10px; overflow:hidden; position:relative }
+#player, #file-player{ position:absolute; inset:0; width:100%; height:100%; }
+
+/* Inputs */
+input[type="text"], select{ background:#0e1426; color:var(--text); border:1px solid #2a355e; border-radius:8px; padding:10px 12px; min-width:240px; }
+input, select, textarea{ font-size:16px !important; } /* prevent iOS focus zoom */
+
+/* Desktop width cap */
+@media (min-width: 1100px){
+  header, main, footer{ max-width:1100px; margin-inline:auto; }
+}
+
+/* Tablet */
+@media (max-width: 900px){
+  header{ grid-template-columns: 1fr; row-gap: var(--gap); }
+}
+
+/* Mobile */
+@media (max-width: 700px){
+  :root{ --gap:12px; }
+  html, body{ max-width:100vw; overflow-x:hidden; }
+  header{ padding:14px; position:sticky; top:0; background:var(--bg); z-index:10; border-bottom:1px solid #1a2342; }
+  .row{ flex-direction:column; align-items:stretch; gap: var(--gap-sm); }
+  input[type="text"], select, button, #file-input{ width:100%; min-width:0; }
+  #player-wrap{ border-radius:8px; }
+  #comments li{ display:flex; flex-direction:column; gap: var(--gap-sm); align-items:stretch; padding:6px; }
+  #comments input{ width:100%; min-width:0; background:#0e1426; color:var(--text); border:1px solid #2a355e; border-radius:6px; padding:6px 8px; }
+  /* Compact, single-line comment input + fix 400px flex-basis */
+  #comment-form{ align-items:stretch; gap: var(--gap-sm); }
+  #comment-input{ flex:0 1 auto !important; height:36px !important; min-height:36px !important; max-height:48px !important; padding:8px 10px !important; line-height:1.2 !important; }
+}
+
+/* Ultra-small phones */
+@media (max-width: 360px){
+  main{ padding-inline:10px; }
+}
+/* Avoid double-tap zoom */
+a, button { touch-action: manipulation; }
+/* Media elements and long strings */
+img, video, canvas, iframe { max-width:100%; height:auto; }
+.filename, .clipname, .path, .tc, .idx { overflow-wrap:anywhere; word-break:break-word; }
+
+
+/* --- Improved Mobile Header Fix (no cutoff or horizontal scroll) --- */
+@media (max-width: 700px) {
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+  }
+  header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    padding: 12px;
+    gap: 10px;
+    border-bottom: 1px solid #1a2342;
+  }
+  header .row {
+    width: 100%;
+    flex-wrap: wrap;
+    margin: 0;
+  }
+  .top-right {
+    align-self: flex-end;
+    margin-top: -6px;
+  }
+  h1 {
+    font-size: 18px;
+    word-break: break-word;
+    margin: 0;
+    padding-right: 0;
+  }
+}
+
+</style>
 </head>
 <body>
 <header>
   <div class="row">
-    <h1 id="t_title">EDL Review Player · YouTube & Dateien</h1>
+    <h1 id="t_title">Phantomcrew · EDL Review Player</h1>
     <div class="row">
-      <label for="yt-url" id="t_ytlabel">YouTube URL (Video/Playlist/Live)</label>
-      <input id="yt-url" type="text" placeholder="https://youtu.be/… | /watch?v=… | /playlist?list=… | /live/… | /shorts/…"/>
+      <label for="yt-url" id="t_ytlabel">YouTube URL (Video/Playlist/Live/Shorts)</label>
+      <input id="yt-url" type="text" placeholder="https://youtu.be/… "/>
       <button id="add-url" type="button">Hinzufügen</button>
     </div>
     <div class="row">
       <label for="file-input" id="t_filelabel">Datei(en) hinzufügen</label>
-      <input id="file-input" type="file" accept="video/*" multiple/> -->
+      <input id="file-input" type="file" accept="video/*" multiple/>
     </div>
     <div class="row">
       <label id="t_sourcelabel">Quelle wählen</label>
       <select id="source-select"></select>
-      <span id="diag" class="badge" style="display:none"></span>  -->
+      <span id="diag" class="badge" style="display:none"></span>
     </div>
     <div class="row">
       <label id="t_edlimport">.edl Marker importieren</label>
@@ -101,7 +197,7 @@
     const diag=$('diag'), fileBanner=$('fileproto'), clipInfo=$('clip-info'), resolverHost=$('resolver-host');
 
     // ---------- State ----------
-    const sources=[]; // {type:'video'|'file', id, title, comments, fileUrl, fileName}
+    const sources=[]; // {type:'video'|'file', id, title, comments, fileUrl, fileName, playlist}
     let current=0; let ytPlayer=null; let ytReady=false;
     let resolver=null; let resolverReady=false;
     const titleCache=new Map(); // id -> title
@@ -109,8 +205,8 @@
     // ---------- i18n ----------
     let LANG='de';
     const I18N={
-      de:{ title:'EDL Review Player · YouTube & Dateien', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Datei(en) hinzufügen', sourcelabel:'Quelle wählen', add:'Hinzufügen', addComment:'Kommentar hinzufügen…', edlimport:'.edl Marker importieren', export:'💾 EDL exportieren', clear:'🗑️ Alle löschen' },
-      en:{ title:'EDL Review Player · YouTube & Files', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Add file(s)', sourcelabel:'Select source', add:'Add', addComment:'Add a comment…', edlimport:'Import .edl markers', export:'💾 Export EDL', clear:'🗑️ Clear all' }
+      de:{ title:'Phantomcrew · EDL Review Player', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Datei(en) hinzufügen', sourcelabel:'Quelle wählen', add:'Hinzufügen', addComment:'Kommentar hinzufügen…', edlimport:'.edl Marker importieren', export:'💾 EDL exportieren', clear:'🗑️ Alle löschen' },
+      en:{ title:'Phantomcrew · EDL Review Player', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Add file(s)', sourcelabel:'Select source', add:'Add', addComment:'Add a comment…', edlimport:'Import .edl markers', export:'💾 Export EDL', clear:'🗑️ Clear all' }
     };
     function applyLang(){
       const t=I18N[LANG];
@@ -162,18 +258,13 @@
       if(!resolverReady) await waitFor(()=>resolverReady, 2000);
       if(!resolver) return '';
       const attempts=[300,600,900,1200,1500];
-      try{
-        resolver.cueVideoById({videoId:id});
-      }catch(e){ return ''; }
+      try{ resolver.cueVideoById({videoId:id}); }catch(e){ return ''; }
       for(const wait of attempts){
         await delay(wait);
         try{
           const data = resolver.getVideoData ? resolver.getVideoData() : null;
           const t = data && data.title ? String(data.title) : '';
-          if(t){
-            titleCache.set(id, t);
-            return t;
-          }
+          if(t){ titleCache.set(id, t); return t; }
         }catch(e){ /* try again */ }
       }
       return '';
@@ -224,43 +315,49 @@
     function onYTState(){ /* no longer used for title loading to avoid flicker */ }
     function onYTError(e){
       const code=e?.data;
-      diag.style.display='inline-block';
-      diag.textContent='YT err '+code;
+      if(diag){ diag.style.display='inline-block'; diag.textContent='YT err '+code; }
       if(location.protocol==='file:') fileBanner.style.display='block';
     }
 
     // ---------- Build sources ----------
-    function addVideoById(id, title=''){
+    function addVideoById(id, title='', playlistId=null){
       if(!isValidVideoId(id)){ alert((LANG==='de'?'Ungültige Video-ID: ':'Invalid video ID: ')+id); return; }
-      const src={type:'video', id, title, comments:[]};
+      const src={type:'video', id, title, comments:[], playlist: playlistId || null};
       sources.push(src);
       const opt=document.createElement('option'); opt.textContent=sourceLabel(src); selectEl.add(opt);
       if(!title){ titleQueue.push(sources.length-1); processTitleQueue(); }
       if(selectEl.selectedIndex<0){ selectEl.selectedIndex=0; current=0; }
       cueCurrent(false);
+      updateUrlWithCurrentSource();
     }
 
-    async function expandPlaylistToVideos(playlistId){
+    async function expandPlaylistToVideos(playlistId, preselectVideoId=null){
       if(!ytReady || !ytPlayer){ alert(LANG==='de'?'YouTube-API noch nicht bereit.':'YouTube API not ready yet.'); return; }
       try{
         ytPlayer.cuePlaylist({ listType:'playlist', list:playlistId, index:0 });
-        await new Promise(r=>setTimeout(r, 800));
+        await new Promise(r=>setTimeout(r, 900));
         const ids = (ytPlayer.getPlaylist && ytPlayer.getPlaylist()) || [];
         if(!ids.length){ alert(LANG==='de'?'Playlist konnte nicht geladen werden.':'Could not load playlist.'); return; }
+
         const startIdx = sources.length;
-        ids.forEach(id=> addVideoById(id, ''));
+        ids.forEach(id=> addVideoById(id, '', playlistId));
         for(let i=0;i<ids.length;i++){ titleQueue.push(startIdx+i); }
         processTitleQueue();
-      }catch(err){
-        diag.style.display='inline-block';
-        diag.textContent='PL err';
-      }
+
+        if(preselectVideoId){
+          const idx = sources.findIndex((s, i)=> i>=startIdx && s.type==='video' && s.id===preselectVideoId);
+          if(idx>=0){ selectEl.selectedIndex = idx; current = idx; cueCurrent(false); }
+        }else{
+          selectEl.selectedIndex = startIdx; current = startIdx; cueCurrent(false);
+        }
+        updateUrlWithCurrentSource();
+      }catch(err){ if(diag){ diag.style.display='inline-block'; diag.textContent='PL err'; } }
     }
 
     function addSourceFromUrl(u){
       const meta=getYouTubeId(u);
       if(!meta){ alert(LANG==='de'?'Ungültige YouTube-URL':'Invalid YouTube URL'); return; }
-      diag.style.display='inline-block'; diag.textContent=(meta.type==='video'?'VID:':'PL:')+meta.id;
+      if(diag){ diag.style.display='inline-block'; diag.textContent=(meta.type==='video'?'VID:':'PL:')+meta.id; }
       if(meta.type==='video'){ addVideoById(meta.id,''); }
       else { expandPlaylistToVideos(meta.id); }
     }
@@ -283,7 +380,7 @@
     });
 
     // ---------- Select change ----------
-    selectEl.addEventListener('change',()=>{ current=selectEl.selectedIndex; cueCurrent(false); });
+    selectEl.addEventListener('change',()=>{ current=selectEl.selectedIndex; cueCurrent(false); updateUrlWithCurrentSource(); });
 
     function cueCurrent(resetTime){
       const src=sources[current]; if(!src) return;
@@ -300,14 +397,24 @@
       showFilePlayer(false);
       try{
         ytPlayer.cueVideoById({videoId:src.id});
-        setTimeout(()=>{
-          ytPlayer.pauseVideo?.();
-        }, 200);
-      }catch(err){
-        diag.style.display='inline-block'; diag.textContent='cue error';
-      }
+        setTimeout(()=>{ ytPlayer.pauseVideo?.(); }, 200);
+      }catch(err){ if(diag){ diag.style.display='inline-block'; diag.textContent='cue error'; } }
       updateCommentList();
       clipInfo.textContent='';
+    }
+
+    // ---------- URL sync (v & list) ----------
+    function updateUrlWithCurrentSource(){
+      const src = sources[current];
+      const base = location.origin + location.pathname;
+      if(!src || src.type!=='video'){
+        history.replaceState(null, '', base);
+        return;
+      }
+      const params = new URLSearchParams();
+      if(src.playlist) params.set('list', src.playlist);
+      params.set('v', src.id);
+      history.replaceState(null, '', `${base}?${params.toString()}`);
     }
 
     // ---------- Comments ----------
@@ -374,9 +481,24 @@
       const write=(c)=>{ const tc=formatEDL(parseEDLTime(c.time)); edl+=`00${two(i++)}  001      V     C        ${tc} ${tc} ${tc} ${tc} \n |C:ResolveColorBlue |M:${c.comment} |D:1\n\n`; };
       for(const c of (src.comments||[])) write(c);
       const blob=new Blob([edl],{type:'text/plain;charset=utf-8'});
-      const safeName=(title||'session').replace(/[^a-z0-9_\\-]+/gi,'_');
+      const safeName=(title||'session').replace(/[^a-z0-9_\-]+/gi,'_');
       saveAs(blob, `${safeName}.edl`);
     });
+
+    // ---------- Auto-load from URL (?v=... and/or ?list=...) ----------
+    (async function autoLoadFromUrl(){
+      const params = new URLSearchParams(location.search);
+      const startVid  = params.get('v');
+      const startList = params.get('list');
+      // Warten bis YouTube bereit (max. 5s)
+      await waitFor(()=>ytReady, 5000);
+      if(startList){
+        const vidOk = startVid && isValidVideoId(startVid) ? startVid : null;
+        expandPlaylistToVideos(startList, vidOk);
+      } else if(startVid && isValidVideoId(startVid)) {
+        addVideoById(startVid, '');
+      }
+    })();
 
     if(location.protocol==='file:'){ fileBanner.style.display='block'; }
   }
