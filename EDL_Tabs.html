@@ -385,6 +385,21 @@ if (typeof nextTab === "string" && nextTab.toLowerCase() === "resolve") {
     if (ALLOWED.has(k)) params[k] = hashParams[k];
   });
 }
+
+// Falls wir in den Resolve-Tab wechseln und noch KEINE Params im Hash sind,
+// nimm die zuletzt bekannten Resolve-Params (nur Session, kein Cookie/kein localStorage).
+if (typeof nextTab === "string" && nextTab.toLowerCase() === "resolve") {
+  const haveParams = Object.keys(params).length > 0;
+  if (!haveParams) {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem('edl_resolve_params') || "{}");
+      const ALLOWED = new Set(["v","list","t","time","start","lang"]);
+      Object.keys(cached || {}).forEach(k => {
+        if (ALLOWED.has(k) && !params[k]) params[k] = cached[k];
+      });
+    } catch (e) {}
+  }
+}
 setHash(nextTab, params);
     exportEDLFromTab(currentTab);
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -786,7 +801,9 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
           Object.keys(childParams).forEach(k => { if (ALLOWED.has(k)) allowed[k]=childParams[k]; });
           if (Object.keys(allowed).length) {
             setParentHashResolve(allowed);
-          }
+          
+            try { sessionStorage.setItem('edl_resolve_params', JSON.stringify(allowed)); } catch(e) {}
+}
         }
       } catch(e) { /* maybe not ready yet; keep polling */ }
     }, POLL_MS);
@@ -808,7 +825,9 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
         const allowed = {};
         Object.keys(childParams).forEach(k => { if (ALLOWED.has(k)) allowed[k]=childParams[k]; });
         if (Object.keys(allowed).length) setParentHashResolve(allowed);
-      }
+      
+            try { sessionStorage.setItem('edl_resolve_params', JSON.stringify(allowed)); } catch(e) {}
+}
     } catch(e) {}
     // delayed second try (mobile browsers sometimes need a tick more)
     setTimeout(() => {
@@ -822,7 +841,9 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
             const allowed = {};
             Object.keys(childParams).forEach(k => { if (ALLOWED.has(k)) allowed[k]=childParams[k]; });
             if (Object.keys(allowed).length) setParentHashResolve(allowed);
-          }
+          
+            try { sessionStorage.setItem('edl_resolve_params', JSON.stringify(allowed)); } catch(e) {}
+}
         }
       } catch(e) {}
     }, PRIME_DELAY_MS);
@@ -877,7 +898,9 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
     Object.keys(p).forEach(k => { if (ALLOWED.has(k)) allowed[k]=p[k]; });
     if (Object.keys(allowed).length) {
       setParentHashResolve(allowed);
-      applyResolveIframeSrc(allowed);
+      
+            try { sessionStorage.setItem('edl_resolve_params', JSON.stringify(allowed)); } catch(e) {}
+applyResolveIframeSrc(allowed);
     }
   }, false);
 })();
