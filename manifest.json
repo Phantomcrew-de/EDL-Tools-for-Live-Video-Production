@@ -1,0 +1,25 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "phantomcrew-de.github",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "phantomcrew-de.github",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "prefer_related_applications": false,
+  "categories": [
+    "business",
+    "entertainment",
+    "games",
+    "music",
+    "news",
+    "photo",
+    "productivity",
+    "utilities"
+  ],
+  "edge_side_panel": {
+    "preferred_width": 800
+  }
+}
