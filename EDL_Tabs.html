@@ -373,19 +373,25 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (switchingTab || nextTab === currentTab) return;
     switchingTab = true;
     let params = {};
-const { params: hashParams } = getHashTabAndQuery();
+    if (nextTab === "atem") {
+      const { params: hashParams } = getHashTabAndQuery();
+      params.lang = hashParams.lang || "";
+    }
 
-if (typeof nextTab === "string" && nextTab.toLowerCase() === "atem") {
-  if (hashParams.lang) params.lang = hashParams.lang;
-}
+      if (nextTab === "resolve") {
+        const { params: hashParams } = getHashTabAndQuery();
+    if (nextTab === "color") {
+      const { params: hashParams } = getHashTabAndQuery();
+      let newLang = getResolveLangFromParams(hashParams);
+      if (!newLang) newLang = localStorage.getItem("lastColorLang") || "EN";
+      setColorLang(newLang, false);
+    }
 
-if (typeof nextTab === "string" && nextTab.toLowerCase() === "resolve") {
-  const ALLOWED = new Set(["v","list","t","time","start","lang"]);
-  Object.keys(hashParams || {}).forEach(k => {
-    if (ALLOWED.has(k)) params[k] = hashParams[k];
-  });
-}
-setHash(nextTab, params);
+        let newLang = getResolveLangFromParams(hashParams);
+        if (!newLang) newLang = localStorage.getItem("lastResolveLang") || "DE";
+        setResolveLang(newLang, false);
+      }
+    setHash(nextTab, params);
     exportEDLFromTab(currentTab);
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
@@ -652,72 +658,19 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
   };
 })();
 </script>
-<script>
-(function() {
-  function getHashTabAndQuery() {
-    const hash = window.location.hash.replace(/^#/, '');
-    const i = hash.indexOf('?');
-    if (i === -1) return { tab: hash || 'atem', params: {} };
-    const tab = hash.slice(0, i) || 'atem';
-    const query = hash.slice(i + 1);
-    const params = {};
-    if (query) {
-      query.split('&').forEach(pair => {
-        if (!pair) return;
-        const j = pair.indexOf('=');
-        if (j === -1) return;
-        const k = decodeURIComponent(pair.slice(0, j));
-        const v = decodeURIComponent(pair.slice(j + 1));
-        if (k) params[k] = v;
-      });
-    }
-    return { tab, params };
-  }
-  const ALLOWED = new Set(['v','list','t','time','start']);
-  function buildSrc(base) {
-    base = base || 'EDL_video_player_for_resolve_2_0_EN_DE.html';
-    const merged = {};
-    const sp = new URLSearchParams(window.location.search);
-    for (const [k,v] of sp.entries()) merged[k] = v;
-    const { params } = getHashTabAndQuery();
-    for (const k in params) merged[k] = params[k];
-    const q = new URLSearchParams();
-    Object.keys(merged).forEach(k => { if (ALLOWED.has(k)) q.set(k, merged[k]); });
-    const qs = q.toString();
-    return qs ? base + '?' + qs : base;
-  }
-  function updateResolveSrc() {
-    const iframe = document.getElementById('iframe-resolve');
-    if (!iframe) return;
-    iframe.setAttribute('src', buildSrc());
-  }
-  function maybeInit() {
-    const h = location.hash.replace(/^#/, '');
-    const tab = h.split('?')[0] || 'atem';
-    if (tab === 'resolve') updateResolveSrc();
-  }
-  window.addEventListener('hashchange', function() {
-    setTimeout(updateResolveSrc, 0);
-  });
-  document.addEventListener('DOMContentLoaded', function() {
-    maybeInit();
-    document.querySelectorAll('.tab').forEach(function(el){
-      el.addEventListener('click', function(){
-        const target = el.getAttribute('data-target') || '';
-        if (target === 'resolve') setTimeout(updateResolveSrc, 0);
-      });
-    });
-  });
-})();
-</script>
+
 <script>
 (function(){
+  // LocalStorage Keys
+  const LS_LAST_TAB = 'edl_last_tab';
+  const LS_RESOLVE_PARAMS = 'edl_resolve_params';
+
   // --- Config ---
   const ALLOWED = new Set(['v','list','t','time','start']);
-  const POLL_MS = 450;           // polling cadence
-  const PRIME_DELAY_MS = 650;    // extra delay after iframe load for mobile
+  const POLL_MS = 450;
+  const PRIME_DELAY_MS = 650;
   let pollTimer = null;
-  let lastSeen = "";             // last seen child search string
+  let lastSeen = "";
 
   // --- Helpers ---
   function parseHash() {
@@ -748,7 +701,6 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
     return qs ? base + '?' + qs : base;
   }
   function setParentHashResolve(fromObj) {
-    // Update only allowed keys
     const current = parseHash();
     const merged = Object.assign({}, current.params);
     Object.keys(fromObj||{}).forEach(k => { if (ALLOWED.has(k)) merged[k]=fromObj[k]; });
@@ -765,11 +717,9 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
     const next = buildResolveSrc(iframe.getAttribute('data-base') || undefined, extraParams);
     if (iframe.getAttribute('src') !== next) iframe.setAttribute('src', next);
   }
-  function isResolveActive() {
-    return (parseHash().tab === 'resolve');
-  }
+  function isResolveActive() { return (parseHash().tab === 'resolve'); }
 
-  // --- Poller (tolerant for mobile) ---
+  // --- Poller ---
   function startPoller() {
     stopPoller();
     const iframe = document.getElementById('iframe-resolve');
@@ -786,20 +736,18 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
           Object.keys(childParams).forEach(k => { if (ALLOWED.has(k)) allowed[k]=childParams[k]; });
           if (Object.keys(allowed).length) {
             setParentHashResolve(allowed);
+            try { localStorage.setItem(LS_RESOLVE_PARAMS, JSON.stringify(allowed)); } catch(e) {}
           }
         }
-      } catch(e) { /* maybe not ready yet; keep polling */ }
+      } catch(e) {}
     }, POLL_MS);
   }
-  function stopPoller() {
-    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-  }
+  function stopPoller() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
 
-  // --- Prime step after iframe load (fixes "first time doesn't work on mobile") ---
+  // --- Prime ---
   function primeAfterLoad() {
     const iframe = document.getElementById('iframe-resolve');
     if (!iframe) return;
-    // immediate try
     try {
       const cw = iframe.contentWindow;
       if (cw && cw.location && cw.location.search) {
@@ -807,10 +755,12 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
         const childParams = Object.fromEntries(new URLSearchParams(lastSeen).entries());
         const allowed = {};
         Object.keys(childParams).forEach(k => { if (ALLOWED.has(k)) allowed[k]=childParams[k]; });
-        if (Object.keys(allowed).length) setParentHashResolve(allowed);
+        if (Object.keys(allowed).length) {
+          setParentHashResolve(allowed);
+          try { localStorage.setItem(LS_RESOLVE_PARAMS, JSON.stringify(allowed)); } catch(e) {}
+        }
       }
     } catch(e) {}
-    // delayed second try (mobile browsers sometimes need a tick more)
     setTimeout(() => {
       try {
         const cw = iframe.contentWindow;
@@ -821,7 +771,10 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
             const childParams = Object.fromEntries(new URLSearchParams(search).entries());
             const allowed = {};
             Object.keys(childParams).forEach(k => { if (ALLOWED.has(k)) allowed[k]=childParams[k]; });
-            if (Object.keys(allowed).length) setParentHashResolve(allowed);
+            if (Object.keys(allowed).length) {
+              setParentHashResolve(allowed);
+              try { localStorage.setItem(LS_RESOLVE_PARAMS, JSON.stringify(allowed)); } catch(e) {}
+            }
           }
         }
       } catch(e) {}
@@ -830,25 +783,43 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
 
   // --- Event wiring ---
   document.addEventListener('DOMContentLoaded', function(){
-    // Keep iframe src aligned with current URL (important for direct links)
+    // Restore last active tab if no hash
+    try {
+      const cur = parseHash();
+      if (!cur.tab || cur.tab === '') {
+        const last = localStorage.getItem(LS_LAST_TAB);
+        if (last) { location.hash = '#' + last; }
+      }
+    } catch(e) {}
+
+    // Keep iframe src aligned with current URL
     applyResolveIframeSrc();
-    // Prime + poll whenever Resolve is active
+
+    // Prime + poll when Resolve active
     const iframe = document.getElementById('iframe-resolve');
     if (iframe) {
       iframe.addEventListener('load', function(){
-        if (isResolveActive()) {
-          primeAfterLoad();
-          startPoller();
-        }
+        if (isResolveActive()) { primeAfterLoad(); startPoller(); }
       });
     }
-    // React on tab clicks to (re)apply src and restart poller on Resolve
+
+    // Tab clicks: persist tab + restore cached resolve params if needed
     document.querySelectorAll('.tab').forEach(function(el){
       el.addEventListener('click', function(){
+        try { localStorage.setItem(LS_LAST_TAB, el.getAttribute('data-target') || 'atem'); } catch(e) {}
         const target = el.getAttribute('data-target') || '';
         if (target === 'resolve') {
+          const curHash = parseHash();
+          if (curHash.tab !== 'resolve' || Object.keys(curHash.params).length === 0) {
+            try {
+              const cached = JSON.parse(localStorage.getItem(LS_RESOLVE_PARAMS) || "{}");
+              if (cached && Object.keys(cached).length) {
+                setParentHashResolve(cached);
+                applyResolveIframeSrc(cached);
+              }
+            } catch(e) {}
+          }
           applyResolveIframeSrc();
-          // wait a beat to let the player initialize its own params
           setTimeout(() => { primeAfterLoad(); startPoller(); }, 150);
         } else {
           stopPoller();
@@ -858,18 +829,17 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
   });
 
   window.addEventListener('hashchange', function(){
-    // Any external hash change -> make sure iframe src matches
+    // Persist current tab from hash
+    try { localStorage.setItem(LS_LAST_TAB, parseHash().tab); } catch(e) {}
     applyResolveIframeSrc();
-    // If resolve becomes active, ensure polling starts
     if (isResolveActive()) {
-      // give the iframe a moment in case it reloads on new hash
       setTimeout(() => { primeAfterLoad(); startPoller(); }, 120);
     } else {
       stopPoller();
     }
   });
 
-  // Optional: accept postMessage (if player sends it); used as an extra hint
+  // Optional postMessage listener (harmless if unused)
   window.addEventListener('message', function(ev){
     if (!ev || !ev.data || ev.data.type !== 'RESOLVE_URL') return;
     const p = ev.data.params || {};
@@ -877,10 +847,12 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
     Object.keys(p).forEach(k => { if (ALLOWED.has(k)) allowed[k]=p[k]; });
     if (Object.keys(allowed).length) {
       setParentHashResolve(allowed);
+      try { localStorage.setItem(LS_RESOLVE_PARAMS, JSON.stringify(allowed)); } catch(e) {}
       applyResolveIframeSrc(allowed);
     }
   }, false);
 })();
 </script>
+
 </body>
 </html>
