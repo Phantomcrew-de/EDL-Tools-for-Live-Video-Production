@@ -2,7 +2,7 @@
   "name": "EDL Tools Suite",
   "short_name": "EDL Suite",
   "description": "browser-based web applications to support timecode-based editing and video annotation workflows, particularly for live productions and DaVinci Resolve postproduction.",
-  "start_url": "https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html",
+  "start_url": "https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
