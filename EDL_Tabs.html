@@ -658,5 +658,147 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
   };
 })();
 </script>
+<script>
+(function() {
+  function getHashTabAndQuery() {
+    const hash = window.location.hash.replace(/^#/, '');
+    const i = hash.indexOf('?');
+    if (i === -1) return { tab: hash || 'atem', params: {} };
+    const tab = hash.slice(0, i) || 'atem';
+    const query = hash.slice(i + 1);
+    const params = {};
+    if (query) {
+      query.split('&').forEach(pair => {
+        if (!pair) return;
+        const j = pair.indexOf('=');
+        if (j === -1) return;
+        const k = decodeURIComponent(pair.slice(0, j));
+        const v = decodeURIComponent(pair.slice(j + 1));
+        if (k) params[k] = v;
+      });
+    }
+    return { tab, params };
+  }
+  const ALLOWED = new Set(['v','list','t','time','start']);
+  function buildSrc(base) {
+    base = base || 'edl_review_player_mobilefix_v2.html';
+    const merged = {};
+    const sp = new URLSearchParams(window.location.search);
+    for (const [k,v] of sp.entries()) merged[k] = v;
+    const { params } = getHashTabAndQuery();
+    for (const k in params) merged[k] = params[k];
+    const q = new URLSearchParams();
+    Object.keys(merged).forEach(k => { if (ALLOWED.has(k)) q.set(k, merged[k]); });
+    const qs = q.toString();
+    return qs ? base + '?' + qs : base;
+  }
+  function updateResolveSrc() {
+    const iframe = document.getElementById('iframe-resolve');
+    if (!iframe) return;
+    iframe.setAttribute('src', buildSrc());
+  }
+  function maybeInit() {
+    const h = location.hash.replace(/^#/, '');
+    const tab = h.split('?')[0] || 'atem';
+    if (tab === 'resolve') updateResolveSrc();
+  }
+  window.addEventListener('hashchange', function() {
+    setTimeout(updateResolveSrc, 0);
+  });
+  document.addEventListener('DOMContentLoaded', function() {
+    maybeInit();
+    document.querySelectorAll('.tab').forEach(function(el){
+      el.addEventListener('click', function(){
+        const target = el.getAttribute('data-target') || '';
+        if (target === 'resolve') setTimeout(updateResolveSrc, 0);
+      });
+    });
+  });
+})();
+</script>
+<script>
+(function(){
+  function getParentHashParams() {
+    const hash = location.hash.replace(/^#/, '');
+    const i = hash.indexOf('?');
+    const params = {};
+    if (i === -1) return { tab: hash || 'atem', params };
+    const tab = hash.slice(0, i) || 'atem';
+    const query = hash.slice(i+1);
+    query.split('&').forEach(pair => {
+      if (!pair) return;
+      const j = pair.indexOf('=');
+      if (j === -1) return;
+      const k = decodeURIComponent(pair.slice(0, j));
+      const v = decodeURIComponent(pair.slice(j+1));
+      if (k) params[k] = v;
+    });
+    return { tab, params };
+  }
+  const ALLOWED = new Set(['v','list','t','time','start']);
+  function allowedFromSearch(search) {
+    const out = {};
+    if (!search) return out;
+    const sp = new URLSearchParams(search.startsWith('?')? search.slice(1): search);
+    for (const [k,v] of sp.entries()) if (ALLOWED.has(k)) out[k]=v;
+    return out;
+  }
+  function buildHash(tab, params) {
+    const qp = new URLSearchParams();
+    Object.keys(params).forEach(k => qp.set(k, params[k]));
+    const qs = qp.toString();
+    return '#' + tab + (qs ? ('?' + qs) : '');
+  }
+  function shallowEqualObj(a,b){
+    const ka = Object.keys(a), kb = Object.keys(b);
+    if (ka.length !== kb.length) return False; // will be corrected below
+  }
+  // correct shallowEqualObj
+  function shallowEqual(a,b){
+    const ka = Object.keys(a), kb = Object.keys(b);
+    if (ka.length !== kb.length) return false;
+    for (let k of ka) { if (a[k] !== b[k]) return false; }
+    return true;
+  }
+
+  function startIframeSync(){
+    const iframe = document.getElementById('iframe-resolve');
+    if (!iframe) return;
+    let lastSent = {};
+    setInterval(function(){
+      try {
+        const cw = iframe.contentWindow;
+        if (!cw || !cw.location) return;
+        const childAllowed = allowedFromSearch(cw.location.search || '');
+        const parentInfo = getParentHashParams();
+        const merged = Object.assign({}, parentInfo.params, childAllowed);
+        // Only update URL if we are on resolve tab AND params actually changed
+        if ((parentInfo.tab || 'atem') === 'resolve') {
+          if (!shallowEqual(childAllowed, lastSent)) {
+            const newHash = buildHash('resolve', merged);
+            const url = location.pathname + location.search + newHash;
+            history.replaceState(null, '', url);
+            lastSent = childAllowed;
+          }
+        }
+      } catch(e) {
+        // Cross-origin or not loaded yet; ignore
+      }
+    }, 400);
+  }
+
+  // Start after load and also when clicking resolve tab
+  document.addEventListener('DOMContentLoaded', function(){
+    startIframeSync();
+    document.querySelectorAll('.tab').forEach(function(el){
+      el.addEventListener('click', function(){
+        if ((el.getAttribute('data-target')||'') === 'resolve') {
+          setTimeout(startIframeSync, 0);
+        }
+      });
+    });
+  });
+})();
+</script>
 </body>
 </html>
