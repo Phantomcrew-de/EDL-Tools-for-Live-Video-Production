@@ -718,86 +718,174 @@ if (isIPadOS && isSafari && typeof applyOrientationEmojiMode === "function") {
 </script>
 <script>
 (function(){
-  function getParentHashParams() {
-    const hash = location.hash.replace(/^#/, '');
-    const i = hash.indexOf('?');
+  // --- Config ---
+  const ALLOWED = new Set(['v','list','t','time','start']);
+  const POLL_MS = 450;           // polling cadence
+  const PRIME_DELAY_MS = 650;    // extra delay after iframe load for mobile
+  let pollTimer = null;
+  let lastSeen = "";             // last seen child search string
+
+  // --- Helpers ---
+  function parseHash() {
+    const h = location.hash.replace(/^#/, '');
+    const i = h.indexOf('?');
+    const tab = (i === -1 ? h : h.slice(0, i)) || 'atem';
     const params = {};
-    if (i === -1) return { tab: hash || 'atem', params };
-    const tab = hash.slice(0, i) || 'atem';
-    const query = hash.slice(i+1);
-    query.split('&').forEach(pair => {
-      if (!pair) return;
-      const j = pair.indexOf('=');
-      if (j === -1) return;
-      const k = decodeURIComponent(pair.slice(0, j));
-      const v = decodeURIComponent(pair.slice(j+1));
-      if (k) params[k] = v;
-    });
+    if (i !== -1) {
+      const sp = new URLSearchParams(h.slice(i+1));
+      for (const [k,v] of sp.entries()) params[k]=v;
+    }
     return { tab, params };
   }
-  const ALLOWED = new Set(['v','list','t','time','start']);
-  function allowedFromSearch(search) {
-    const out = {};
-    if (!search) return out;
-    const sp = new URLSearchParams(search.startsWith('?')? search.slice(1): search);
-    for (const [k,v] of sp.entries()) if (ALLOWED.has(k)) out[k]=v;
-    return out;
+  function mergedParams() {
+    const merged = {};
+    const sp = new URLSearchParams(location.search);
+    for (const [k,v] of sp.entries()) merged[k]=v;
+    const { params } = parseHash();
+    for (const k in params) merged[k]=params[k];
+    return merged;
   }
-  function buildHash(tab, params) {
+  function buildResolveSrc(base, extra) {
+    base = base || 'EDL_video_player_for_resolve_2_0_EN_DE.html';
+    const all = Object.assign({}, mergedParams(), extra||{});
     const qp = new URLSearchParams();
-    Object.keys(params).forEach(k => qp.set(k, params[k]));
+    Object.keys(all).forEach(k => { if (ALLOWED.has(k)) qp.set(k, all[k]); });
     const qs = qp.toString();
-    return '#' + tab + (qs ? ('?' + qs) : '');
+    return qs ? base + '?' + qs : base;
   }
-  function shallowEqualObj(a,b){
-    const ka = Object.keys(a), kb = Object.keys(b);
-    if (ka.length !== kb.length) return False; // will be corrected below
+  function setParentHashResolve(fromObj) {
+    // Update only allowed keys
+    const current = parseHash();
+    const merged = Object.assign({}, current.params);
+    Object.keys(fromObj||{}).forEach(k => { if (ALLOWED.has(k)) merged[k]=fromObj[k]; });
+    const qp = new URLSearchParams();
+    Object.keys(merged).forEach(k => qp.set(k, merged[k]));
+    const newHash = '#resolve' + (qp.toString() ? ('?' + qp.toString()) : '');
+    if (location.hash === newHash) return;
+    try { history.replaceState(null, '', location.pathname + location.search + newHash); }
+    catch(e) { try { location.hash = newHash; } catch(_) {} }
   }
-  // correct shallowEqualObj
-  function shallowEqual(a,b){
-    const ka = Object.keys(a), kb = Object.keys(b);
-    if (ka.length !== kb.length) return false;
-    for (let k of ka) { if (a[k] !== b[k]) return false; }
-    return true;
-  }
-
-  function startIframeSync(){
+  function applyResolveIframeSrc(extraParams) {
     const iframe = document.getElementById('iframe-resolve');
     if (!iframe) return;
-    let lastSent = {};
-    setInterval(function(){
+    const next = buildResolveSrc(iframe.getAttribute('data-base') || undefined, extraParams);
+    if (iframe.getAttribute('src') !== next) iframe.setAttribute('src', next);
+  }
+  function isResolveActive() {
+    return (parseHash().tab === 'resolve');
+  }
+
+  // --- Poller (tolerant for mobile) ---
+  function startPoller() {
+    stopPoller();
+    const iframe = document.getElementById('iframe-resolve');
+    if (!iframe) return;
+    pollTimer = setInterval(() => {
       try {
         const cw = iframe.contentWindow;
         if (!cw || !cw.location) return;
-        const childAllowed = allowedFromSearch(cw.location.search || '');
-        const parentInfo = getParentHashParams();
-        const merged = Object.assign({}, parentInfo.params, childAllowed);
-        // Only update URL if we are on resolve tab AND params actually changed
-        if ((parentInfo.tab || 'atem') === 'resolve') {
-          if (!shallowEqual(childAllowed, lastSent)) {
-            const newHash = buildHash('resolve', merged);
-            const url = location.pathname + location.search + newHash;
-            history.replaceState(null, '', url);
-            lastSent = childAllowed;
+        const search = cw.location.search || "";
+        if (search && search !== lastSeen) {
+          lastSeen = search;
+          const childParams = Object.fromEntries(new URLSearchParams(search).entries());
+          const allowed = {};
+          Object.keys(childParams).forEach(k => { if (ALLOWED.has(k)) allowed[k]=childParams[k]; });
+          if (Object.keys(allowed).length) {
+            setParentHashResolve(allowed);
           }
         }
-      } catch(e) {
-        // Cross-origin or not loaded yet; ignore
-      }
-    }, 400);
+      } catch(e) { /* maybe not ready yet; keep polling */ }
+    }, POLL_MS);
+  }
+  function stopPoller() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
 
-  // Start after load and also when clicking resolve tab
+  // --- Prime step after iframe load (fixes "first time doesn't work on mobile") ---
+  function primeAfterLoad() {
+    const iframe = document.getElementById('iframe-resolve');
+    if (!iframe) return;
+    // immediate try
+    try {
+      const cw = iframe.contentWindow;
+      if (cw && cw.location && cw.location.search) {
+        lastSeen = cw.location.search;
+        const childParams = Object.fromEntries(new URLSearchParams(lastSeen).entries());
+        const allowed = {};
+        Object.keys(childParams).forEach(k => { if (ALLOWED.has(k)) allowed[k]=childParams[k]; });
+        if (Object.keys(allowed).length) setParentHashResolve(allowed);
+      }
+    } catch(e) {}
+    // delayed second try (mobile browsers sometimes need a tick more)
+    setTimeout(() => {
+      try {
+        const cw = iframe.contentWindow;
+        if (cw && cw.location && cw.location.search) {
+          const search = cw.location.search;
+          if (search !== lastSeen) {
+            lastSeen = search;
+            const childParams = Object.fromEntries(new URLSearchParams(search).entries());
+            const allowed = {};
+            Object.keys(childParams).forEach(k => { if (ALLOWED.has(k)) allowed[k]=childParams[k]; });
+            if (Object.keys(allowed).length) setParentHashResolve(allowed);
+          }
+        }
+      } catch(e) {}
+    }, PRIME_DELAY_MS);
+  }
+
+  // --- Event wiring ---
   document.addEventListener('DOMContentLoaded', function(){
-    startIframeSync();
+    // Keep iframe src aligned with current URL (important for direct links)
+    applyResolveIframeSrc();
+    // Prime + poll whenever Resolve is active
+    const iframe = document.getElementById('iframe-resolve');
+    if (iframe) {
+      iframe.addEventListener('load', function(){
+        if (isResolveActive()) {
+          primeAfterLoad();
+          startPoller();
+        }
+      });
+    }
+    // React on tab clicks to (re)apply src and restart poller on Resolve
     document.querySelectorAll('.tab').forEach(function(el){
       el.addEventListener('click', function(){
-        if ((el.getAttribute('data-target')||'') === 'resolve') {
-          setTimeout(startIframeSync, 0);
+        const target = el.getAttribute('data-target') || '';
+        if (target === 'resolve') {
+          applyResolveIframeSrc();
+          // wait a beat to let the player initialize its own params
+          setTimeout(() => { primeAfterLoad(); startPoller(); }, 150);
+        } else {
+          stopPoller();
         }
       });
     });
   });
+
+  window.addEventListener('hashchange', function(){
+    // Any external hash change -> make sure iframe src matches
+    applyResolveIframeSrc();
+    // If resolve becomes active, ensure polling starts
+    if (isResolveActive()) {
+      // give the iframe a moment in case it reloads on new hash
+      setTimeout(() => { primeAfterLoad(); startPoller(); }, 120);
+    } else {
+      stopPoller();
+    }
+  });
+
+  // Optional: accept postMessage (if player sends it); used as an extra hint
+  window.addEventListener('message', function(ev){
+    if (!ev || !ev.data || ev.data.type !== 'RESOLVE_URL') return;
+    const p = ev.data.params || {};
+    const allowed = {};
+    Object.keys(p).forEach(k => { if (ALLOWED.has(k)) allowed[k]=p[k]; });
+    if (Object.keys(allowed).length) {
+      setParentHashResolve(allowed);
+      applyResolveIframeSrc(allowed);
+    }
+  }, false);
 })();
 </script>
 </body>
