@@ -373,25 +373,19 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (switchingTab || nextTab === currentTab) return;
     switchingTab = true;
     let params = {};
-    if (nextTab === "atem") {
-      const { params: hashParams } = getHashTabAndQuery();
-      params.lang = hashParams.lang || "";
-    }
+const { params: hashParams } = getHashTabAndQuery();
 
-      if (nextTab === "resolve") {
-        const { params: hashParams } = getHashTabAndQuery();
-    if (nextTab === "color") {
-      const { params: hashParams } = getHashTabAndQuery();
-      let newLang = getResolveLangFromParams(hashParams);
-      if (!newLang) newLang = localStorage.getItem("lastColorLang") || "EN";
-      setColorLang(newLang, false);
-    }
+if (typeof nextTab === "string" && nextTab.toLowerCase() === "atem") {
+  if (hashParams.lang) params.lang = hashParams.lang;
+}
 
-        let newLang = getResolveLangFromParams(hashParams);
-        if (!newLang) newLang = localStorage.getItem("lastResolveLang") || "DE";
-        setResolveLang(newLang, false);
-      }
-    setHash(nextTab, params);
+if (typeof nextTab === "string" && nextTab.toLowerCase() === "resolve") {
+  const ALLOWED = new Set(["v","list","t","time","start","lang"]);
+  Object.keys(hashParams || {}).forEach(k => {
+    if (ALLOWED.has(k)) params[k] = hashParams[k];
+  });
+}
+setHash(nextTab, params);
     exportEDLFromTab(currentTab);
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
