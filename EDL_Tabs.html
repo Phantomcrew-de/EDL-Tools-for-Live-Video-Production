@@ -3,7 +3,18 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
+
+<!-- PWA Meta Tags -->
+<meta name="theme-color" content="#000436" />
+<meta name="description" content="browser-based web applications to support timecode-based editing and video annotation workflows, particularly for live productions and DaVinci Resolve postproduction." />
+<link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="EDL Tools Suite" />
+
 <title>EDL-Tools Roundtrip Suite</title>
+
 <style>
     html, body { height: 100%; margin: 0; padding: 0; }
     body { background: #181818; color: #eee; margin: 0; font-family: sans-serif; height: 100vh; }
@@ -904,6 +915,18 @@ applyResolveIframeSrc(allowed);
     }
   }, false);
 })();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('Service Worker registered with scope:', registration.scope);
+      })
+      .catch(error => {
+        console.error('Service Worker registration failed:', error);
+      });
+  });
+}
 </script>
 </body>
 </html>
