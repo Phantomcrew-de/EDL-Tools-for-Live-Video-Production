@@ -6,7 +6,7 @@
   "orientation": "any",
   "scope": "/",
   "short_name": "phantomcrew-de.github",
-  "start_url": "/",
+  "start_url": "https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html",
   "theme_color": "#ffffff",
   "prefer_related_applications": false,
   "categories": [
