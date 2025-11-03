@@ -1,6 +1,13 @@
 # 🎬 EDL Tools for ATEM Live Video Production & DaVinci Resolve
 
+
+
+<p>
+  <img src="icons/edl_suite_icon_02.png" alt="Logo" align="left" width="120"/>
 This repository provides two lightweight, browser-based web applications to support timecode-based editing and video annotation workflows, particularly for live productions and DaVinci Resolve postproduction.
+</p>
+
+<br>
 
 [![Try App](https://img.shields.io/badge/Try%20App-%234CAF50?style=for-the-badge&logo=rocket)](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html)
 
