@@ -361,7 +361,11 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
       if(!meta){ alert(LANG==='de'?'Ungültige YouTube-URL':'Invalid YouTube URL'); return; }
       if(diag){ diag.style.display='inline-block'; diag.textContent=(meta.type==='video'?'VID:':'PL:')+meta.id; }
       if(meta.type==='video'){ addVideoById(meta.id,''); }
-      else { expandPlaylistToVideos(meta.id); }
+      else { 
+    // Minimal patch: respect ?v=... when adding a playlist URL via input
+    let _startV = null;
+    try { _startV = (new URL(u)).searchParams.get('v'); } catch(e){}
+    expandPlaylistToVideos(meta.id, _startV || null); }
     }
 
     addUrlBtn.addEventListener('click',()=>{ const u=urlInput.value.trim(); if(!u) return; addSourceFromUrl(u); urlInput.value=''; });
