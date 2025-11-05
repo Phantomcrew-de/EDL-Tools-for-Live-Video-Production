@@ -9,7 +9,7 @@ This repository provides two lightweight, browser-based web applications to supp
 
 <br>
 
-[![Try App](https://img.shields.io/badge/Try%20App-%234CAF50?style=for-the-badge&logo=rocket)](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/EDL_Tabs.html)
+[![Try App](https://img.shields.io/badge/Try%20App-%234CAF50?style=for-the-badge&logo=rocket)](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/)
 
 
 ---
