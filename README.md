@@ -12,6 +12,7 @@ This repository provides two lightweight, browser-based web applications to supp
 [![Try App](https://img.shields.io/badge/Try%20App-%234CAF50?style=for-the-badge&logo=rocket)](https://phantomcrew-de.github.io/EDL-Tools-for-Live-Video-Production/)
 
 
+
 ---
 
 ## 🛠️ Tools Included
@@ -159,3 +160,4 @@ This is an unofficial project and has no affiliation with Blackmagic Design.
 ## 🤝 Author
 
 Made with ❤️ by Julius – [phantomcrew.de](https://phantomcrew.de/)
+<br><br><a href="https://www.buymeacoffee.com/phantomcrew" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
