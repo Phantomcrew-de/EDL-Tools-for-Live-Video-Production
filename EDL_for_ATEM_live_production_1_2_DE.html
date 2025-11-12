@@ -358,7 +358,7 @@ FCM: NON-DROP FRAME
   });
 
   let a = document.createElement("a");
-  let file = new Blob([listString], {type: "text/plain"});
+  let file = new Blob([listString], {type: "application/octet-stream"});
   a.href = URL.createObjectURL(file);
   a.download = edlFileName;
   a.click();
