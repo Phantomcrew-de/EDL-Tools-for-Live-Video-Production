@@ -277,7 +277,7 @@ function downloadEDL() {
     }
   }
   const edlContent = updatedLines.join('\n');
-  const blob = new Blob([edlContent], { type: 'text/plain' });
+  const blob = new Blob([edlContent], { type: 'application/octet-stream' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = originalFilename + '_offset.edl';
