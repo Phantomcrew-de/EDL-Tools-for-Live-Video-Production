@@ -118,7 +118,7 @@
     // ========== Download Helper ==========
     function saveAs(blob,filename){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.style.display='none';a.href=url;a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},100);}
 
-    function downloadBlob(content,name,isBlob=false){const blob=isBlob?content:new Blob([content],{type:'text/plain;charset=utf-8'});saveAs(blob,name);
+    function downloadBlob(content,name,isBlob=false){const blob=isBlob?content:new Blob([content],{type:'application/octet-stream;charset=utf-8'});saveAs(blob,name);
       // optional Link für Benutzer‑Historie
       const link=document.createElement('a');link.href='#';link.textContent=`✓ ${name} gespeichert`;link.style.pointerEvents='none';document.getElementById('downloadLinks').appendChild(link);
     }
