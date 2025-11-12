@@ -486,7 +486,7 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
       let i=1;
       const write=(c)=>{ const tc=formatEDL(parseEDLTime(c.time)); edl+=`00${two(i++)}  001      V     C        ${tc} ${tc} ${tc} ${tc} \n |C:ResolveColorBlue |M:${c.comment} |D:1\n\n`; };
       for(const c of (src.comments||[])) write(c);
-      const blob=new Blob([edl],{type:'text/plain;charset=utf-8'});
+      const blob=new Blob([edl],{type:'application/octet-stream;charset=utf-8'});
       const safeName=(title||'session').replace(/[^a-z0-9_\-]+/gi,'_');
       saveAs(blob, `${safeName}.edl`);
     });
