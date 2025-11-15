@@ -269,11 +269,14 @@
     <div class="row-label">FPS</div>
     <select id="fps">
       <option>12</option>
+      <option>23.976</option>
       <option>24</option>
       <option selected>25</option>
+      <option>29.97</option>
       <option>30</option>
       <option>48</option>
       <option>50</option>
+      <option>59.94</option>
       <option>60</option>
     </select>
   </div>
@@ -285,7 +288,6 @@
 
   <div class="row">
     <div class="row-label">Offset ms</div>
-    <!-- kein min/max mehr -->
     <input id="msOffset" type="number" step="10" value="0" class="compact-input">
   </div>
 
@@ -306,7 +308,7 @@
   </div>
 
   <div class="hint">
-    URL: <code>?fps=25&amp;utc=1&amp;ms=-80</code>
+    URL: <code>?fps=23.976&amp;utc=1&amp;ms=-80</code>
   </div>
 </div>
 
@@ -316,13 +318,17 @@
   let scriptNode = null;
   let running = false;
 
-  let fps = 25;
+  // fpsSignal = echte LTC-Frames pro Sekunde (kann krumm sein)
+  // fpsTc     = Frames pro TC-Sekunde im Zählwerk (immer ganzzahlig)
+  let fpsSignal = 25;
+  let fpsTc = 25;
+
   let hours = 0, minutes = 0, seconds = 0, frames = 0;
   let utcOffset = 0;
   let msOffset = 0;
 
   let sampleRate = 48000;
-  let bitRate = fps * 80;
+  let bitRate = fpsSignal * 80;
   let bitDuration = 1.0 / bitRate;
   let timeInBit = 0.0;
   let bitIndex = 0;
@@ -349,14 +355,6 @@
     else statusPill.classList.add("paused");
   }
 
-  function clampInt(val, min, max) {
-    val = parseInt(val, 10);
-    if (isNaN(val)) val = 0;
-    if (val < min) val = min;
-    if (val > max) val = max;
-    return val;
-  }
-
   function updateTimeInputs() {
     document.getElementById("h").value = hours;
     document.getElementById("m").value = minutes;
@@ -380,7 +378,7 @@
     }
   }
 
-  function buildFrameBits(h, m, s, f, fpsVal) {
+  function buildFrameBits(h, m, s, f, fpsTcVal) {
     let bits = new Array(80).fill(0);
 
     setBcd(bits, f, [0,1,2,3], [8,9]);
@@ -388,14 +386,14 @@
     setBcd(bits, m, [32,33,34,35], [40,41,42]);
     setBcd(bits, h, [48,49,50,51], [56,57]);
 
-    bits[10] = 0; // drop flag
-    bits[11] = 0; // color flag
-    bits[58] = 0; // BGF1
+    bits[10] = 0; // drop-flag (immer non-drop)
+    bits[11] = 0; // color-flag
+    bits[58] = 0; // BGF1 (hier 0, wir signalisieren nur implizit über fps)
 
     const syncPattern = [0,0,1,1, 1,1,1,1, 1,1,1,1, 1,1,0,1];
     for (let i = 0; i < 16; i++) bits[64 + i] = syncPattern[i];
 
-    let parityIndex = (fpsVal === 25) ? 59 : 27;
+    let parityIndex = (fpsTcVal === 25) ? 59 : 27;
     bits[parityIndex] = 0;
     let zeroCount = 0;
     for (let i = 0; i < 80; i++) if (bits[i] === 0) zeroCount++;
@@ -406,7 +404,7 @@
 
   function incrementTimecode() {
     frames++;
-    if (frames >= fps) {
+    if (frames >= fpsTc) {
       frames = 0;
       seconds++;
       if (seconds >= 60) {
@@ -421,13 +419,13 @@
   }
 
   function resetBitstream() {
-    bitRate = fps * 80;
+    bitRate = fpsSignal * 80;
     bitDuration = 1.0 / bitRate;
     timeInBit = 0.0;
     bitIndex = 0;
     phase = 1.0;
     midTransitionDone = false;
-    currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fps);
+    currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fpsTc);
     updateTcDisplay();
   }
 
@@ -452,7 +450,7 @@
       if (bitIndex >= 80) {
         bitIndex = 0;
         incrementTimecode();
-        currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fps);
+        currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fpsTc);
         updateTcDisplay();
       }
     }
@@ -468,7 +466,7 @@
       now.getUTCMilliseconds();
 
     baseMs += utcOffset * 3600 * 1000;
-    baseMs += msOffset; // KEIN Limit hier
+    baseMs += msOffset;
 
     const dayMs = 24 * 3600 * 1000;
     baseMs = ((baseMs % dayMs) + dayMs) % dayMs;
@@ -480,8 +478,9 @@
     let s = Math.floor(rem / 1000);
     let ms = rem % 1000;
 
-    let f = Math.floor((ms / 1000) * fps);
-    if (f >= fps) f = fps - 1;
+    // Frames aus echter Signal-Rate, aber auf fpsTc geklemmt
+    let f = Math.floor((ms / 1000) * fpsSignal);
+    if (f >= fpsTc) f = fpsTc - 1;
 
     hours = h;
     minutes = m;
@@ -495,20 +494,45 @@
 
   function updateUrlFromState() {
     const params = new URLSearchParams(window.location.search);
-    params.set("fps", fps.toString());
+    params.set("fps", fpsSelect.value); // Anzeige-Wert (23.976, 29.97, etc.)
     params.set("utc", utcOffset.toString());
     params.set("ms", msOffset.toString());
     const newUrl = window.location.pathname + "?" + params.toString();
     window.history.replaceState({}, "", newUrl);
   }
 
+  function applyFpsFromSelect() {
+    const valStr = fpsSelect.value;
+    const val = parseFloat(valStr);
+
+    // Mapping: krumme Framerates → Signal & TC
+    if (Math.abs(val - 23.976) < 0.001) {
+      fpsSignal = 24000 / 1001; // ≈ 23.976
+      fpsTc = 24;
+    } else if (Math.abs(val - 29.97) < 0.001) {
+      fpsSignal = 30000 / 1001; // ≈ 29.97
+      fpsTc = 30;
+    } else if (Math.abs(val - 59.94) < 0.001) {
+      fpsSignal = 60000 / 1001; // ≈ 59.94
+      fpsTc = 60;
+    } else {
+      fpsSignal = val;
+      fpsTc = Math.round(val); // 12,24,25,30,48,50,60
+    }
+  }
+
   function initializeFromUrl() {
     const params = new URLSearchParams(window.location.search);
 
-    const urlFps = parseInt(params.get("fps") || "0", 10);
-    if (!isNaN(urlFps) && [12,24,25,30,48,50,60].includes(urlFps)) fps = urlFps;
-    else fps = 25;
-    fpsSelect.value = fps.toString();
+    const urlFps = params.get("fps");
+    if (urlFps) {
+      // nur setzen, wenn wir die Option kennen
+      const options = Array.from(fpsSelect.options).map(o => o.value);
+      if (options.includes(urlFps)) {
+        fpsSelect.value = urlFps;
+      }
+    }
+    applyFpsFromSelect();
 
     const urlUtc = params.get("utc");
     if (urlUtc !== null) {
@@ -547,7 +571,7 @@
       sampleRate = audioCtx.sampleRate;
     }
 
-    fps = parseInt(fpsSelect.value, 10);
+    applyFpsFromSelect();
     utcOffset = parseFloat(utcOffsetInput.value) || 0;
     msOffset = parseFloat(msOffsetInput.value) || 0;
 
@@ -575,13 +599,14 @@
   // UI Events
   startBtn.addEventListener("click", startLTC);
   stopBtn.addEventListener("click", stopLTC);
+
   resyncBtn.addEventListener("click", function() {
     syncToClock();
     updateUrlFromState();
   });
 
   fpsSelect.addEventListener("change", function() {
-    fps = parseInt(this.value, 10);
+    applyFpsFromSelect();
     updateUrlFromState();
     syncToClock();
     if (running) {
