@@ -109,7 +109,6 @@
       justify-content: space-between;
       gap: 12px;
       align-items: flex-start;
-      margin-bottom: 14px;
     }
     .header-right {
       display: flex;
@@ -731,6 +730,28 @@
       font-size: 0.9rem;
       padding: 0.85rem 1.1rem;
     }
+
+    /* ===== Copy/Share Bubble-Toast ===== */
+    #copy-toast {
+      position: absolute;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(10, 14, 30, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: var(--text-main);
+      font-size: 0.78rem;
+      box-shadow: 0 12px 26px rgba(0,0,0,0.65);
+      z-index: 9999;
+      transform: translateX(-50%);
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+      white-space: nowrap;
+    }
+    #copy-toast.fade-out {
+      opacity: 0;
+      transform: translate(-50%, -6px);
+    }
   </style>
 </head>
 <body>
@@ -761,6 +782,15 @@
           <option value="en">EN</option>
           <option value="de">DE</option>
         </select>
+        
+        <button
+          class="btn btn-ghost btn-small"
+          id="copy-ltc-url-btn"
+          type="button"
+          title="LTC-URL kopieren"
+        >
+          LTC
+        </button>
 
         <button
           class="btn btn-ghost btn-small"
@@ -800,6 +830,7 @@
             </select>
           </div>
           <div class="preset-buttons">
+            <button class="btn btn-ghost btn-small" id="btn-new-project">🆕 New</button>
             <button class="btn btn-ghost btn-small" id="btn-save-project">💾 Save</button>
             <button class="btn btn-danger btn-small" id="btn-delete-project">🗑 Delete</button>
           </div>
@@ -1163,6 +1194,7 @@
         markerButtonsTitle: "Marker buttons (built-in & custom)",
         markerListTitle: "Marker list",
         storageHint: "Projects, custom buttons & presets are stored in this browser.",
+        btnNewProject: "🆕 New",
         btnSaveProject: "💾 Save",
         btnDeleteProject: "🗑 Delete",
         btnSavePreset: "⭐ Save preset",
@@ -1212,6 +1244,7 @@
         markerButtonsTitle: "Marker-Buttons (Standard & Custom)",
         markerListTitle: "Marker-Liste",
         storageHint: "Projekte, Custom-Buttons & Presets werden in diesem Browser gespeichert.",
+        btnNewProject: "🆕 Neu",
         btnSaveProject: "💾 Speichern",
         btnDeleteProject: "🗑 Löschen",
         btnSavePreset: "⭐ Preset speichern",
@@ -1263,6 +1296,7 @@
       ["marker-buttons-title","markerButtonsTitle"],
       ["marker-list-title","markerListTitle"],
       ["storage-hint","storageHint"],
+      ["btn-new-project","btnNewProject"],
       ["btn-save-project","btnSaveProject"],
       ["btn-delete-project","btnDeleteProject"],
       ["btn-save-preset","btnSavePreset"],
@@ -1567,6 +1601,15 @@ FCM: NON-DROP FRAME
         timecodeList=[]; renderList();
       }
       populateProjectDropdown();
+      updateURLFromSettings();
+    }
+
+    function newProject(){
+      $("project-title").value = "";
+      timecodeList = [];
+      renderList();
+      const dd = $("project-dropdown");
+      if (dd) dd.value = "";
       updateURLFromSettings();
     }
 
@@ -1971,7 +2014,39 @@ FCM: NON-DROP FRAME
       document.documentElement.style.setProperty("--marker-btn-scale", markerButtonScale);
     }
 
-    /* ===== URL-Handling für Sharing ===== */
+    /* ===== Sprechblasen / Toast-Funktion ===== */
+
+    function showBubble(message, anchorElement) {
+      if (!anchorElement) return;
+
+      const existing = $("copy-toast");
+      if (existing && existing.parentNode) {
+        existing.parentNode.removeChild(existing);
+      }
+
+      const bubble = document.createElement("div");
+      bubble.id = "copy-toast";
+      bubble.textContent = message;
+      document.body.appendChild(bubble);
+
+      const rect = anchorElement.getBoundingClientRect();
+      const top = rect.bottom + window.scrollY + 6;
+      const left = rect.left + rect.width / 2;
+
+      bubble.style.top = `${top}px`;
+      bubble.style.left = `${left}px`;
+
+      setTimeout(() => {
+        bubble.classList.add("fade-out");
+        setTimeout(() => {
+          if (bubble.parentNode) {
+            bubble.parentNode.removeChild(bubble);
+          }
+        }, 250);
+      }, 3000);
+    }
+
+    /* ===== URL-Handling & Sharing ===== */
 
     function getURLSettings() {
       const params = new URLSearchParams(window.location.search);
@@ -2019,7 +2094,6 @@ FCM: NON-DROP FRAME
       window.history.replaceState(null, "", newUrl);
     }
 
-    // Copy & Share Helpers
     function getShareableUrl() {
       updateURLFromSettings();
       return window.location.href;
@@ -2027,6 +2101,7 @@ FCM: NON-DROP FRAME
 
     async function copyCurrentUrlToClipboard() {
       const url = getShareableUrl();
+      const btn = $("copy-url-btn");
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           await navigator.clipboard.writeText(url);
@@ -2041,17 +2116,67 @@ FCM: NON-DROP FRAME
           document.execCommand("copy");
           document.body.removeChild(tmp);
         }
-        alert(currentLang === "de" ? "URL kopiert." : "URL copied.");
+        showBubble(
+          currentLang === "de" ? "URL kopiert ✅" : "URL copied ✅",
+          btn
+        );
       } catch (err) {
-        alert(currentLang === "de"
-          ? "Konnte die URL nicht kopieren."
-          : "Could not copy the URL."
+        showBubble(
+          currentLang === "de" ? "Konnte URL nicht kopieren ❌" : "Could not copy URL ❌",
+          btn
+        );
+      }
+    }
+
+    function buildLtcUrl() {
+      const base = new URL("ltc/", window.location.href);
+      const fps = $("framerate-selector")?.value || "25";
+      const tz = $("timezone-selector")?.value || "UTC";
+      const offset = timezoneOffsets[tz] ?? 0;
+      let ms = parseInt($("latency-input")?.value || "0", 10);
+      if (isNaN(ms)) ms = 0;
+
+      const params = new URLSearchParams();
+      params.set("fps", fps);
+      params.set("utc", offset);
+      params.set("ms", ms);
+
+      base.search = params.toString();
+      return base.toString();
+    }
+
+    async function copyLtcUrlToClipboard() {
+      const url = buildLtcUrl();
+      const btn = $("copy-ltc-url-btn");
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          const tmp = document.createElement("textarea");
+          tmp.value = url;
+          tmp.style.position = "fixed";
+          tmp.style.top = "-9999px";
+          document.body.appendChild(tmp);
+          tmp.focus();
+          tmp.select();
+          document.execCommand("copy");
+          document.body.removeChild(tmp);
+        }
+        showBubble(
+          currentLang === "de" ? "LTC-URL kopiert ✅" : "LTC URL copied ✅",
+          btn
+        );
+      } catch (err) {
+        showBubble(
+          currentLang === "de" ? "Konnte LTC-URL nicht kopieren ❌" : "Could not copy LTC URL ❌",
+          btn
         );
       }
     }
 
     async function shareCurrentUrl() {
       const url = getShareableUrl();
+      const btn = $("share-url-btn");
       const shareData = {
         title: document.title,
         text: currentLang === "de"
@@ -2065,15 +2190,14 @@ FCM: NON-DROP FRAME
           await navigator.share(shareData);
         } catch (err) {
           if (!err || err.name !== "AbortError") {
-            alert(currentLang === "de"
-              ? "Teilen nicht möglich."
-              : "Sharing failed."
+            showBubble(
+              currentLang === "de" ? "Teilen nicht möglich ❌" : "Sharing failed ❌",
+              btn
             );
           }
         }
       } else {
-        // Fallback: Einfach kopieren
-        copyCurrentUrlToClipboard();
+        await copyCurrentUrlToClipboard();
       }
     }
 
@@ -2132,6 +2256,7 @@ FCM: NON-DROP FRAME
       $("info-button").addEventListener("click",()=>toggleInfoBox());
       $("info-box-close").addEventListener("click",()=>toggleInfoBox("close"));
 
+      $("btn-new-project").addEventListener("click", newProject);
       $("btn-save-project").addEventListener("click",saveProject);
       $("btn-delete-project").addEventListener("click",deleteProject);
 
@@ -2183,6 +2308,11 @@ FCM: NON-DROP FRAME
       const copyBtn = $("copy-url-btn");
       if (copyBtn) {
         copyBtn.addEventListener("click", copyCurrentUrlToClipboard);
+      }
+
+      const copyLtcBtn = $("copy-ltc-url-btn");
+      if (copyLtcBtn) {
+        copyLtcBtn.addEventListener("click", copyLtcUrlToClipboard);
       }
 
       const shareBtn = $("share-url-btn");
