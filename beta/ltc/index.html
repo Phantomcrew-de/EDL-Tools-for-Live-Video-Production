@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Phantomcrew LTC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --pc-dark: #000436;
+      --pc-dark-blue: #1D3A69;
+      --pc-accent-red: #FF5050;
+      --pc-gold: #C99443;
+      --pc-grey: #ACACAC;
+      --pc-light: #ECEBED;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1D3A69 0%, #000436 55%, #000110 100%);
+      color: var(--pc-light);
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      margin: 16px;
+      padding: 18px 16px 16px;
+      background: rgba(0, 4, 54, 0.95);
+      border-radius: 16px;
+      border: 1px solid rgba(201, 148, 67, 0.5);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      margin: 0;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .logo-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--pc-accent-red);
+      box-shadow: 0 0 10px var(--pc-accent-red);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      background: rgba(12, 29, 71, 0.9);
+      border: 1px solid rgba(201, 148, 67, 0.5);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--pc-accent-red);
+      box-shadow: 0 0 6px var(--pc-accent-red);
+    }
+    .status-pill.paused .status-dot {
+      background: var(--pc-grey);
+      box-shadow: none;
+    }
+
+    .status-text { margin: 0; }
+
+    .tc-display {
+      margin: 6px 0 10px;
+      font-family: "SF Mono", "Roboto Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 1.3rem;
+      letter-spacing: 0.22em;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #0C1D47, #000436);
+      border: 1px solid rgba(201, 148, 67, 0.7);
+      text-align: center;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+    }
+
+    .row-label {
+      color: var(--pc-grey);
+      min-width: 60px;
+    }
+
+    select, input[type="number"] {
+      background: rgba(0, 4, 54, 0.98);
+      border-radius: 999px;
+      border: 1px solid rgba(201, 148, 67, 0.7);
+      padding: 5px 10px;
+      color: var(--pc-light);
+      font-size: 0.8rem;
+      outline: none;
+      appearance: none;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+    }
+
+    select { padding-right: 22px; }
+
+    .compact-input {
+      width: 60px;
+      text-align: center;
+    }
+
+    .time-inputs {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .time-inputs span.sep {
+      font-size: 0.78rem;
+      color: var(--pc-grey);
+    }
+
+    .buttons-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      gap: 6px;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    #startBtn {
+      background: var(--pc-accent-red);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(255, 80, 80, 0.5);
+      flex: 1;
+    }
+
+    #stopBtn {
+      background: rgba(12, 29, 71, 1);
+      color: var(--pc-light);
+      border: 1px solid rgba(172, 172, 172, 0.6);
+    }
+
+    #resyncBtn {
+      background: rgba(201, 148, 67, 0.12);
+      color: var(--pc-gold);
+      border: 1px solid rgba(201, 148, 67, 0.7);
+      font-size: 0.78rem;
+      padding: 5px 10px;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 0.7rem;
+      color: var(--pc-grey);
+      text-align: right;
+    }
+
+    #audioGate {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    #audioGateInner {
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: rgba(0, 4, 54, 0.96);
+      border: 1px solid rgba(201,148,67,0.7);
+      text-align: center;
+      max-width: 280px;
+      color: var(--pc-light);
+      box-shadow: 0 18px 45px rgba(0,0,0,0.7);
+      font-size: 0.8rem;
+    }
+
+    #audioGateInner button {
+      margin-top: 10px;
+      background: var(--pc-accent-red);
+      color: #fff;
+      padding: 7px 16px;
+      font-size: 0.82rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(255, 80, 80, 0.5);
+    }
+
+    @media (max-width: 380px) {
+      .tc-display {
+        font-size: 1.15rem;
+        letter-spacing: 0.18em;
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="audioGate">
+  <div id="audioGateInner">
+    Audio freigeben
+    <button id="audioGateBtn">Start</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="title-row">
+    <h1><span class="logo-dot"></span>Phantomcrew LTC</h1>
+    <div id="statusPill" class="status-pill paused">
+      <div class="status-dot"></div>
+      <p id="status" class="status-text">stopp</p>
+    </div>
+  </div>
+
+  <div id="tcDisplay" class="tc-display">--:--:--:--</div>
+
+  <div class="row">
+    <div class="row-label">FPS</div>
+    <select id="fps">
+      <option>12</option>
+      <option>24</option>
+      <option selected>25</option>
+      <option>30</option>
+      <option>48</option>
+      <option>50</option>
+      <option>60</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <div class="row-label">UTC</div>
+    <input id="utcOffset" type="number" step="1" value="0" class="compact-input">
+  </div>
+
+  <div class="row">
+    <div class="row-label">Offset ms</div>
+    <!-- kein min/max mehr -->
+    <input id="msOffset" type="number" step="10" value="0" class="compact-input">
+  </div>
+
+  <div class="row">
+    <div class="row-label">Start</div>
+    <div class="time-inputs">
+      <input id="h" type="number" min="0" max="23" value="0" class="compact-input"><span class="sep">:</span>
+      <input id="m" type="number" min="0" max="59" value="0" class="compact-input"><span class="sep">:</span>
+      <input id="s" type="number" min="0" max="59" value="0" class="compact-input"><span class="sep">:</span>
+      <input id="f" type="number" min="0" max="59" value="0" class="compact-input">
+    </div>
+  </div>
+
+  <div class="buttons-row">
+    <button id="startBtn">Start</button>
+    <button id="stopBtn" disabled>Stop</button>
+    <button id="resyncBtn" type="button">Jetzt</button>
+  </div>
+
+  <div class="hint">
+    URL: <code>?fps=25&amp;utc=1&amp;ms=-80</code>
+  </div>
+</div>
+
+<script>
+(function() {
+  let audioCtx = null;
+  let scriptNode = null;
+  let running = false;
+
+  let fps = 25;
+  let hours = 0, minutes = 0, seconds = 0, frames = 0;
+  let utcOffset = 0;
+  let msOffset = 0;
+
+  let sampleRate = 48000;
+  let bitRate = fps * 80;
+  let bitDuration = 1.0 / bitRate;
+  let timeInBit = 0.0;
+  let bitIndex = 0;
+  let phase = 1.0;
+  let midTransitionDone = false;
+  let currentFrameBits = new Array(80).fill(0);
+
+  const statusEl = document.getElementById("status");
+  const statusPill = document.getElementById("statusPill");
+  const fpsSelect = document.getElementById("fps");
+  const utcOffsetInput = document.getElementById("utcOffset");
+  const msOffsetInput = document.getElementById("msOffset");
+  const startBtn = document.getElementById("startBtn");
+  const stopBtn = document.getElementById("stopBtn");
+  const resyncBtn = document.getElementById("resyncBtn");
+  const tcDisplay = document.getElementById("tcDisplay");
+
+  const audioGate = document.getElementById("audioGate");
+  const audioGateBtn = document.getElementById("audioGateBtn");
+
+  function logStatus(text, isRunning) {
+    statusEl.textContent = text;
+    if (isRunning) statusPill.classList.remove("paused");
+    else statusPill.classList.add("paused");
+  }
+
+  function clampInt(val, min, max) {
+    val = parseInt(val, 10);
+    if (isNaN(val)) val = 0;
+    if (val < min) val = min;
+    if (val > max) val = max;
+    return val;
+  }
+
+  function updateTimeInputs() {
+    document.getElementById("h").value = hours;
+    document.getElementById("m").value = minutes;
+    document.getElementById("s").value = seconds;
+    document.getElementById("f").value = frames;
+  }
+
+  function updateTcDisplay() {
+    const pad2 = x => x.toString().padStart(2, "0");
+    tcDisplay.textContent = `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}:${pad2(frames)}`;
+  }
+
+  function setBcd(bits, value, unitIndices, tensIndices) {
+    let units = value % 10;
+    let tens = Math.floor(value / 10);
+    for (let i = 0; i < unitIndices.length; i++) {
+      bits[unitIndices[i]] = (units >> i) & 1;
+    }
+    for (let i = 0; i < tensIndices.length; i++) {
+      bits[tensIndices[i]] = (tens >> i) & 1;
+    }
+  }
+
+  function buildFrameBits(h, m, s, f, fpsVal) {
+    let bits = new Array(80).fill(0);
+
+    setBcd(bits, f, [0,1,2,3], [8,9]);
+    setBcd(bits, s, [16,17,18,19], [24,25,26]);
+    setBcd(bits, m, [32,33,34,35], [40,41,42]);
+    setBcd(bits, h, [48,49,50,51], [56,57]);
+
+    bits[10] = 0; // drop flag
+    bits[11] = 0; // color flag
+    bits[58] = 0; // BGF1
+
+    const syncPattern = [0,0,1,1, 1,1,1,1, 1,1,1,1, 1,1,0,1];
+    for (let i = 0; i < 16; i++) bits[64 + i] = syncPattern[i];
+
+    let parityIndex = (fpsVal === 25) ? 59 : 27;
+    bits[parityIndex] = 0;
+    let zeroCount = 0;
+    for (let i = 0; i < 80; i++) if (bits[i] === 0) zeroCount++;
+    if (zeroCount % 2 === 1) bits[parityIndex] = 1;
+
+    return bits;
+  }
+
+  function incrementTimecode() {
+    frames++;
+    if (frames >= fps) {
+      frames = 0;
+      seconds++;
+      if (seconds >= 60) {
+        seconds = 0;
+        minutes++;
+        if (minutes >= 60) {
+          minutes = 0;
+          hours = (hours + 1) % 24;
+        }
+      }
+    }
+  }
+
+  function resetBitstream() {
+    bitRate = fps * 80;
+    bitDuration = 1.0 / bitRate;
+    timeInBit = 0.0;
+    bitIndex = 0;
+    phase = 1.0;
+    midTransitionDone = false;
+    currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fps);
+    updateTcDisplay();
+  }
+
+  function generateSample() {
+    if (!running) return 0.0;
+    const dt = 1.0 / sampleRate;
+    timeInBit += dt;
+
+    let currentBit = currentFrameBits[bitIndex];
+
+    if (currentBit === 1 && !midTransitionDone && timeInBit >= bitDuration / 2) {
+      phase = -phase;
+      midTransitionDone = true;
+    }
+
+    if (timeInBit >= bitDuration) {
+      timeInBit -= bitDuration;
+      phase = -phase;
+      bitIndex++;
+      midTransitionDone = false;
+
+      if (bitIndex >= 80) {
+        bitIndex = 0;
+        incrementTimecode();
+        currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fps);
+        updateTcDisplay();
+      }
+    }
+    return phase * 0.6;
+  }
+
+  function syncToClock() {
+    const now = new Date();
+    let baseMs =
+      now.getUTCHours() * 3600 * 1000 +
+      now.getUTCMinutes() * 60 * 1000 +
+      now.getUTCSeconds() * 1000 +
+      now.getUTCMilliseconds();
+
+    baseMs += utcOffset * 3600 * 1000;
+    baseMs += msOffset; // KEIN Limit hier
+
+    const dayMs = 24 * 3600 * 1000;
+    baseMs = ((baseMs % dayMs) + dayMs) % dayMs;
+
+    let h = Math.floor(baseMs / (3600 * 1000));
+    let rem = baseMs % (3600 * 1000);
+    let m = Math.floor(rem / (60 * 1000));
+    rem = rem % (60 * 1000);
+    let s = Math.floor(rem / 1000);
+    let ms = rem % 1000;
+
+    let f = Math.floor((ms / 1000) * fps);
+    if (f >= fps) f = fps - 1;
+
+    hours = h;
+    minutes = m;
+    seconds = s;
+    frames = f;
+
+    updateTimeInputs();
+    updateTcDisplay();
+    resetBitstream();
+  }
+
+  function updateUrlFromState() {
+    const params = new URLSearchParams(window.location.search);
+    params.set("fps", fps.toString());
+    params.set("utc", utcOffset.toString());
+    params.set("ms", msOffset.toString());
+    const newUrl = window.location.pathname + "?" + params.toString();
+    window.history.replaceState({}, "", newUrl);
+  }
+
+  function initializeFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+
+    const urlFps = parseInt(params.get("fps") || "0", 10);
+    if (!isNaN(urlFps) && [12,24,25,30,48,50,60].includes(urlFps)) fps = urlFps;
+    else fps = 25;
+    fpsSelect.value = fps.toString();
+
+    const urlUtc = params.get("utc");
+    if (urlUtc !== null) {
+      const val = parseFloat(urlUtc);
+      if (!isNaN(val)) utcOffset = val;
+    }
+    utcOffsetInput.value = utcOffset.toString();
+
+    const urlMs = params.get("ms");
+    if (urlMs !== null) {
+      const valMs = parseFloat(urlMs);
+      if (!isNaN(valMs)) msOffset = valMs;
+    }
+    msOffsetInput.value = msOffset.toString();
+  }
+
+  function ensureAudioRunning() {
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume().then(() => {
+        audioGate.style.display = "none";
+      });
+    }
+  }
+
+  function startLTC() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      sampleRate = audioCtx.sampleRate;
+      scriptNode = audioCtx.createScriptProcessor(1024, 0, 1);
+      scriptNode.onaudioprocess = function(e) {
+        let out = e.outputBuffer.getChannelData(0);
+        for (let i = 0; i < out.length; i++) out[i] = generateSample();
+      };
+      scriptNode.connect(audioCtx.destination);
+    } else {
+      sampleRate = audioCtx.sampleRate;
+    }
+
+    fps = parseInt(fpsSelect.value, 10);
+    utcOffset = parseFloat(utcOffsetInput.value) || 0;
+    msOffset = parseFloat(msOffsetInput.value) || 0;
+
+    syncToClock();
+    running = true;
+    ensureAudioRunning();
+
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    logStatus("läuft", true);
+    updateUrlFromState();
+
+    if (audioCtx.state === "suspended") {
+      audioGate.style.display = "flex";
+    }
+  }
+
+  function stopLTC() {
+    running = false;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    logStatus("stopp", false);
+  }
+
+  // UI Events
+  startBtn.addEventListener("click", startLTC);
+  stopBtn.addEventListener("click", stopLTC);
+  resyncBtn.addEventListener("click", function() {
+    syncToClock();
+    updateUrlFromState();
+  });
+
+  fpsSelect.addEventListener("change", function() {
+    fps = parseInt(this.value, 10);
+    updateUrlFromState();
+    syncToClock();
+    if (running) {
+      resetBitstream();
+      ensureAudioRunning();
+    }
+  });
+
+  utcOffsetInput.addEventListener("change", function() {
+    utcOffset = parseFloat(this.value) || 0;
+    updateUrlFromState();
+    syncToClock();
+    if (running) {
+      resetBitstream();
+      ensureAudioRunning();
+    }
+  });
+
+  msOffsetInput.addEventListener("change", function() {
+    msOffset = parseFloat(this.value) || 0; // kein Limit
+    updateUrlFromState();
+    syncToClock();
+    if (running) {
+      resetBitstream();
+      ensureAudioRunning();
+    }
+  });
+
+  audioGateBtn.addEventListener("click", function() {
+    if (audioCtx) {
+      audioCtx.resume().then(() => {
+        audioGate.style.display = "none";
+      });
+    }
+  });
+
+  function handleFirstUserGesture() {
+    ensureAudioRunning();
+    window.removeEventListener("click", handleFirstUserGesture);
+    window.removeEventListener("touchstart", handleFirstUserGesture);
+  }
+  window.addEventListener("click", handleFirstUserGesture, { once: true });
+  window.addEventListener("touchstart", handleFirstUserGesture, { once: true });
+
+  window.addEventListener("load", function() {
+    initializeFromUrl();
+    syncToClock();
+    updateUrlFromState();
+    startLTC();
+  });
+})();
+</script>
+</body>
+</html>
