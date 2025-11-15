@@ -138,14 +138,17 @@
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.45);
     }
 
+    /* Verbreiterter, mobiltauglicher Language Switch */
     #lang-switch {
       border-radius: 999px;
       border: 1px solid rgba(255, 255, 255, 0.18);
       background: rgba(8, 10, 20, 0.9);
       color: var(--text-main);
-      padding: 3px 8px;
-      font-size: 0.8rem;
+      padding: 4px 12px;
+      font-size: 0.85rem;
       outline: none;
+      min-width: 80px;
+      text-align: center;
     }
 
     #info-box {
@@ -168,6 +171,9 @@
         right: 10px;
         left: 10px;
         transform: none;
+      }
+      #lang-switch {
+        font-size: 0.9rem;
       }
     }
     #info-box h4 { margin: 4px 0 4px; }
@@ -755,6 +761,25 @@
           <option value="en">EN</option>
           <option value="de">DE</option>
         </select>
+
+        <button
+          class="btn btn-ghost btn-small"
+          id="copy-url-btn"
+          type="button"
+          title="URL kopieren"
+        >
+          📋
+        </button>
+
+        <button
+          class="btn btn-ghost btn-small"
+          id="share-url-btn"
+          type="button"
+          title="URL teilen"
+        >
+          📤
+        </button>
+
         <div id="info-button" title="About this app">ℹ️</div>
       </div>
     </header>
@@ -1994,6 +2019,64 @@ FCM: NON-DROP FRAME
       window.history.replaceState(null, "", newUrl);
     }
 
+    // Copy & Share Helpers
+    function getShareableUrl() {
+      updateURLFromSettings();
+      return window.location.href;
+    }
+
+    async function copyCurrentUrlToClipboard() {
+      const url = getShareableUrl();
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          const tmp = document.createElement("textarea");
+          tmp.value = url;
+          tmp.style.position = "fixed";
+          tmp.style.top = "-9999px";
+          document.body.appendChild(tmp);
+          tmp.focus();
+          tmp.select();
+          document.execCommand("copy");
+          document.body.removeChild(tmp);
+        }
+        alert(currentLang === "de" ? "URL kopiert." : "URL copied.");
+      } catch (err) {
+        alert(currentLang === "de"
+          ? "Konnte die URL nicht kopieren."
+          : "Could not copy the URL."
+        );
+      }
+    }
+
+    async function shareCurrentUrl() {
+      const url = getShareableUrl();
+      const shareData = {
+        title: document.title,
+        text: currentLang === "de"
+          ? "Bearbeite deine EDL-Marker direkt in dieser Ansicht."
+          : "Edit your EDL markers directly in this view.",
+        url
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          if (!err || err.name !== "AbortError") {
+            alert(currentLang === "de"
+              ? "Teilen nicht möglich."
+              : "Sharing failed."
+            );
+          }
+        }
+      } else {
+        // Fallback: Einfach kopieren
+        copyCurrentUrlToClipboard();
+      }
+    }
+
     function initApp(){
       setInterval(updateTime,33.3334);
 
@@ -2096,6 +2179,16 @@ FCM: NON-DROP FRAME
       $("project-title").addEventListener("blur", () => {
         updateURLFromSettings();
       });
+
+      const copyBtn = $("copy-url-btn");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", copyCurrentUrlToClipboard);
+      }
+
+      const shareBtn = $("share-url-btn");
+      if (shareBtn) {
+        shareBtn.addEventListener("click", shareCurrentUrl);
+      }
 
       applyLanguage();
       updateURLFromSettings();
