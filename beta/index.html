@@ -39,6 +39,7 @@
       margin: 0;
       padding: 0;
       min-height: 100vh;
+      height: 100%;
       background: #02030a;          /* dunkler Hintergrund für Overscroll */
       color: var(--text-main);
       overflow-x: hidden;
@@ -51,6 +52,7 @@
       margin: 0;
       padding: 0;
       min-height: 100vh;
+      height: 100%;
       color: var(--text-main);
       background: var(--bg-gradient);
       overflow-x: hidden;
@@ -107,19 +109,6 @@
       align-items: center;
       gap: 8px;
       flex-wrap: nowrap;
-    }
-    .pill {
-      margin-top: 4px;
-      padding: 3px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: radial-gradient(circle at top left,
-        rgba(255, 255, 255, 0.08),
-        rgba(0, 0, 0, 0.1));
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-      display: inline-block;
     }
 
     #info-button {
@@ -610,11 +599,14 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(8px);
       z-index: 60;
       align-items: center;
       justify-content: center;
+      min-height: 100vh;
+      overflow-y: auto;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
     }
     #custom-button-dialog {
       width: min(480px, 92vw);
@@ -623,6 +615,7 @@
       border: 1px solid rgba(255, 255, 255, 0.18);
       box-shadow: 0 18px 40px rgba(0,0,0,0.7);
       padding: 16px 18px 14px;
+      margin: 24px auto;
     }
     #custom-button-dialog h3 {
       margin: 0 0 8px;
@@ -682,6 +675,18 @@
       border-color: #fff;
       box-shadow: 0 0 0 2px rgba(255,255,255,0.6);
     }
+
+    /* ===== ANDROID-SCALING ===== */
+    html.android {
+      font-size: 15px;
+    }
+    html.android h1 {
+      font-size: 1.6rem;
+    }
+    html.android .btn {
+      font-size: 0.9rem;
+      padding: 0.85rem 1.1rem;
+    }
   </style>
 </head>
 <body>
@@ -706,7 +711,6 @@
       <div>
         <h1 id="main-title">Edit List for Live Productions</h1>
         <h6 id="main-subtitle">Marker &amp; EDL Helper with Custom Layout</h6>
-        <div class="pill" id="pill-text">Live tool</div>
       </div>
       <div class="header-right">
         <select id="lang-switch">
@@ -917,6 +921,11 @@
       });
     } catch(e) {}
 
+    // Android-Erkennung für spezielles Scaling
+    if (/Android/i.test(navigator.userAgent)) {
+      document.documentElement.classList.add("android");
+    }
+
     let timecodeList = [];
     let customButtons = [];
     let customPresets = {};
@@ -1053,7 +1062,6 @@
 
     const i18n = {
       en: {
-        pill: "Live tool",
         mainTitle: "Edit List for Live Productions",
         mainSubtitle: "Marker & EDL Helper with Custom Layout",
         infoTitle: "About this App",
@@ -1102,7 +1110,6 @@
         customDialogCommentPlaceholder: "You can use {text} as a variable"
       },
       de: {
-        pill: "Live-Tool",
         mainTitle: "Edit-Liste für Live-Produktionen",
         mainSubtitle: "Marker- & EDL-Helfer mit Custom-Layout",
         infoTitle: "Über diese App",
@@ -1160,7 +1167,6 @@
     function applyLanguage() {
       document.getElementById("main-title").textContent = t("mainTitle");
       document.getElementById("main-subtitle").textContent = t("mainSubtitle");
-      document.getElementById("pill-text").textContent = t("pill");
       document.getElementById("info-title").textContent = t("infoTitle");
       document.getElementById("info-text-1").textContent = t("infoText1");
       document.getElementById("info-title-resolve").textContent = t("infoTitleResolve");
@@ -1196,7 +1202,7 @@
       document.getElementById("custom-comment-input").placeholder = t("customDialogCommentPlaceholder");
       document.getElementById("custom-emoji-input").placeholder = t("customDialogEmojiOwnPlaceholder");
 
-      // Subtexts & Hint leer lassen
+      // Subtexts leer lassen
       document.getElementById("preset-hint").textContent = "";
       document.getElementById("marker-subtext").textContent = "";
       document.getElementById("marker-list-subtext").textContent = "";
@@ -1794,12 +1800,14 @@ FCM: NON-DROP FRAME
 
       buildCustomDialogOptions();
       overlay.style.display = "flex";
+      document.body.style.overflow = "hidden";   // Body-Scroll sperren
       labelInput.focus();
     }
 
     function closeCustomButtonDialog(){
       const overlay = document.getElementById("custom-button-overlay");
       if(overlay) overlay.style.display = "none";
+      document.body.style.overflow = "";         // Body-Scroll wieder erlauben
     }
 
     function loadPresetIntoCustomDialog(){
