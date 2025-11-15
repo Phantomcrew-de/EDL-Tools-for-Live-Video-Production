@@ -28,7 +28,7 @@
       --button-padding: 1rem 1.3rem;
       --button-radius: 16px;
 
-      /* Marker-Button-Scale */
+      /* Marker-Button-Scale (wird per Slider verändert) */
       --marker-btn-scale: 1;
       --marker-btn-padding-y: 1rem;
       --marker-btn-padding-x: 1.3rem;
@@ -51,6 +51,7 @@
       max-width: 100%;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-x pan-y;
+      overscroll-behavior: none;
     }
 
     body {
@@ -64,6 +65,7 @@
       max-width: 100%;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-x pan-y;
+      overscroll-behavior: none;
     }
 
     .app-shell {
@@ -616,7 +618,6 @@
       flex-wrap: wrap;
       align-items: center;
     }
-
     .marker-size-wrapper {
       display: none;
       align-items: center;
@@ -1140,7 +1141,7 @@
         btnSaveProject: "💾 Save",
         btnDeleteProject: "🗑 Delete",
         btnSavePreset: "⭐ Save preset",
-        btnDeletePreset: "🗑 Delete",
+        btnDeletePreset: "🗑 Delete preset",
         btnDownloadEDL: "💾 Download EDL",
         btnAddCustom: "➕ Custom button",
         layoutEditOff: "🛠 Layout-Edit: OFF",
@@ -1188,8 +1189,8 @@
         storageHint: "Projekte, Custom-Buttons & Presets werden in diesem Browser gespeichert.",
         btnSaveProject: "💾 Speichern",
         btnDeleteProject: "🗑 Löschen",
-        btnSavePreset: "⭐ Als Preset speichern",
-        btnDeletePreset: "✖ Preset entfernen",
+        btnSavePreset: "⭐ Preset speichern",
+        btnDeletePreset: "🗑 Preset entfernen",
         btnDownloadEDL: "💾 EDL downloaden",
         btnAddCustom: "➕ Custom-Button",
         layoutEditOff: "🛠 Layout-Edit: AUS",
@@ -1309,15 +1310,23 @@
       switch(comment){
         case "Outtake":
         case "Outtake ": return "ResolveColorFuchsia";
-        case "Cut":      return "ResolveColorPink";
+        case "Cut":
+        case "Schnitt":  return "ResolveColorPink";
         case "Start":    return "ResolveColorYellow";
-        case "Syncpoint":return "ResolveColorGreen";
-        case "Continue": return "ResolveColorCyan";
-        case "Again":    return "ResolveColorSand";
-        case "End":      return "ResolveColorRed";
-        case "Check this part for an Error": return "ResolveColorCocoa";
-        case "Best Take": return "ResolveColorLavender";
-        case "Slow motion or timelapse": return "ResolveColorSky";
+        case "Syncpoint":
+        case "Syncpunkt":return "ResolveColorGreen";
+        case "Continue":
+        case "Weiter":   return "ResolveColorCyan";
+        case "Again":
+        case "Nochmal":  return "ResolveColorSand";
+        case "End":
+        case "Ende":     return "ResolveColorRed";
+        case "Check this part for an Error":
+        case "Diesen Teil auf Fehler prüfen": return "ResolveColorCocoa";
+        case "Best Take":
+        case "Beste Take": return "ResolveColorLavender";
+        case "Slow motion or timelapse":
+        case "Zeitlupe oder Zeitraffer": return "ResolveColorSky";
         default: return "ResolveColorBlue";
       }
     }
@@ -1486,6 +1495,7 @@ FCM: NON-DROP FRAME
       const dd=$("project-dropdown");
       if(dd.querySelector(`option[value="${name}"]`)) dd.value=name;
       renderList();
+      updateURLFromSettings();
     }
 
     function populateProjectDropdown(){
@@ -1508,6 +1518,7 @@ FCM: NON-DROP FRAME
       dd.onchange=()=>{
         $("project-title").value=dd.value;
         loadProject(dd.value);
+        updateURLFromSettings();
       };
     }
 
@@ -1531,6 +1542,7 @@ FCM: NON-DROP FRAME
         timecodeList=[]; renderList();
       }
       populateProjectDropdown();
+      updateURLFromSettings();
     }
 
     function loadCustomButtonsFromStorage(){
@@ -1572,25 +1584,32 @@ FCM: NON-DROP FRAME
       loadCustomPresetsFromStorage();
     }
 
-    function applyPreset(value){
-      let preset=value.startsWith("custom:")
+    function getCurrentLayoutClone(){
+      return currentLayout.map(e=>({kind:e.kind,id:e.id}));
+    }
+
+    function applyPreset(value, skipURL){
+      let preset=value && value.startsWith("custom:")
         ? customPresets[value.slice("custom:".length)]
         : BUILTIN_PRESETS[value];
       if(!preset) return;
+
+      if($("preset-select")) $("preset-select").value = value;
+
       if(preset.framerate) $("framerate-selector").value=preset.framerate;
       if(typeof preset.latency==="number") $("latency-input").value=preset.latency;
+
       markerButtonScale = typeof preset.buttonScale === "number" ? preset.buttonScale : 1;
       document.documentElement.style.setProperty("--marker-btn-scale", markerButtonScale);
       const slider = $("marker-size-slider");
       if(slider) slider.value = Math.round(markerButtonScale * 100);
+
       currentLayout=(preset.layout && preset.layout.length)
         ? preset.layout.map(e=>({kind:e.kind,id:e.id}))
         : DEFAULT_LAYOUT.map(e=>({kind:e.kind,id:e.id}));
       renderMarkerButtons();
-    }
 
-    function getCurrentLayoutClone(){
-      return currentLayout.map(e=>({kind:e.kind,id:e.id}));
+      if(!skipURL) updateURLFromSettings();
     }
 
     function saveCurrentAsPreset(){
@@ -1606,6 +1625,7 @@ FCM: NON-DROP FRAME
       };
       saveCustomPresetsToStorage();
       $("preset-select").value=`custom:${name}`;
+      updateURLFromSettings();
     }
 
     function deleteCurrentPreset(){
@@ -1926,19 +1946,105 @@ FCM: NON-DROP FRAME
       document.documentElement.style.setProperty("--marker-btn-scale", markerButtonScale);
     }
 
+    /* ===== URL-Handling für Sharing ===== */
+
+    function getURLSettings() {
+      const params = new URLSearchParams(window.location.search);
+      const lang = params.get("lang");
+      const utc = params.get("utc");
+      const fr = params.get("fr");
+      const latencyStr = params.get("latency");
+      const title = params.get("title");
+      const preset = params.get("preset");
+      let latency = null;
+      if(latencyStr !== null && latencyStr !== ""){
+        const l = parseInt(latencyStr,10);
+        if(!isNaN(l)) latency = l;
+      }
+      return { lang, utc, fr, latency, title, preset };
+    }
+
+    function updateURLFromSettings(){
+      const params = new URLSearchParams(window.location.search);
+
+      params.set("lang", currentLang);
+
+      const tzVal = $("timezone-selector")?.value;
+      if(tzVal) params.set("utc", tzVal);
+
+      const frVal = $("framerate-selector")?.value;
+      if(frVal) params.set("fr", frVal);
+
+      const latVal = $("latency-input")?.value;
+      if(latVal !== undefined && latVal !== "" && !isNaN(parseInt(latVal,10))) {
+        params.set("latency", parseInt(latVal,10));
+      } else {
+        params.delete("latency");
+      }
+
+      const titleVal = $("project-title")?.value.trim();
+      if(titleVal) params.set("title", titleVal);
+      else params.delete("title");
+
+      const presetVal = $("preset-select")?.value;
+      if(presetVal) params.set("preset", presetVal);
+      else params.delete("preset");
+
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState(null, "", newUrl);
+    }
+
     function initApp(){
       setInterval(updateTime,33.3334);
 
       loadCustomButtonsFromStorage();
       loadCustomPresetsFromStorage();
 
-      currentLayout=BUILTIN_PRESETS.default.layout.map(e=>({kind:e.kind,id:e.id}));
+      currentLayout=DEFAULT_LAYOUT.map(e=>({kind:e.kind,id:e.id}));
       renderMarkerButtons();
       populateProjectDropdown();
       renderList();
 
+      const urlSettings = getURLSettings();
+
+      // Sprache aus URL
+      if(urlSettings.lang === "de" || urlSettings.lang === "en"){
+        currentLang = urlSettings.lang;
+        if($("lang-switch")) $("lang-switch").value = urlSettings.lang;
+      }
+
+      // Initiales PRESET: aus URL oder default
+      let initialPreset = "default";
+      if(urlSettings.preset &&
+         $("preset-select") &&
+         $("preset-select").querySelector(`option[value="${urlSettings.preset}"]`)){
+        initialPreset = urlSettings.preset;
+      }
+      applyPreset(initialPreset, true); // true = URL jetzt noch nicht anfassen
+
+      // Danach: URL-Overrides auf die Felder anwenden
+      if(urlSettings.utc &&
+         $("timezone-selector") &&
+         $("timezone-selector").querySelector(`option[value="${urlSettings.utc}"]`)){
+        $("timezone-selector").value = urlSettings.utc;
+      }
+
+      if(urlSettings.fr &&
+         $("framerate-selector") &&
+         $("framerate-selector").querySelector(`option[value="${urlSettings.fr}"]`)){
+        $("framerate-selector").value = urlSettings.fr;
+      }
+
+      if(urlSettings.latency !== null && $("latency-input")){
+        $("latency-input").value = urlSettings.latency;
+      }
+
+      if(urlSettings.title !== null && $("project-title")){
+        $("project-title").value = urlSettings.title;
+        loadProject(urlSettings.title);
+      }
+
       $("preset-select").addEventListener("change",e=>applyPreset(e.target.value));
-      applyPreset("default");
 
       $("info-button").addEventListener("click",()=>toggleInfoBox());
       $("info-box-close").addEventListener("click",()=>toggleInfoBox("close"));
@@ -1967,15 +2073,32 @@ FCM: NON-DROP FRAME
       const slider = $("marker-size-slider");
       if(slider){
         slider.value = Math.round(markerButtonScale * 100);
-        slider.addEventListener("input", setMarkerScaleFromSlider);
+        slider.addEventListener("input", () => {
+          setMarkerScaleFromSlider();
+        });
       }
 
       $("lang-switch").addEventListener("change",e=>{
         currentLang = e.target.value;
         applyLanguage();
+        updateURLFromSettings();
+      });
+
+      $("timezone-selector").addEventListener("change", () => {
+        updateURLFromSettings();
+      });
+      $("framerate-selector").addEventListener("change", () => {
+        updateURLFromSettings();
+      });
+      $("latency-input").addEventListener("input", () => {
+        updateURLFromSettings();
+      });
+      $("project-title").addEventListener("blur", () => {
+        updateURLFromSettings();
       });
 
       applyLanguage();
+      updateURLFromSettings();
     }
 
     window.addEventListener("load",initApp);
