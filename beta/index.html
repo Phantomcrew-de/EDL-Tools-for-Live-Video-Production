@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit List for Live Productions – Custom Layout</title>
+
+  <!-- Mobile: Zoom deaktivieren + Notch ausnutzen -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+  <!-- Farbe für Browser-/App-Bar -->
+  <meta name="theme-color" content="#02030a" />
+
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at top left, #1f3b70, #060814 60%);
+      --glass-bg: rgba(20, 26, 48, 0.78);
+      --glass-border: rgba(255, 255, 255, 0.16);
+      --glass-soft: rgba(255, 255, 255, 0.05);
+      --text-main: #f8f8ff;
+      --text-muted: #b0badc;
+      --accent: #ffb347;
+      --accent-soft: rgba(255, 179, 71, 0.2);
+      --danger: #ff5c7a;
+      --radius-lg: 18px;
+      --shadow-3d: 0 18px 40px rgba(0, 0, 0, 0.55);
+      --transition-fast: 0.18s ease-out;
+      --button-padding: 1rem 1.3rem;
+      --button-radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    html {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: #02030a;          /* dunkler Hintergrund für Overscroll */
+      color: var(--text-main);
+      overflow-x: hidden;
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      color: var(--text-main);
+      background: var(--bg-gradient);
+      overflow-x: hidden;
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1120px;
+      margin: 24px auto 32px;
+      padding: 24px 24px 28px;
+      border-radius: 24px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-3d);
+      backdrop-filter: blur(26px) saturate(150%);
+      width: 100%;
+    }
+
+    @media (max-width: 1024px) {
+      .app-shell {
+        margin: 16px auto 24px;
+        padding: 18px 14px 22px;
+        width: calc(100% - 24px);   /* links/rechts gleich viel Abstand */
+      }
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: clamp(1.4rem, 2vw + 1rem, 1.9rem);
+      font-weight: 650;
+      letter-spacing: 0.02em;
+    }
+    h6 {
+      margin: 4px 0 6px;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+    .pill {
+      margin-top: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: radial-gradient(circle at top left,
+        rgba(255, 255, 255, 0.08),
+        rgba(0, 0, 0, 0.1));
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    #info-button {
+      cursor: pointer;
+      font-size: 1.4rem;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--glass-soft);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      transition: transform var(--transition-fast),
+        box-shadow var(--transition-fast), background var(--transition-fast);
+    }
+    #info-button:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    #lang-switch {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(8, 10, 20, 0.9);
+      color: var(--text-main);
+      padding: 3px 8px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    #info-box {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 50%;
+      transform: translateX(50%);
+      max-width: 520px;
+      background: rgba(12, 19, 40, 0.96);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      padding: 18px 18px 20px;
+      z-index: 50;
+      backdrop-filter: blur(24px) saturate(160%);
+    }
+    @media (max-width: 600px) {
+      #info-box {
+        right: 10px;
+        left: 10px;
+        transform: none;
+      }
+    }
+    #info-box h4 { margin: 4px 0 4px; }
+    #info-box p {
+      margin: 4px 0 8px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    #info-box-close {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(10, 10, 24, 0.9);
+      color: var(--text-main);
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color var(--transition-fast),
+        box-shadow var(--transition-fast), background var(--transition-fast);
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+      background: rgba(14, 20, 40, 0.95);
+    }
+    select {
+      appearance: none;
+      background-image: linear-gradient(45deg,transparent 50%,#fff 50%),
+        linear-gradient(135deg,#fff 50%,transparent 50%),
+        linear-gradient(to right,transparent,transparent);
+      background-position: calc(100% - 18px) 14px,
+        calc(100% - 13px) 14px,
+        calc(100% - 38px) 0.5em;
+      background-size: 6px 6px, 6px 6px, 1px 1.6em;
+      background-repeat: no-repeat;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 2fr 1.4fr;
+      gap: 10px;
+      align-items: end;
+      width: 100%;
+    }
+    @media (max-width: 720px) {
+      .grid-two { grid-template-columns: 1fr; }
+    }
+    .grid-three {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      width: 100%;
+    }
+    @media (max-width: 900px) {
+      .grid-three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 600px) {
+      .grid-three { grid-template-columns: 1fr; }
+    }
+
+    .timer-shell {
+      margin-top: 10px;
+      padding: 12px 14px 10px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(125deg,
+        rgba(255, 255, 255, 0.08),
+        rgba(0, 0, 0, 0.25));
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+    }
+    #timer {
+      font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: clamp(1.3rem, 3vw + 0.9rem, 1.8rem);
+      letter-spacing: 0.16em;
+    }
+
+    button { cursor: pointer; border: none; background: none; color: inherit; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: var(--button-padding);
+      border-radius: var(--button-radius);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: radial-gradient(circle at top left,
+        rgba(255, 255, 255, 0.12),
+        rgba(0, 0, 0, 0.3));
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: transform var(--transition-fast),
+        box-shadow var(--transition-fast), background var(--transition-fast),
+        border-color var(--transition-fast);
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .btn span.emoji { font-size: 1.3rem; }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.55);
+      background: radial-gradient(circle at top left,
+        rgba(255, 255, 255, 0.2),
+        rgba(0, 0, 0, 0.35));
+    }
+    .btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
+    }
+    .btn-small {
+      padding: 0.5rem 0.8rem;
+      font-size: 0.82rem;
+      border-radius: 999px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    }
+    .btn-ghost {
+      background: rgba(8, 10, 20, 0.9);
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+    }
+    .btn-ghost:hover { background: rgba(16, 20, 40, 0.95); }
+    .btn-danger {
+      border-color: rgba(255, 92, 122, 0.7);
+      background: linear-gradient(135deg,
+        rgba(255, 92, 122, 0.3),
+        rgba(180, 32, 64, 0.85));
+    }
+
+    .btn-cut {
+      border-color: #f199b0;
+      background: linear-gradient(135deg,
+        rgba(241, 153, 176, 0.35),
+        rgba(192, 122, 140, 0.7));
+    }
+    .btn-start {
+      border-color: #f3d241;
+      background: linear-gradient(135deg,
+        rgba(243, 210, 65, 0.35),
+        rgba(194, 168, 52, 0.7));
+    }
+    .btn-end {
+      border-color: #ed3023;
+      background: linear-gradient(135deg,
+        rgba(237, 48, 35, 0.4),
+        rgba(189, 38, 28, 0.8));
+    }
+    .btn-sync {
+      border-color: #4ec057;
+      background: linear-gradient(135deg,
+        rgba(78, 192, 87, 0.4),
+        rgba(62, 153, 69, 0.85));
+    }
+    .btn-continue {
+      border-color: #01b7ba;
+      background: linear-gradient(135deg,
+        rgba(1, 183, 186, 0.4),
+        rgba(0, 146, 148, 0.85));
+    }
+    .btn-outtake {
+      border-color: #ff44c8;
+      background: linear-gradient(135deg,
+        rgba(255, 68, 200, 0.4),
+        rgba(204, 54, 160, 0.85));
+    }
+    .btn-again {
+      border-color: #d6c199;
+      background: linear-gradient(135deg,
+        rgba(214, 193, 153, 0.35),
+        rgba(171, 154, 122, 0.85));
+    }
+    .btn-check {
+      border-color: #6e5143;
+      background: linear-gradient(135deg,
+        rgba(110, 81, 67, 0.5),
+        rgba(88, 64, 53, 0.9));
+    }
+    .btn-slomo {
+      border-color: #8ad3ff;
+      background: linear-gradient(135deg,
+        rgba(138, 211, 255, 0.4),
+        rgba(110, 168, 204, 0.85));
+    }
+    .btn-transition,
+    .btn-vfx,
+    .btn-comment {
+      border-color: #3a78c3;
+      background: linear-gradient(135deg,
+        rgba(58, 120, 195, 0.45),
+        rgba(46, 96, 156, 0.88));
+    }
+    .btn-besttake {
+      border-color: #c299ff;
+      background: linear-gradient(135deg,
+        rgba(194, 153, 255, 0.45),
+        rgba(155, 122, 204, 0.88));
+    }
+
+    .marker-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      width: 100%;
+    }
+    .marker-slot {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .marker-slot-controls {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+    }
+    .marker-slot-controls button {
+      padding: 0.2rem 0.45rem;
+      font-size: 0.72rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(5, 6, 18, 0.9);
+      opacity: 0.85;
+    }
+    .marker-slot-controls button:hover {
+      opacity: 1;
+      background: rgba(12, 16, 35, 0.95);
+    }
+    .marker-slot-controls button[data-delete="true"] {
+      border-color: rgba(255, 92, 122, 0.7);
+      color: #ffc2d1;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 22px;
+      margin-bottom: 6px;
+    }
+    .section-header h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+    .subtext {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .footer-row {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+    .footer-row .left,
+    .footer-row .right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .badge {
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: var(--text-muted);
+    }
+
+    /* -------- Marker List -------- */
+    #comment-list {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0;
+      width: 100%;
+    }
+    #comment-list li {
+      display: grid;
+      grid-template-columns: auto 130px minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: 8px;
+      margin-bottom: 7px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(8, 10, 24, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      width: 100%;
+    }
+    #comment-list input[type="text"] {
+      background: rgba(16, 18, 35, 0.98);
+      border-radius: 8px;
+      padding: 5px 7px;
+      font-size: 0.92rem;
+      color: var(--text-main);
+      border-width: 1px;
+      width: 100%;
+    }
+    #comment-list input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+    .marker-time-input {
+      font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      width: 100%;
+    }
+    .marker-comment-input {
+      min-width: 0;
+      width: 100%;
+    }
+    .delete-marker-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: radial-gradient(circle at top left,
+        rgba(255, 92, 122, 0.26),
+        rgba(80, 10, 20, 0.9));
+      color: #ffd5e0;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .delete-marker-btn:hover {
+      border-color: rgba(255, 113, 145, 0.85);
+    }
+    .color-box {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 1px solid rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+    }
+    .new-entry {
+      animation: slide-in 0.4s ease-out;
+    }
+    .deleted-entry {
+      animation: slide-out 0.45s ease-in forwards;
+    }
+    @keyframes slide-in {
+      from { transform: translateY(-10%); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes slide-out {
+      from { transform: translateX(0);   opacity: 1; }
+      to   { transform: translateX(-100%); opacity: 0; }
+    }
+
+    #color-picker {
+      position: absolute;
+      background: rgba(12, 19, 40, 0.98);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 6px;
+      display: grid;
+      grid-template-columns: repeat(4, 20px);
+      gap: 4px;
+      z-index: 999;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(14px);
+    }
+    #color-picker div {
+      border-radius: 6px;
+      border: 1px solid rgba(0, 0, 0, 0.5);
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      #comment-list li {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-rows: auto auto;
+        grid-template-areas:
+          "color time delete"
+          "color comment delete";
+      }
+      .color-box { grid-area: color; }
+      .marker-time-input { grid-area: time; }
+      .marker-comment-input { grid-area: comment; }
+      .delete-marker-btn { grid-area: delete; }
+
+      .marker-time-input,
+      .marker-comment-input {
+        width: 100%;
+      }
+    }
+
+    .preset-buttons {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .preset-buttons button {
+      flex: 1 1 140px;
+      max-width: 100%;
+    }
+    @media (max-width: 600px) {
+      .preset-buttons button {
+        flex: 1 1 100%;
+      }
+    }
+
+    /* ==== Custom Button Dialog ==== */
+    #custom-button-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 60;
+      align-items: center;
+      justify-content: center;
+    }
+    #custom-button-dialog {
+      width: min(480px, 92vw);
+      background: rgba(12, 19, 40, 0.98);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.7);
+      padding: 16px 18px 14px;
+    }
+    #custom-button-dialog h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+    .custom-dialog-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .custom-dialog-row label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .custom-dialog-row input,
+    .custom-dialog-row select {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(10, 10, 24, 0.9);
+      color: var(--text-main);
+      padding: 7px 9px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .custom-dialog-row input:focus,
+    .custom-dialog-row select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+    .custom-dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    /* Farb-Swatches im Dialog */
+    #custom-color-swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .custom-color-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.6);
+    }
+    .custom-color-swatch.selected {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.6);
+    }
+  </style>
+</head>
+<body>
+  <div id="info-box">
+    <div style="text-align: right;">
+      <button id="info-box-close">❌</button>
+    </div>
+    <h4 id="info-title">About this App</h4>
+    <p id="info-text-1">
+      This web application is a timecode &amp; marker tracker for live productions
+      (ATEM Mini/Pro ISO etc.).
+    </p>
+    <h4 id="info-title-resolve">Export to DaVinci Resolve</h4>
+    <p id="info-text-2">
+      Use <strong>💾 Download EDL</strong> and then in DaVinci Resolve:
+      right-click the timeline → <em>Import → Timeline Markers from EDL</em>.
+    </p>
+  </div>
+
+  <main class="app-shell">
+    <header class="app-header">
+      <div>
+        <h1 id="main-title">Edit List for Live Productions</h1>
+        <h6 id="main-subtitle">Marker &amp; EDL Helper with Custom Layout</h6>
+        <div class="pill" id="pill-text">Live tool</div>
+      </div>
+      <div class="header-right">
+        <select id="lang-switch">
+          <option value="en">EN</option>
+          <option value="de">DE</option>
+        </select>
+        <div id="info-button" title="About this app">ℹ️</div>
+      </div>
+    </header>
+
+    <!-- Projects & Presets -->
+    <section>
+      <h6 id="projects-presets-title">Projects &amp; Presets</h6>
+      <div class="grid-two">
+        <div>
+          <label for="project-title" id="label-project-title">Project title</label>
+          <input type="text" id="project-title" placeholder="Enter a project title" />
+        </div>
+        <div class="grid-two">
+          <div>
+            <label for="project-dropdown" id="label-saved-projects">Saved projects</label>
+            <select id="project-dropdown">
+              <option value="" disabled selected>Select project</option>
+            </select>
+          </div>
+          <div class="preset-buttons">
+            <button class="btn btn-ghost btn-small" id="btn-save-project">💾 Save</button>
+            <button class="btn btn-danger btn-small" id="btn-delete-project">🗑 Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;" class="grid-three">
+        <div>
+          <label for="preset-select" id="label-preset-select">Production preset</label>
+          <select id="preset-select">
+            <option value="default">Default – All markers</option>
+            <option value="musicVideo">Music Video</option>
+            <option value="talkshow">Talkshow / Interview</option>
+            <option value="event">Live Event / Stage</option>
+          </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <div class="preset-buttons">
+            <button class="btn btn-ghost btn-small" id="btn-save-preset">⭐ Save as preset</button>
+            <button class="btn btn-ghost btn-small" id="btn-delete-preset">✖ Remove preset</button>
+          </div>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <div class="subtext" id="preset-hint"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Timecode -->
+    <section style="margin-top:16px;">
+      <h6 id="timecode-settings-title">Timecode settings</h6>
+      <div class="grid-three">
+        <div>
+          <label for="timezone-selector" id="label-timezone">Timezone</label>
+          <select id="timezone-selector">
+            <option value="UTC-12">UTC-12</option>
+            <option value="UTC-11">UTC-11</option>
+            <option value="UTC-10">UTC-10</option>
+            <option value="UTC-9">UTC-9</option>
+            <option value="UTC-8">UTC-8</option>
+            <option value="UTC-7">UTC-7</option>
+            <option value="UTC-6">UTC-6</option>
+            <option value="UTC-5">UTC-5</option>
+            <option value="UTC-4">UTC-4</option>
+            <option value="UTC-3">UTC-3</option>
+            <option value="UTC-2">UTC-2</option>
+            <option value="UTC-1">UTC-1</option>
+            <option value="UTC">UTC</option>
+            <option value="UTC+1" selected>UTC+1</option>
+            <option value="UTC+2">UTC+2</option>
+            <option value="UTC+3">UTC+3</option>
+            <option value="UTC+4">UTC+4</option>
+            <option value="UTC+5">UTC+5</option>
+            <option value="UTC+6">UTC+6</option>
+            <option value="UTC+7">UTC+7</option>
+            <option value="UTC+8">UTC+8</option>
+            <option value="UTC+9">UTC+9</option>
+            <option value="UTC+10">UTC+10</option>
+            <option value="UTC+11">UTC+11</option>
+            <option value="UTC+12">UTC+12</option>
+          </select>
+        </div>
+        <div>
+          <label for="framerate-selector" id="label-framerate">Framerate</label>
+          <select id="framerate-selector">
+            <option value="24">24 fps</option>
+            <option value="25" selected>25 fps</option>
+            <option value="30">30 fps</option>
+            <option value="50">50 fps</option>
+            <option value="60">60 fps</option>
+            <option value="120">120 fps</option>
+          </select>
+        </div>
+        <div>
+          <label for="latency-input" id="label-latency">Latency (ms)</label>
+          <input type="number" id="latency-input" value="0" />
+        </div>
+      </div>
+      <div class="timer-shell">
+        <div id="timer">00:00:00:00</div>
+      </div>
+    </section>
+
+    <!-- Marker Buttons -->
+    <section>
+      <div class="section-header">
+        <div>
+          <h3 id="marker-buttons-title">Marker buttons (built-in &amp; custom)</h3>
+          <div class="subtext" id="marker-subtext"></div>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <button class="btn btn-ghost btn-small" id="layout-edit-toggle">
+            🛠 Layout-Edit: OFF
+          </button>
+          <button class="btn btn-ghost btn-small" id="btn-add-custom-button">
+            ➕ Custom button
+          </button>
+        </div>
+      </div>
+      <div class="marker-grid" id="marker-buttons"></div>
+    </section>
+
+    <!-- Marker List -->
+    <section>
+      <div class="section-header" style="margin-top:20px;">
+        <div>
+          <h3 id="marker-list-title">Marker list</h3>
+          <div class="subtext" id="marker-list-subtext"></div>
+        </div>
+      </div>
+      <ul id="comment-list"></ul>
+    </section>
+
+    <!-- Footer -->
+    <section class="footer-row">
+      <div class="left">
+        <button class="btn btn-start" id="btn-download-edl">💾 Download EDL</button>
+      </div>
+      <div class="right">
+        <span class="badge" id="storage-hint">
+          Projects, custom buttons &amp; presets are stored in this browser.
+        </span>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==== Custom Button Dialog ==== -->
+  <div id="custom-button-overlay">
+    <div id="custom-button-dialog">
+      <h3 id="custom-dialog-title">New custom button</h3>
+
+      <div class="custom-dialog-row">
+        <label for="custom-preset-select" id="custom-dialog-preset-label">Load preset</label>
+        <select id="custom-preset-select"></select>
+      </div>
+
+      <div class="custom-dialog-row">
+        <label for="custom-label-input" id="custom-dialog-label-label">Button label</label>
+        <input id="custom-label-input" type="text" autocomplete="off">
+      </div>
+
+      <div class="custom-dialog-row">
+        <label for="custom-comment-input" id="custom-dialog-comment-label">
+          Comment text for EDL markers
+        </label>
+        <input id="custom-comment-input" type="text" autocomplete="off"
+          placeholder="You can use {text} as a variable">
+      </div>
+
+      <div class="custom-dialog-row">
+        <label for="custom-emoji-select" id="custom-dialog-emoji-label">Emoji / prefix</label>
+        <select id="custom-emoji-select"></select>
+        <input id="custom-emoji-input" type="text" autocomplete="off"
+          placeholder="…or type your own emoji">
+      </div>
+
+      <div class="custom-dialog-row">
+        <label for="custom-color-select" id="custom-dialog-color-label">Resolve color</label>
+        <select id="custom-color-select"></select>
+        <div id="custom-color-swatches"></div>
+      </div>
+
+      <div class="custom-dialog-actions">
+        <button class="btn btn-ghost btn-small" id="custom-dialog-cancel">Cancel</button>
+        <button class="btn btn-start btn-small" id="custom-dialog-save">Save button</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Warnung beim Verlassen
+    window.onbeforeunload = function () {
+      return "Are you sure you want to leave? Any unsaved data will be lost.";
+    };
+
+    // iOS: Pinch-Zoom zusätzlich per JS blocken
+    try {
+      ["gesturestart","gesturechange","gestureend"].forEach(ev=>{
+        document.addEventListener(ev, function(e){ e.preventDefault(); }, {passive:false});
+      });
+    } catch(e) {}
+
+    let timecodeList = [];
+    let customButtons = [];
+    let customPresets = {};
+    let currentLayout = [];
+    let editMode = false;
+    let currentLang = "en";
+
+    const timezoneOffsets = {
+      UTC: 0, "UTC-12": -12, "UTC-11": -11, "UTC-10": -10, "UTC-9": -9,
+      "UTC-8": -8, "UTC-7": -7, "UTC-6": -6, "UTC-5": -5, "UTC-4": -4,
+      "UTC-3": -3, "UTC-2": -2, "UTC-1": -1,
+      "UTC+1": 1, "UTC+2": 2, "UTC+3": 3, "UTC+4": 4, "UTC+5": 5,
+      "UTC+6": 6, "UTC+7": 7, "UTC+8": 8, "UTC+9": 9, "UTC+10": 10,
+      "UTC+11": 11, "UTC+12": 12
+    };
+    const framerates = { "24":24,"25":25,"30":30,"50":50,"60":60,"120":120 };
+
+    const EMOJI_CHOICES = ["⭐","🎬","🎥","🎤","🎧","📸","🎙️","🎛️","🎹","🎵","🚨","🔥","💥","🤣"];
+    const RESOLVE_COLOR_CHOICES = [
+      "ResolveColorBlue","ResolveColorCyan","ResolveColorGreen","ResolveColorYellow",
+      "ResolveColorRed","ResolveColorPink","ResolveColorPurple","ResolveColorFuchsia",
+      "ResolveColorRose","ResolveColorLavender","ResolveColorSky","ResolveColorMint",
+      "ResolveColorLemon","ResolveColorSand","ResolveColorCocoa","ResolveColorCream"
+    ];
+
+    const DEFAULT_MARKERS_BASE = [
+      { id:"comment",    emoji:"✍️",   btnClass:"btn-comment"   },
+      { id:"start",      emoji:"▶️",   btnClass:"btn-start"     },
+      { id:"cut",        emoji:"✂️",   btnClass:"btn-cut"       },
+      { id:"continue",   emoji:"🚶‍♀️", btnClass:"btn-continue"  },
+      { id:"again",      emoji:"🔁",   btnClass:"btn-again"     },
+      { id:"outtake",    emoji:"🤣",   btnClass:"btn-outtake"   },
+      { id:"end",        emoji:"✋",   btnClass:"btn-end"       },
+      { id:"check",      emoji:"🚨",   btnClass:"btn-check"     },
+      { id:"slomo",      emoji:"🐢/🐇",btnClass:"btn-slomo"     },
+      { id:"transition", emoji:"🔥",   btnClass:"btn-transition"},
+      { id:"vfx",        emoji:"💥",   btnClass:"btn-vfx"       },
+      { id:"besttake",   emoji:"🤎",   btnClass:"btn-besttake"  },
+      { id:"sync",       emoji:"🎬",   btnClass:"btn-sync"      }
+    ];
+
+    const markerLabels = {
+      en: {
+        comment:"Comment",
+        start:"Start",
+        cut:"Cut",
+        continue:"Continue",
+        again:"Again",
+        outtake:"Outtake",
+        end:"End",
+        check:"Check Error",
+        slomo:"Speed",
+        transition:"Transition",
+        vfx:"Effect",
+        besttake:"Best Take",
+        sync:"Sync"
+      },
+      de: {
+        comment:"Kommentar",
+        start:"Start",
+        cut:"Schnitt",
+        continue:"Weiter",
+        again:"Nochmal",
+        outtake:"Outtake",
+        end:"Ende",
+        check:"Fehler prüfen",
+        slomo:"Tempo",
+        transition:"Übergang",
+        vfx:"Effekt",
+        besttake:"Beste Take",
+        sync:"Sync"
+      }
+    };
+
+    // Kommentartext, der in die Marker/EDL geschrieben wird
+    const markerComments = {
+      en: {
+        comment: null, // wird per Prompt abgefragt
+        start: "Start",
+        cut: "Cut",
+        continue: "Continue",
+        again: "Again",
+        outtake: "Outtake",
+        end: "End",
+        check: "Check this part for an Error",
+        slomo: "Slow motion or timelapse",
+        transition: "Transition",
+        vfx: "Visual effects or SFX/Music",
+        besttake: "Best Take",
+        sync: "Syncpoint"
+      },
+      de: {
+        comment: null,
+        start: "Start",
+        cut: "Schnitt",
+        continue: "Weiter",
+        again: "Nochmal",
+        outtake: "Outtake",
+        end: "Ende",
+        check: "Diesen Teil auf Fehler prüfen",
+        slomo: "Zeitlupe oder Zeitraffer",
+        transition: "Übergang",
+        vfx: "VFX oder SFX/Musik",
+        besttake: "Beste Take",
+        sync: "Syncpunkt"
+      }
+    };
+
+    const BUILTIN_PRESETS = {
+      default: {
+        framerate:"25",
+        latency:0,
+        layout: DEFAULT_MARKERS_BASE.map(m => ({kind:"builtin",id:m.id}))
+      },
+      musicVideo: {
+        framerate:"25",
+        latency:80,
+        layout:["start","sync","cut","transition","vfx","besttake","again","end"]
+          .map(id => ({kind:"builtin",id}))
+      },
+      talkshow: {
+        framerate:"25",
+        latency:0,
+        layout:["start","sync","cut","continue","again","check","outtake","end"]
+          .map(id => ({kind:"builtin",id}))
+      },
+      event: {
+        framerate:"50",
+        latency:40,
+        layout:["start","sync","cut","slomo","transition","besttake","end"]
+          .map(id => ({kind:"builtin",id}))
+      }
+    };
+
+    const i18n = {
+      en: {
+        pill: "Live tool",
+        mainTitle: "Edit List for Live Productions",
+        mainSubtitle: "Marker & EDL Helper with Custom Layout",
+        infoTitle: "About this App",
+        infoText1: "This web application is a timecode & marker tracker for live productions (ATEM Mini/Pro ISO etc.).",
+        infoTitleResolve: "Export to DaVinci Resolve",
+        infoText2: "Use 💾 Download EDL and then in DaVinci Resolve: right-click the timeline → \"Import → Timeline Markers from EDL\".",
+        projectsPresets: "Projects & Presets",
+        labelProjectTitle: "Project title",
+        labelSavedProjects: "Saved projects",
+        labelPresetSelect: "Production preset",
+        timecodeSettings: "Timecode settings",
+        labelTimezone: "Timezone",
+        labelFramerate: "Framerate",
+        labelLatency: "Latency (ms)",
+        markerButtonsTitle: "Marker buttons (built-in & custom)",
+        markerListTitle: "Marker list",
+        storageHint: "Projects, custom buttons & presets are stored in this browser.",
+        btnSaveProject: "💾 Save",
+        btnDeleteProject: "🗑 Delete",
+        btnSavePreset: "⭐ Save as preset",
+        btnDeletePreset: "✖ Remove preset",
+        btnDownloadEDL: "💾 Download EDL",
+        btnAddCustom: "➕ Custom button",
+        layoutEditOff: "🛠 Layout-Edit: OFF",
+        layoutEditOn: "🛠 Layout-Edit: ON",
+        placeholderProjectTitle: "Enter a project title",
+        alertNoMarkers: "No markers found. Add at least one marker before downloading the EDL.",
+        confirmDeleteProject: name => `Delete project "${name}"?`,
+        confirmDeletePreset: name => `Remove preset "${name}"?`,
+        promptComment: "Enter your comment:",
+        promptPresetName: "Name for this custom preset (e.g. 'Podcast Show A'):",
+        onlyCustomPresetRemovable: "Only custom presets can be removed.",
+        customDialogTitle: "New custom button",
+        customDialogPresetLabel: "Load preset",
+        customDialogPresetPlaceholder: "None / choose preset…",
+        customDialogLabelLabel: "Button label",
+        customDialogCommentLabel: "Comment text for EDL markers (you can use {text})",
+        customDialogEmojiLabel: "Emoji / prefix",
+        customDialogEmojiPlaceholder: "Choose an emoji…",
+        customDialogEmojiOwnPlaceholder: "…or type your own emoji",
+        customDialogColorLabel: "Resolve color",
+        customDialogColorPlaceholder: "Choose a Resolve color…",
+        customDialogSave: "Save button",
+        customDialogCancel: "Cancel",
+        customDialogLabelRequired: "Please enter a label for the button.",
+        customDialogCommentPlaceholder: "You can use {text} as a variable"
+      },
+      de: {
+        pill: "Live-Tool",
+        mainTitle: "Edit-Liste für Live-Produktionen",
+        mainSubtitle: "Marker- & EDL-Helfer mit Custom-Layout",
+        infoTitle: "Über diese App",
+        infoText1: "Diese Web-App ist ein Timecode- & Marker-Tracker für Live-Produktionen (ATEM Mini/Pro ISO etc.).",
+        infoTitleResolve: "Export nach DaVinci Resolve",
+        infoText2: "Nutze 💾 Download EDL und in DaVinci Resolve: Rechtsklick auf die Timeline → „Import → Timeline Markers from EDL“.",
+        projectsPresets: "Projekte & Presets",
+        labelProjectTitle: "Projekttitel",
+        labelSavedProjects: "Gespeicherte Projekte",
+        labelPresetSelect: "Produktions-Preset",
+        timecodeSettings: "Timecode-Einstellungen",
+        labelTimezone: "Zeitzone",
+        labelFramerate: "Framerate",
+        labelLatency: "Latenz (ms)",
+        markerButtonsTitle: "Marker-Buttons (Standard & Custom)",
+        markerListTitle: "Marker-Liste",
+        storageHint: "Projekte, Custom-Buttons & Presets werden in diesem Browser gespeichert.",
+        btnSaveProject: "💾 Speichern",
+        btnDeleteProject: "🗑 Löschen",
+        btnSavePreset: "⭐ Als Preset speichern",
+        btnDeletePreset: "✖ Preset entfernen",
+        btnDownloadEDL: "💾 EDL downloaden",
+        btnAddCustom: "➕ Custom-Button",
+        layoutEditOff: "🛠 Layout-Edit: AUS",
+        layoutEditOn: "🛠 Layout-Edit: AN",
+        placeholderProjectTitle: "Projekttitel eingeben",
+        alertNoMarkers: "Keine Marker vorhanden. Füge mindestens einen Marker hinzu, bevor du die EDL lädst.",
+        confirmDeleteProject: name => `Projekt „${name}“ löschen?`,
+        confirmDeletePreset: name => `Preset „${name}“ entfernen?`,
+        promptComment: "Kommentar eingeben:",
+        promptPresetName: "Name für dieses Custom-Preset (z. B. „Podcast Show A“):",
+        onlyCustomPresetRemovable: "Nur Custom-Presets können entfernt werden.",
+        customDialogTitle: "Neuer Custom-Button",
+        customDialogPresetLabel: "Preset laden",
+        customDialogPresetPlaceholder: "Keins / Preset wählen …",
+        customDialogLabelLabel: "Button-Beschriftung",
+        customDialogCommentLabel: "Kommentartext für die EDL-Marker (du kannst {text} benutzen)",
+        customDialogEmojiLabel: "Emoji / Präfix",
+        customDialogEmojiPlaceholder: "Emoji auswählen …",
+        customDialogEmojiOwnPlaceholder: "…oder eigenes Emoji eintippen",
+        customDialogColorLabel: "Resolve-Farbe",
+        customDialogColorPlaceholder: "Resolve-Farbe auswählen …",
+        customDialogSave: "Button speichern",
+        customDialogCancel: "Abbrechen",
+        customDialogLabelRequired: "Bitte gib eine Beschriftung für den Button ein.",
+        customDialogCommentPlaceholder: "Du kannst {text} als Variable benutzen"
+      }
+    };
+
+    function t(key, ...args) {
+      const value = i18n[currentLang][key];
+      return typeof value === "function" ? value(...args) : value;
+    }
+
+    function applyLanguage() {
+      document.getElementById("main-title").textContent = t("mainTitle");
+      document.getElementById("main-subtitle").textContent = t("mainSubtitle");
+      document.getElementById("pill-text").textContent = t("pill");
+      document.getElementById("info-title").textContent = t("infoTitle");
+      document.getElementById("info-text-1").textContent = t("infoText1");
+      document.getElementById("info-title-resolve").textContent = t("infoTitleResolve");
+      document.getElementById("info-text-2").textContent = t("infoText2");
+      document.getElementById("projects-presets-title").textContent = t("projectsPresets");
+      document.getElementById("label-project-title").textContent = t("labelProjectTitle");
+      document.getElementById("label-saved-projects").textContent = t("labelSavedProjects");
+      document.getElementById("label-preset-select").textContent = t("labelPresetSelect");
+      document.getElementById("timecode-settings-title").textContent = t("timecodeSettings");
+      document.getElementById("label-timezone").textContent = t("labelTimezone");
+      document.getElementById("label-framerate").textContent = t("labelFramerate");
+      document.getElementById("label-latency").textContent = t("labelLatency");
+      document.getElementById("marker-buttons-title").textContent = t("markerButtonsTitle");
+      document.getElementById("marker-list-title").textContent = t("markerListTitle");
+      document.getElementById("storage-hint").textContent = t("storageHint");
+      document.getElementById("btn-save-project").textContent = t("btnSaveProject");
+      document.getElementById("btn-delete-project").textContent = t("btnDeleteProject");
+      document.getElementById("btn-save-preset").textContent = t("btnSavePreset");
+      document.getElementById("btn-delete-preset").textContent = t("btnDeletePreset");
+      document.getElementById("btn-download-edl").textContent = t("btnDownloadEDL");
+      document.getElementById("btn-add-custom-button").textContent = t("btnAddCustom");
+      document.getElementById("project-title").placeholder = t("placeholderProjectTitle");
+
+      // Custom Dialog Texte
+      document.getElementById("custom-dialog-title").textContent = t("customDialogTitle");
+      document.getElementById("custom-dialog-preset-label").textContent = t("customDialogPresetLabel");
+      document.getElementById("custom-dialog-label-label").textContent = t("customDialogLabelLabel");
+      document.getElementById("custom-dialog-comment-label").textContent = t("customDialogCommentLabel");
+      document.getElementById("custom-dialog-emoji-label").textContent = t("customDialogEmojiLabel");
+      document.getElementById("custom-dialog-color-label").textContent = t("customDialogColorLabel");
+      document.getElementById("custom-dialog-cancel").textContent = t("customDialogCancel");
+      document.getElementById("custom-dialog-save").textContent = t("customDialogSave");
+      document.getElementById("custom-comment-input").placeholder = t("customDialogCommentPlaceholder");
+      document.getElementById("custom-emoji-input").placeholder = t("customDialogEmojiOwnPlaceholder");
+
+      // Subtexts & Hint leer lassen
+      document.getElementById("preset-hint").textContent = "";
+      document.getElementById("marker-subtext").textContent = "";
+      document.getElementById("marker-list-subtext").textContent = "";
+
+      buildCustomDialogOptions();
+      setEditMode(editMode);
+      renderMarkerButtons();
+    }
+
+    function formatNumber(n){return n.toString().padStart(2,"0");}
+    function formatNumberThree(n){return n.toString().padStart(3,"0");}
+
+    function updateTime() {
+      const tz = document.getElementById("timezone-selector").value;
+      const fr = document.getElementById("framerate-selector").value;
+      const latency = parseInt(document.getElementById("latency-input").value || "0",10);
+      const offset = timezoneOffsets[tz] || 0;
+      const fps = framerates[fr] || 25;
+
+      let now = new Date();
+      now.setMilliseconds(now.getMilliseconds() + latency);
+
+      let h = (now.getUTCHours() + offset) % 24;
+      if (h < 0) h += 24;
+      const m  = now.getUTCMinutes();
+      const s  = now.getUTCSeconds();
+      const ms = now.getUTCMilliseconds();
+      const frame = Math.round((ms/1000)*fps);
+      document.getElementById("timer").textContent =
+        `${formatNumber(h)}:${formatNumber(m)}:${formatNumber(s)}:${formatNumber(frame)}`;
+    }
+
+    // Farblogik jetzt über Marker-ID
+    function getColorForMarkerId(id){
+      switch(id){
+        case "outtake":   return "ResolveColorFuchsia";
+        case "cut":       return "ResolveColorPink";
+        case "start":     return "ResolveColorYellow";
+        case "sync":      return "ResolveColorGreen";
+        case "continue":  return "ResolveColorCyan";
+        case "again":     return "ResolveColorSand";
+        case "end":       return "ResolveColorRed";
+        case "check":     return "ResolveColorCocoa";
+        case "besttake":  return "ResolveColorLavender";
+        case "slomo":     return "ResolveColorSky";
+        case "comment":   return "ResolveColorBlue";
+        default:          return "ResolveColorBlue";
+      }
+    }
+
+    // Fallback für alte gespeicherte Projekte (englische Kommentare)
+    function getColorForComment(comment){
+      switch(comment){
+        case "Outtake":
+        case "Outtake ":
+          return "ResolveColorFuchsia";
+        case "Cut": return "ResolveColorPink";
+        case "Start": return "ResolveColorYellow";
+        case "Syncpoint": return "ResolveColorGreen";
+        case "Continue": return "ResolveColorCyan";
+        case "Again": return "ResolveColorSand";
+        case "End": return "ResolveColorRed";
+        case "Check this part for an Error": return "ResolveColorCocoa";
+        case "Best Take": return "ResolveColorLavender";
+        case "Slow motion or timelapse": return "ResolveColorSky";
+        default: return "ResolveColorBlue";
+      }
+    }
+
+    function resolveColorToHex(c){
+      const map={
+        ResolveColorBlue:"#007FE3",
+        ResolveColorCyan:"#01B7BA",
+        ResolveColorGreen:"#4EC057",
+        ResolveColorYellow:"#F3D241",
+        ResolveColorRed:"#ED3023",
+        ResolveColorPink:"#F199B0",
+        ResolveColorFuchsia:"#FF44C8",
+        ResolveColorLavender:"#C299FF",
+        ResolveColorSky:"#8AD3FF",
+        ResolveColorSand:"#D6C199",
+        ResolveColorCocoa:"#6E5143",
+        ResolveColorPurple:"#9B59B6",
+        ResolveColorRose:"#F78DA7",
+        ResolveColorMint:"#B9E269",
+        ResolveColorLemon:"#FFF176",
+        ResolveColorCream:"#F5EBE1"
+      };
+      return map[c] || "#3A78C3";
+    }
+
+    function addMarker(commentText, explicitColor){
+      const tc = document.getElementById("timer").textContent || "00:00:00:00";
+      const item = {timecode:tc,comment:commentText,id:Date.now()};
+      if(explicitColor) item.color = explicitColor;
+      timecodeList.push(item);
+      saveProject();
+    }
+    function addCommentMarker(){
+      const c = prompt(t("promptComment"));
+      if(c === null) return;
+      const tc = document.getElementById("timer").textContent || "00:00:00:00";
+      timecodeList.unshift({
+        timecode:tc,
+        comment:c,
+        id:Date.now(),
+        color:getColorForMarkerId("comment")
+      });
+      saveProject();
+    }
+    function syncBeepAndMarker(){
+      try{ new Audio("sfx/beepsound.mp3").play(); }catch(e){}
+      const text = (markerComments[currentLang] && markerComments[currentLang].sync) || "Syncpoint";
+      addMarker(text, getColorForMarkerId("sync"));
+    }
+
+    function renderList(){
+      timecodeList.sort((a,b)=>b.id-a.id);
+      const container=document.getElementById("comment-list");
+      let html="";
+      timecodeList.forEach(({timecode,comment,id,color},index)=>{
+        const colorCode=color||getColorForComment(comment);
+        const hex=resolveColorToHex(colorCode);
+        html+=`
+          <li id="item_${id}" ${index===0?"class='new-entry'":""}>
+            <div id="colorbox_${id}" class="color-box" style="background-color:${hex}"></div>
+            <input type="text" value="${timecode}" id="timecode_${id}" class="marker-time-input">
+            <input type="text" value="${(comment||"").replace(/"/g,"&quot;")}" id="comment_${id}" class="marker-comment-input">
+            <button class="delete-marker-btn" data-id="${id}">✕</button>
+          </li>`;
+      });
+      container.innerHTML=html;
+
+      timecodeList.forEach(({id})=>{
+        const tInput=document.getElementById(`timecode_${id}`);
+        const cInput=document.getElementById(`comment_${id}`);
+        const d=container.querySelector(`button[data-id="${id}"]`);
+        const box=document.getElementById(`colorbox_${id}`);
+        if(tInput) tInput.addEventListener("blur",()=>editComment(id));
+        if(cInput) cInput.addEventListener("blur",()=>editComment(id));
+        if(d) d.addEventListener("click",()=>deleteComment(id));
+        if(box) box.addEventListener("click",()=>changeColor(id));
+      });
+    }
+    function deleteComment(id){
+      const li=document.getElementById(`item_${id}`);
+      if(li){
+        li.classList.add("deleted-entry");
+        setTimeout(()=>{
+          timecodeList=timecodeList.filter(x=>x.id!==id);
+          saveProject();
+        },450);
+      }else{
+        timecodeList=timecodeList.filter(x=>x.id!==id);
+        saveProject();
+      }
+    }
+    function editComment(id){
+      const tInput=document.getElementById(`timecode_${id}`);
+      const cInput=document.getElementById(`comment_${id}`);
+      const item=timecodeList.find(x=>x.id===id);
+      if(!item||!tInput||!cInput) return;
+      item.timecode=tInput.value;
+      item.comment=cInput.value;
+      saveProject();
+    }
+
+    function changeColor(id){
+      const existing=document.getElementById("color-picker");
+      if(existing) existing.remove();
+      const colors=RESOLVE_COLOR_CHOICES;
+      const picker=document.createElement("div");
+      picker.id="color-picker";
+      const colorBox=document.getElementById(`colorbox_${id}`);
+      const rect=colorBox.getBoundingClientRect();
+      picker.style.left=rect.left+"px";
+      picker.style.top=(rect.bottom+window.scrollY+4)+"px";
+
+      colors.forEach(name=>{
+        const div=document.createElement("div");
+        div.style.backgroundColor=resolveColorToHex(name);
+        div.title=name;
+        div.addEventListener("click",()=>{
+          const item=timecodeList.find(x=>x.id===id);
+          if(item){ item.color=name; saveProject(); }
+          if(document.body.contains(picker)) document.body.removeChild(picker);
+        });
+        picker.appendChild(div);
+      });
+      document.body.appendChild(picker);
+      setTimeout(()=>{
+        document.addEventListener("click",function remove(e){
+          if(!picker.contains(e.target)&&!colorBox.contains(e.target)){
+            if(document.body.contains(picker)) document.body.removeChild(picker);
+            document.removeEventListener("click",remove);
+          }
+        });
+      },0);
+    }
+
+    function downloadList(){
+      const now=new Date();
+      const date=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,"0")}-${now.getDate().toString().padStart(2,"0")}`;
+      const time=`${now.getHours().toString().padStart(2,"0")}-${now.getMinutes().toString().padStart(2,"0")}-${now.getSeconds().toString().padStart(2,"0")}`;
+      let projectTitle=document.getElementById("project-title").value.trim();
+      if(!projectTitle) projectTitle="UntitledProject";
+      if(timecodeList.length===0){
+        alert(t("alertNoMarkers"));
+        return;
+      }
+      const safeTitle=projectTitle
+        .replace(/ä/g,"ae").replace(/ü/g,"ue").replace(/ö/g,"oe")
+        .replace(/[^a-zA-Z0-9]/g,"_");
+      const filename=`${date}_${time}_${safeTitle}.edl`;
+
+      let nr=1;
+      let content=`TITLE: ${projectTitle} | created in edl webapp by PHANTOMCREW.DE
+FCM: NON-DROP FRAME
+
+`;
+      timecodeList.forEach(item=>{
+        const {timecode,comment,color}=item;
+        const c=color||getColorForComment(comment);
+        content+=`${formatNumberThree(nr)}  001      V     C        ${timecode} ${timecode} ${timecode} ${timecode} 
+ |C:${c} |M:${comment} |D:1
+
+`;
+        nr++;
+      });
+      const a=document.createElement("a");
+      const file=new Blob([content],{type:"application/octet-stream"});
+      a.href=URL.createObjectURL(file);
+      a.download=filename;
+      a.click();
+    }
+
+    function getProjectKey(name){return `edlProject_${name}`;}
+    function saveProject(){
+      let name=document.getElementById("project-title").value.trim();
+      if(!name) name="Autosave";
+      localStorage.setItem(getProjectKey(name),JSON.stringify(timecodeList));
+      populateProjectDropdown();
+      document.getElementById("project-title").value=name;
+      const dd=document.getElementById("project-dropdown");
+      if(dd.querySelector(`option[value="${name}"]`)) dd.value=name;
+      renderList();
+    }
+    function populateProjectDropdown(){
+      const dd=document.getElementById("project-dropdown");
+      const current=document.getElementById("project-title").value.trim();
+      dd.innerHTML="";
+      const ph=document.createElement("option");
+      ph.value=""; ph.disabled=true; ph.textContent="Select project";
+      dd.appendChild(ph);
+      Object.keys(localStorage)
+        .filter(k=>k.startsWith("edlProject_"))
+        .sort()
+        .forEach(key=>{
+          const name=key.replace("edlProject_","");
+          const opt=document.createElement("option");
+          opt.value=name; opt.textContent=name;
+          dd.appendChild(opt);
+        });
+      if(current && dd.querySelector(`option[value="${current}"]`)){
+        dd.value=current;
+      }else{
+        dd.value="";
+      }
+      dd.onchange=function(){
+        document.getElementById("project-title").value=dd.value;
+        loadProject(dd.value);
+      };
+    }
+    function loadProject(name){
+      const n=name||document.getElementById("project-dropdown").value;
+      if(!n) return;
+      const json=localStorage.getItem(getProjectKey(n));
+      if(!json) return;
+      try{ timecodeList=JSON.parse(json)||[]; }catch(e){ timecodeList=[]; }
+      renderList();
+    }
+    function deleteProject(){
+      const dd=document.getElementById("project-dropdown");
+      const n=dd.value;
+      if(!n) return;
+      if(!confirm(t("confirmDeleteProject",n))) return;
+      localStorage.removeItem(getProjectKey(n));
+      if(document.getElementById("project-title").value.trim()===n){
+        document.getElementById("project-title").value="";
+        timecodeList=[]; renderList();
+      }
+      populateProjectDropdown();
+    }
+
+    function loadCustomButtonsFromStorage(){
+      try{
+        const raw=localStorage.getItem("edlCustomButtons");
+        customButtons=raw?JSON.parse(raw):[];
+      }catch{customButtons=[];}
+    }
+    function saveCustomButtonsToStorage(){
+      localStorage.setItem("edlCustomButtons",JSON.stringify(customButtons));
+      renderMarkerButtons();
+    }
+    function getCustomButtonById(id){return customButtons.find(b=>b.id===id);}
+
+    function loadCustomPresetsFromStorage(){
+      try{
+        const raw=localStorage.getItem("edlCustomPresets");
+        customPresets=raw?JSON.parse(raw):{};
+      }catch{customPresets={};}
+      const select=document.getElementById("preset-select");
+      Array.from(select.options)
+        .filter(o=>o.dataset.custom==="1")
+        .forEach(o=>select.removeChild(o));
+      Object.keys(customPresets).forEach(name=>{
+        const opt=document.createElement("option");
+        opt.value=`custom:${name}`;
+        opt.textContent=`Custom – ${name}`;
+        opt.dataset.custom="1";
+        select.appendChild(opt);
+      });
+    }
+    function saveCustomPresetsToStorage(){
+      localStorage.setItem("edlCustomPresets",JSON.stringify(customPresets));
+      loadCustomPresetsFromStorage();
+    }
+
+    function applyPreset(value){
+      let preset;
+      if(value.startsWith("custom:")){
+        const name=value.slice("custom:".length);
+        preset=customPresets[name];
+      }else{
+        preset=BUILTIN_PRESETS[value];
+      }
+      if(!preset) return;
+      if(preset.framerate) document.getElementById("framerate-selector").value=preset.framerate;
+      if(typeof preset.latency==="number") document.getElementById("latency-input").value=preset.latency;
+      currentLayout=(preset.layout && preset.layout.length)
+        ? preset.layout.map(e=>({kind:e.kind,id:e.id}))
+        : BUILTIN_PRESETS.default.layout.map(e=>({kind:e.kind,id:e.id}));
+      renderMarkerButtons();
+    }
+
+    function getCurrentLayoutClone(){
+      return currentLayout.map(e=>({kind:e.kind,id:e.id}));
+    }
+    function saveCurrentAsPreset(){
+      const name=prompt(t("promptPresetName"));
+      if(!name) return;
+      const fr=document.getElementById("framerate-selector").value;
+      const lat=parseInt(document.getElementById("latency-input").value||"0",10);
+      customPresets[name]={framerate:fr,latency:lat,layout:getCurrentLayoutClone()};
+      saveCustomPresetsToStorage();
+      document.getElementById("preset-select").value=`custom:${name}`;
+    }
+    function deleteCurrentPreset(){
+      const select=document.getElementById("preset-select");
+      const val=select.value;
+      if(!val.startsWith("custom:")){
+        alert(t("onlyCustomPresetRemovable"));
+        return;
+      }
+      const name=val.slice("custom:".length);
+      if(!confirm(t("confirmDeletePreset",name))) return;
+      delete customPresets[name];
+      saveCustomPresetsToStorage();
+      select.value="default";
+      applyPreset("default");
+    }
+
+    function getBuiltinMarkerById(id){
+      const base=DEFAULT_MARKERS_BASE.find(m=>m.id===id);
+      if(!base) return null;
+      const label=(markerLabels[currentLang] && markerLabels[currentLang][id]) || id;
+      const comment=(markerComments[currentLang] && markerComments[currentLang][id]) ?? null;
+      return {...base,label,comment};
+    }
+
+    function moveLayoutIndex(index,delta){
+      const ni=index+delta;
+      if(ni<0||ni>=currentLayout.length) return;
+      const tmp=currentLayout[index];
+      currentLayout[index]=currentLayout[ni];
+      currentLayout[ni]=tmp;
+      renderMarkerButtons();
+    }
+    function deleteLayoutEntryAtIndex(index){
+      currentLayout.splice(index,1);
+      renderMarkerButtons();
+    }
+
+    function renderMarkerButtons(){
+      const container=document.getElementById("marker-buttons");
+      container.innerHTML="";
+      if(!currentLayout||!currentLayout.length){
+        currentLayout=BUILTIN_PRESETS.default.layout.map(e=>({kind:e.kind,id:e.id}));
+      }
+      currentLayout.forEach((entry,index)=>{
+        let label="",emoji="",btnClass="btn-comment",color=null;
+        if(entry.kind==="builtin"){
+          const m=getBuiltinMarkerById(entry.id); if(!m) return;
+          label=m.label; emoji=m.emoji; btnClass=m.btnClass;
+        }else{
+          const b=getCustomButtonById(entry.id); if(!b) return;
+          label=b.label; emoji=b.emoji||"⭐"; color=b.color||"ResolveColorBlue";
+        }
+        const slot=document.createElement("div");
+        slot.className="marker-slot";
+        slot.dataset.index=index;
+
+        const button=document.createElement("button");
+        button.className=`btn ${btnClass}`;
+        if(entry.kind==="custom"){
+          const hex=resolveColorToHex(color);
+          button.style.borderColor=hex;
+          button.style.background=`linear-gradient(135deg, ${hex}33, rgba(0,0,0,0.8))`;
+        }
+        button.innerHTML=`<span class="emoji">${emoji}</span><span>${label}</span>`;
+        button.addEventListener("click",()=>{
+          if(entry.kind==="builtin"){
+            if(entry.id==="comment"){
+              addCommentMarker();
+            } else if(entry.id==="sync"){
+              syncBeepAndMarker();
+            } else {
+              const m=getBuiltinMarkerById(entry.id);
+              if(m){
+                const text = m.comment || m.label;
+                addMarker(text, getColorForMarkerId(entry.id));
+              }
+            }
+          }else{
+            const b=getCustomButtonById(entry.id);
+            if(!b) return;
+            let comment = b.comment || b.label;
+            if(comment && comment.includes("{text}")){
+              const extra = prompt(t("promptComment"));
+              if(extra === null) return;
+              comment = comment.replace(/\{text\}/g, extra);
+            }
+            addMarker(comment, b.color);
+          }
+        });
+
+        slot.appendChild(button);
+
+        if(editMode){
+          const controls=document.createElement("div");
+          controls.className="marker-slot-controls";
+          const leftBtn=document.createElement("button");
+          leftBtn.textContent="←";
+          leftBtn.title="Move left";
+          leftBtn.addEventListener("click",(e)=>{e.stopPropagation();moveLayoutIndex(index,-1);});
+          const rightBtn=document.createElement("button");
+          rightBtn.textContent="→";
+          rightBtn.title="Move right";
+          rightBtn.addEventListener("click",(e)=>{e.stopPropagation();moveLayoutIndex(index,1);});
+          const delBtn=document.createElement("button");
+          delBtn.textContent="✖";
+          delBtn.dataset.delete="true";
+          delBtn.title="Remove from layout";
+          delBtn.addEventListener("click",(e)=>{e.stopPropagation();deleteLayoutEntryAtIndex(index);});
+          controls.appendChild(leftBtn);
+          controls.appendChild(rightBtn);
+          controls.appendChild(delBtn);
+          slot.appendChild(controls);
+        }
+
+        container.appendChild(slot);
+      });
+    }
+
+    function toggleInfoBox(force){
+      const box=document.getElementById("info-box");
+      if(force==="close"){ box.style.display="none"; return; }
+      box.style.display=box.style.display==="block"?"none":"block";
+    }
+
+    function setEditMode(on){
+      editMode=on;
+      const btn=document.getElementById("layout-edit-toggle");
+      if(editMode){
+        btn.textContent=t("layoutEditOn");
+        btn.classList.add("btn-danger");
+      }else{
+        btn.textContent=t("layoutEditOff");
+        btn.classList.remove("btn-danger");
+      }
+      renderMarkerButtons();
+    }
+
+    /* ===== Custom Button Dialog ===== */
+
+    function buildCustomDialogOptions(){
+      const emojiSelect = document.getElementById("custom-emoji-select");
+      const colorSelect = document.getElementById("custom-color-select");
+      const presetSelect = document.getElementById("custom-preset-select");
+      const swatchContainer = document.getElementById("custom-color-swatches");
+      if(!emojiSelect || !colorSelect || !presetSelect || !swatchContainer) return;
+
+      const currentEmoji = emojiSelect.value;
+      const currentColor = colorSelect.value;
+
+      // Emoji-Select
+      emojiSelect.innerHTML = "";
+      const emojiPlaceholder = document.createElement("option");
+      emojiPlaceholder.value = "";
+      emojiPlaceholder.disabled = true;
+      emojiPlaceholder.selected = !currentEmoji;
+      emojiPlaceholder.textContent = t("customDialogEmojiPlaceholder");
+      emojiSelect.appendChild(emojiPlaceholder);
+      EMOJI_CHOICES.forEach(e=>{
+        const opt = document.createElement("option");
+        opt.value = e;
+        opt.textContent = e;
+        if(e === currentEmoji) opt.selected = true;
+        emojiSelect.appendChild(opt);
+      });
+
+      // Color-Select
+      colorSelect.innerHTML = "";
+      const colorPlaceholder = document.createElement("option");
+      colorPlaceholder.value = "";
+      colorPlaceholder.disabled = true;
+      colorPlaceholder.selected = !currentColor;
+      colorPlaceholder.textContent = t("customDialogColorPlaceholder");
+      colorSelect.appendChild(colorPlaceholder);
+      RESOLVE_COLOR_CHOICES.forEach(name=>{
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        if(name === currentColor) opt.selected = true;
+        colorSelect.appendChild(opt);
+      });
+
+      // Farb-Swatches
+      swatchContainer.innerHTML = "";
+      RESOLVE_COLOR_CHOICES.forEach(name=>{
+        const sw = document.createElement("div");
+        sw.className = "custom-color-swatch" + (name === currentColor ? " selected" : "");
+        sw.style.backgroundColor = resolveColorToHex(name);
+        sw.title = name;
+        sw.addEventListener("click", ()=>{
+          colorSelect.value = name;
+          Array.from(swatchContainer.children).forEach(c=>c.classList.remove("selected"));
+          sw.classList.add("selected");
+        });
+        swatchContainer.appendChild(sw);
+      });
+
+      // Preset-Select
+      presetSelect.innerHTML = "";
+      const presPh = document.createElement("option");
+      presPh.value = "";
+      presPh.textContent = t("customDialogPresetPlaceholder");
+      presPh.selected = true;
+      presetSelect.appendChild(presPh);
+
+      // Built-in Marker als Vorlage
+      DEFAULT_MARKERS_BASE.forEach(m=>{
+        const label = (markerLabels[currentLang] && markerLabels[currentLang][m.id]) || m.id;
+        const opt = document.createElement("option");
+        opt.value = "builtin:"+m.id;
+        opt.textContent = `Builtin – ${m.emoji} ${label}`;
+        presetSelect.appendChild(opt);
+      });
+
+      // Custom Buttons als Vorlage
+      customButtons.forEach(b=>{
+        const opt = document.createElement("option");
+        opt.value = "custom:"+b.id;
+        opt.textContent = `Custom – ${b.emoji || "⭐"} ${b.label}`;
+        presetSelect.appendChild(opt);
+      });
+    }
+
+    function openCustomButtonDialog(){
+      const overlay = document.getElementById("custom-button-overlay");
+      const labelInput = document.getElementById("custom-label-input");
+      const commentInput = document.getElementById("custom-comment-input");
+      const emojiSelect = document.getElementById("custom-emoji-select");
+      const emojiInput = document.getElementById("custom-emoji-input");
+      const colorSelect = document.getElementById("custom-color-select");
+      const presetSelect = document.getElementById("custom-preset-select");
+      if(!overlay || !labelInput || !commentInput || !emojiSelect || !colorSelect || !presetSelect) return;
+
+      labelInput.value = "";
+      commentInput.value = "";
+      emojiSelect.value = "";
+      emojiInput.value = "";
+      colorSelect.value = "";
+      presetSelect.value = "";
+
+      buildCustomDialogOptions();
+      overlay.style.display = "flex";
+      labelInput.focus();
+    }
+
+    function closeCustomButtonDialog(){
+      const overlay = document.getElementById("custom-button-overlay");
+      if(overlay) overlay.style.display = "none";
+    }
+
+    function loadPresetIntoCustomDialog(){
+      const presetSelect = document.getElementById("custom-preset-select");
+      const labelInput = document.getElementById("custom-label-input");
+      const commentInput = document.getElementById("custom-comment-input");
+      const emojiSelect = document.getElementById("custom-emoji-select");
+      const colorSelect = document.getElementById("custom-color-select");
+      const emojiInput = document.getElementById("custom-emoji-input");
+      if(!presetSelect || !labelInput || !commentInput || !emojiSelect || !colorSelect || !emojiInput) return;
+
+      const value = presetSelect.value;
+      if(!value) return;
+
+      if(value.startsWith("builtin:")){
+        const id = value.slice("builtin:".length);
+        const m = getBuiltinMarkerById(id);
+        if(!m) return;
+        labelInput.value = m.label;
+        if(id === "comment"){
+          commentInput.value = "{text}";
+        }else{
+          commentInput.value = m.comment || m.label;
+        }
+        emojiSelect.value = m.emoji;
+        emojiInput.value = "";
+        const colorName = getColorForMarkerId(id);
+        colorSelect.value = colorName;
+      }else if(value.startsWith("custom:")){
+        const id = value.slice("custom:".length);
+        const b = getCustomButtonById(id);
+        if(!b) return;
+        labelInput.value = b.label;
+        commentInput.value = b.comment || b.label;
+        emojiSelect.value = b.emoji || "";
+        emojiInput.value = "";
+        colorSelect.value = b.color || "ResolveColorBlue";
+      }
+      buildCustomDialogOptions();
+    }
+
+    function submitCustomButtonFromDialog(){
+      const labelInput = document.getElementById("custom-label-input");
+      const commentInput = document.getElementById("custom-comment-input");
+      const emojiSelect = document.getElementById("custom-emoji-select");
+      const emojiInput = document.getElementById("custom-emoji-input");
+      const colorSelect = document.getElementById("custom-color-select");
+      if(!labelInput || !emojiSelect || !colorSelect || !emojiInput) return;
+
+      const label = (labelInput.value || "").trim();
+      if(!label){
+        alert(t("customDialogLabelRequired"));
+        labelInput.focus();
+        return;
+      }
+      const commentRaw = (commentInput && commentInput.value || "").trim();
+      const ownEmoji = (emojiInput.value || "").trim();
+      const emoji = ownEmoji || emojiSelect.value || "⭐";
+      const colorChoice = colorSelect.value || "ResolveColorBlue";
+      const id = `c${Date.now()}`;
+      const btn = {
+        id,
+        label,
+        comment: commentRaw || label,
+        emoji,
+        color: colorChoice
+      };
+      customButtons.push(btn);
+      saveCustomButtonsToStorage();
+      currentLayout.push({kind:"custom",id});
+      renderMarkerButtons();
+      closeCustomButtonDialog();
+    }
+
+    function initApp(){
+      setInterval(updateTime,33.3334);
+
+      loadCustomButtonsFromStorage();
+      loadCustomPresetsFromStorage();
+
+      currentLayout=BUILTIN_PRESETS.default.layout.map(e=>({kind:e.kind,id:e.id}));
+      renderMarkerButtons();
+      populateProjectDropdown();
+      renderList();
+
+      document.getElementById("preset-select")
+        .addEventListener("change",e=>applyPreset(e.target.value));
+      applyPreset("default");
+
+      document.getElementById("info-button")
+        .addEventListener("click",()=>toggleInfoBox());
+      document.getElementById("info-box-close")
+        .addEventListener("click",()=>toggleInfoBox("close"));
+
+      document.getElementById("btn-save-project")
+        .addEventListener("click",saveProject);
+      document.getElementById("btn-delete-project")
+        .addEventListener("click",deleteProject);
+
+      document.getElementById("btn-add-custom-button")
+        .addEventListener("click",openCustomButtonDialog);
+      document.getElementById("custom-dialog-cancel")
+        .addEventListener("click",closeCustomButtonDialog);
+      document.getElementById("custom-dialog-save")
+        .addEventListener("click",submitCustomButtonFromDialog);
+      document.getElementById("custom-button-overlay")
+        .addEventListener("click",e=>{
+          if(e.target.id === "custom-button-overlay") closeCustomButtonDialog();
+        });
+      document.getElementById("custom-preset-select")
+        .addEventListener("change",loadPresetIntoCustomDialog);
+      document.addEventListener("keydown",e=>{
+        if(e.key === "Escape") closeCustomButtonDialog();
+      });
+
+      document.getElementById("btn-save-preset")
+        .addEventListener("click",saveCurrentAsPreset);
+      document.getElementById("btn-delete-preset")
+        .addEventListener("click",deleteCurrentPreset);
+
+      document.getElementById("btn-download-edl")
+        .addEventListener("click",downloadList);
+
+      document.getElementById("layout-edit-toggle")
+        .addEventListener("click",()=>setEditMode(!editMode));
+
+      document.getElementById("lang-switch")
+        .addEventListener("change",e=>{
+          currentLang = e.target.value;
+          applyLanguage();
+        });
+
+      applyLanguage();
+    }
+
+    window.addEventListener("load",initApp);
+  </script>
+</body>
+</html>
