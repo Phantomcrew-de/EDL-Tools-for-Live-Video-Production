@@ -782,7 +782,7 @@
           <option value="en">EN</option>
           <option value="de">DE</option>
         </select>
-        
+
         <button
           class="btn btn-ghost btn-small"
           id="copy-ltc-url-btn"
@@ -792,7 +792,7 @@
           LTC
         </button>
 
-        <button
+         <button
           class="btn btn-ghost btn-small"
           id="copy-url-btn"
           type="button"
@@ -2140,6 +2140,9 @@ FCM: NON-DROP FRAME
       params.set("fps", fps);
       params.set("utc", offset);
       params.set("ms", ms);
+      params.set("ub", "date");
+      params.set("df", "0");
+      params.set("cf", "0");
 
       base.search = params.toString();
       return base.toString();
@@ -2310,9 +2313,9 @@ FCM: NON-DROP FRAME
         copyBtn.addEventListener("click", copyCurrentUrlToClipboard);
       }
 
-      const copyLtcBtn = $("copy-ltc-url-btn");
-      if (copyLtcBtn) {
-        copyLtcBtn.addEventListener("click", copyLtcUrlToClipboard);
+      const copyBtn = $("copy--url-btn");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", copyUrlToClipboard);
       }
 
       const shareBtn = $("share-url-btn");
