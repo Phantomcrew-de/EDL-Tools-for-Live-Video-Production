@@ -13,7 +13,9 @@
       --pc-grey: #ACACAC;
       --pc-light: #ECEBED;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 0;
@@ -25,9 +27,10 @@
       align-items: center;
       justify-content: center;
     }
+
     .card {
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       margin: 16px;
       padding: 18px 16px 16px;
       background: rgba(0, 4, 54, 0.95);
@@ -35,13 +38,17 @@
       border: 1px solid rgba(201, 148, 67, 0.5);
       box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1;
     }
+
     .title-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
     }
+
     h1 {
       font-size: 1.1rem;
       margin: 0;
@@ -51,6 +58,7 @@
       align-items: center;
       gap: 0.45rem;
     }
+
     .logo-dot {
       width: 9px;
       height: 9px;
@@ -58,6 +66,7 @@
       background: var(--pc-accent-red);
       box-shadow: 0 0 10px var(--pc-accent-red);
     }
+
     .status-pill {
       display: inline-flex;
       align-items: center;
@@ -68,6 +77,7 @@
       background: rgba(12, 29, 71, 0.9);
       border: 1px solid rgba(201, 148, 67, 0.5);
     }
+
     .status-dot {
       width: 7px;
       height: 7px;
@@ -79,7 +89,9 @@
       background: var(--pc-grey);
       box-shadow: none;
     }
+
     .status-text { margin: 0; }
+
     .tc-display {
       margin: 6px 0 10px;
       font-family: "SF Mono", "Roboto Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -91,6 +103,7 @@
       border: 1px solid rgba(201, 148, 67, 0.7);
       text-align: center;
     }
+
     .row {
       display: flex;
       align-items: center;
@@ -99,10 +112,12 @@
       margin-bottom: 8px;
       font-size: 0.78rem;
     }
+
     .row-label {
       color: var(--pc-grey);
-      min-width: 60px;
+      min-width: 68px;
     }
+
     select, input[type="number"], input[type="text"] {
       background: rgba(0, 4, 54, 0.98);
       border-radius: 999px;
@@ -115,26 +130,56 @@
       -moz-appearance: none;
       -webkit-appearance: none;
     }
+
     select { padding-right: 22px; }
+
     .compact-input {
       width: 60px;
       text-align: center;
     }
+
     .hex-input {
       width: 90px;
       text-align: center;
       text-transform: uppercase;
       letter-spacing: 0.12em;
     }
+
     .time-inputs {
       display: flex;
       gap: 4px;
       align-items: center;
     }
+
     .time-inputs span.sep {
       font-size: 0.78rem;
       color: var(--pc-grey);
     }
+
+    .flag-group {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .flag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(172, 172, 172, 0.6);
+      background: rgba(12, 29, 71, 0.9);
+      cursor: pointer;
+    }
+
+    .flag-pill input {
+      margin: 0;
+    }
+
     .buttons-row {
       display: flex;
       justify-content: space-between;
@@ -142,6 +187,7 @@
       margin-top: 6px;
       gap: 6px;
     }
+
     button {
       border-radius: 999px;
       border: none;
@@ -154,17 +200,20 @@
       gap: 6px;
       white-space: nowrap;
     }
+
     #startBtn {
       background: var(--pc-accent-red);
       color: #fff;
       box-shadow: 0 0 12px rgba(255, 80, 80, 0.5);
       flex: 1;
     }
+
     #stopBtn {
       background: rgba(12, 29, 71, 1);
       color: var(--pc-light);
       border: 1px solid rgba(172, 172, 172, 0.6);
     }
+
     #resyncBtn {
       background: rgba(201, 148, 67, 0.12);
       color: var(--pc-gold);
@@ -172,17 +221,56 @@
       font-size: 0.78rem;
       padding: 5px 10px;
     }
+
     button:disabled {
       opacity: 0.4;
       box-shadow: none;
       cursor: default;
     }
+
     .hint {
       margin-top: 6px;
       font-size: 0.7rem;
       color: var(--pc-grey);
       text-align: right;
     }
+
+    #audioGate {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    #audioGateInner {
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: rgba(0, 4, 54, 0.96);
+      border: 1px solid rgba(201,148,67,0.7);
+      text-align: center;
+      max-width: 280px;
+      color: var(--pc-light);
+      box-shadow: 0 18px 45px rgba(0,0,0,0.7);
+      font-size: 0.8rem;
+    }
+
+    #audioGateInner button {
+      margin-top: 10px;
+      background: var(--pc-accent-red);
+      color: #fff;
+      padding: 7px 16px;
+      font-size: 0.82rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(255, 80, 80, 0.5);
+    }
+
+    .hidden { display: none !important; }
+
     @media (max-width: 380px) {
       .tc-display {
         font-size: 1.15rem;
@@ -192,6 +280,13 @@
   </style>
 </head>
 <body>
+<div id="audioGate">
+  <div id="audioGateInner">
+    Audio freigeben
+    <button id="audioGateBtn">Start</button>
+  </div>
+</div>
+
 <div class="card">
   <div class="title-row">
     <h1><span class="logo-dot"></span>Phantomcrew LTC</h1>
@@ -220,8 +315,36 @@
   </div>
 
   <div class="row">
-    <div class="row-label">UTC</div>
-    <input id="utcOffset" type="number" step="1" value="0" class="compact-input">
+    <div class="row-label">Timezone</div>
+    <select id="utcOffset" class="compact-input">
+      <option value="-12">UTC-12</option>
+      <option value="-11">UTC-11</option>
+      <option value="-10">UTC-10</option>
+      <option value="-9">UTC-9</option>
+      <option value="-8">UTC-8</option>
+      <option value="-7">UTC-7</option>
+      <option value="-6">UTC-6</option>
+      <option value="-5">UTC-5</option>
+      <option value="-4">UTC-4</option>
+      <option value="-3">UTC-3</option>
+      <option value="-2">UTC-2</option>
+      <option value="-1">UTC-1</option>
+      <option value="0">UTC±0</option>
+      <option value="1" selected>UTC+1</option>
+      <option value="2">UTC+2</option>
+      <option value="3">UTC+3</option>
+      <option value="4">UTC+4</option>
+      <option value="5">UTC+5</option>
+      <option value="6">UTC+6</option>
+      <option value="7">UTC+7</option>
+      <option value="8">UTC+8</option>
+      <option value="9">UTC+9</option>
+      <option value="10">UTC+10</option>
+      <option value="11">UTC+11</option>
+      <option value="12">UTC+12</option>
+      <option value="13">UTC+13</option>
+      <option value="14">UTC+14</option>
+    </select>
   </div>
 
   <div class="row">
@@ -234,10 +357,34 @@
     <div class="time-inputs">
       <select id="ubMode">
         <option value="off">aus</option>
-        <option value="date">Datum (ST 309)</option>
+        <option value="date">Datum + TZ</option>
+        <option value="sceneTake">Scene/Take</option>
         <option value="custom">Custom</option>
       </select>
       <input id="ubHex" type="text" maxlength="8" placeholder="8 HEX" class="hex-input">
+    </div>
+  </div>
+
+  <div class="row hidden" id="sceneRow">
+    <div class="row-label">Scene/Take</div>
+    <div class="time-inputs">
+      <input id="sceneInput" type="number" min="0" step="1" placeholder="Scene" class="compact-input">
+      <span class="sep">/</span>
+      <input id="takeInput" type="number" min="0" step="1" placeholder="Take" class="compact-input">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-label">Flags</div>
+    <div class="flag-group">
+      <label class="flag-pill">
+        <input id="dfFlag" type="checkbox">
+        <span>DF</span>
+      </label>
+      <label class="flag-pill">
+        <input id="cfFlag" type="checkbox">
+        <span>CF</span>
+      </label>
     </div>
   </div>
 
@@ -258,7 +405,7 @@
   </div>
 
   <div class="hint">
-    URL: <code>?fps=25&amp;utc=1&amp;ms=-80&amp;ub=date</code>
+    URL: <code>?fps=23.976&amp;utc=1&amp;ms=-80&amp;ub=date</code>
   </div>
 </div>
 
@@ -268,16 +415,19 @@
   let scriptNode = null;
   let running = false;
 
-  // fpsSignal = echte LTC Frames/s (krumm möglich)
-  // fpsTc     = Frames/s im angezeigten TC (ganzzahlig)
   let fpsSignal = 25;
   let fpsTc = 25;
 
   let hours = 0, minutes = 0, seconds = 0, frames = 0;
-  let utcOffset = 0;   // Stunden
-  let msOffset = 0;    // beliebig
-  let userBitsMode = "off"; // "off" | "date" | "custom"
+  let utcOffset = 1;
+  let msOffset = 0;
+
+  let userBitsMode = "off";    // "off" | "date" | "sceneTake" | "custom"
   let userBitsHex = "";
+  let sceneValue = "";
+  let takeValue = "";
+  let dropFrame = false;
+  let colorFrame = false;
 
   let sampleRate = 48000;
   let bitRate = fpsSignal * 80;
@@ -291,14 +441,23 @@
   const statusEl = document.getElementById("status");
   const statusPill = document.getElementById("statusPill");
   const fpsSelect = document.getElementById("fps");
-  const utcOffsetInput = document.getElementById("utcOffset");
+  const utcOffsetSelect = document.getElementById("utcOffset");
   const msOffsetInput = document.getElementById("msOffset");
-  const ubModeSelect = document.getElementById("ubMode");
-  const ubHexInput = document.getElementById("ubHex");
   const startBtn = document.getElementById("startBtn");
   const stopBtn = document.getElementById("stopBtn");
   const resyncBtn = document.getElementById("resyncBtn");
   const tcDisplay = document.getElementById("tcDisplay");
+
+  const ubModeSelect = document.getElementById("ubMode");
+  const ubHexInput = document.getElementById("ubHex");
+  const sceneRow = document.getElementById("sceneRow");
+  const sceneInput = document.getElementById("sceneInput");
+  const takeInput = document.getElementById("takeInput");
+  const dfFlag = document.getElementById("dfFlag");
+  const cfFlag = document.getElementById("cfFlag");
+
+  const audioGate = document.getElementById("audioGate");
+  const audioGateBtn = document.getElementById("audioGateBtn");
 
   function logStatus(text, isRunning) {
     statusEl.textContent = text;
@@ -340,95 +499,126 @@
     bits[idx] = val ? 1 : 0;
   }
 
-  function setBGFFlags(bits, hasDateTimezone) {
+  function updateUbInputsVisible() {
+    ubHexInput.disabled = (userBitsMode !== "custom");
+    ubHexInput.style.opacity = (userBitsMode === "custom") ? 1 : 0.4;
+
+    if (userBitsMode === "sceneTake") {
+      sceneRow.classList.remove("hidden");
+    } else {
+      sceneRow.classList.add("hidden");
+    }
+  }
+
+  function getCurrentDateInfo() {
+    const now = new Date();
+    const offsetMs = (utcOffset * 3600 * 1000) + msOffset;
+    const local = new Date(now.getTime() + offsetMs);
+
+    return {
+      year: local.getUTCFullYear() % 100,
+      month: local.getUTCMonth() + 1,
+      day: local.getUTCDate()
+    };
+  }
+
+  function setBGFFlagsDate(bits) {
     const is25 = (Math.round(fpsTc) === 25);
     const bgf0Index = is25 ? 27 : 43;
     const bgf1Index = 58;
     const bgf2Index = is25 ? 43 : 59;
 
-    // Clock time immer an, Date/Timezone nur bei Mode "date"
-    const BGF0 = 0;
-    const BGF1 = 1;                  // Clock time / Wall clock
-    const BGF2 = hasDateTimezone ? 1 : 0;
+    setBit(bits, bgf0Index, 1);
+    setBit(bits, bgf1Index, 1);
+    setBit(bits, bgf2Index, 1);
+  }
 
-    setBit(bits, bgf0Index, BGF0);
-    setBit(bits, bgf1Index, BGF1);
-    setBit(bits, bgf2Index, BGF2);
+  function clearBGFFlags(bits) {
+    const is25 = (Math.round(fpsTc) === 25);
+    const bgf0Index = is25 ? 27 : 43;
+    const bgf1Index = 58;
+    const bgf2Index = is25 ? 43 : 59;
+    setBit(bits, bgf0Index, 0);
+    setBit(bits, bgf1Index, 0);
+    setBit(bits, bgf2Index, 0);
   }
 
   function applyUserBits(bits, dateInfo) {
-    // dateInfo: {day, month, year} mit year = 0..99
-    if (userBitsMode === "off") {
-      setBGFFlags(bits, false);
-      return;
-    }
+    // reset all BG nibbles to 0
+    const bgNibbles = [
+      [4,5,6,7],
+      [12,13,14,15],
+      [20,21,22,23],
+      [28,29,30,31],
+      [36,37,38,39],
+      [44,45,46,47],
+      [52,53,54,55],
+      [60,61,62,63]
+    ];
+    bgNibbles.forEach(arr => setUserNibble(bits, 0x0, arr));
+    clearBGFFlags(bits);
+
+    if (userBitsMode === "off") return;
 
     if (userBitsMode === "custom") {
-      setBGFFlags(bits, false);
       let hex = (userBitsHex || "").toUpperCase().replace(/[^0-9A-F]/g, "");
       while (hex.length < 8) hex += "0";
       if (hex.length > 8) hex = hex.slice(0, 8);
       for (let i = 0; i < 8; i++) {
         const val = parseInt(hex[i], 16);
         const nib = isNaN(val) ? 0 : val;
-        switch (i) {
-          case 0: setUserNibble(bits, nib, [4,5,6,7]); break;
-          case 1: setUserNibble(bits, nib, [12,13,14,15]); break;
-          case 2: setUserNibble(bits, nib, [20,21,22,23]); break;
-          case 3: setUserNibble(bits, nib, [28,29,30,31]); break;
-          case 4: setUserNibble(bits, nib, [36,37,38,39]); break;
-          case 5: setUserNibble(bits, nib, [44,45,46,47]); break;
-          case 6: setUserNibble(bits, nib, [52,53,54,55]); break;
-          case 7: setUserNibble(bits, nib, [60,61,62,63]); break;
-        }
+        setUserNibble(bits, nib, bgNibbles[i]);
       }
       return;
     }
 
-    // Mode "date" -> SMPTE ST 309 YYMMDD + Timezone-Code
-    setBGFFlags(bits, true);
+    if (userBitsMode === "sceneTake") {
+      const s = Math.max(0, Math.min(999, parseInt(sceneValue || "0", 10) || 0));
+      const t = Math.max(0, Math.min(999, parseInt(takeValue || "0", 10) || 0));
 
-    const d = dateInfo.day;
-    const m = dateInfo.month;
-    const y = dateInfo.year % 100;
+      const sH = Math.floor(s / 100);
+      const sT = Math.floor((s % 100) / 10);
+      const sU = s % 10;
+      const tH = Math.floor(t / 100);
+      const tT = Math.floor((t % 100) / 10);
+      const tU = t % 10;
 
-    const dUnits = d % 10;
-    const dTens  = Math.floor(d / 10);
-    const mUnits = m % 10;
-    const mTens  = Math.floor(m / 10);
-    const yUnits = y % 10;
-    const yTens  = Math.floor(y / 10);
+      setUserNibble(bits, sH, bgNibbles[0]); // BG1
+      setUserNibble(bits, sT, bgNibbles[1]); // BG2
+      setUserNibble(bits, sU, bgNibbles[2]); // BG3
+      setUserNibble(bits, tH, bgNibbles[3]); // BG4
+      setUserNibble(bits, tT, bgNibbles[4]); // BG5
+      setUserNibble(bits, tU, bgNibbles[5]); // BG6
+      // BG7/BG8 bleiben 0
+      return;
+    }
 
-    // Binary Groups 1..6 -> BCD-Digits (YYMMDD nach ST 309)
-    // BG1: day units
-    setUserNibble(bits, dUnits, [4,5,6,7]);
-    // BG2: day tens
-    setUserNibble(bits, dTens, [12,13,14,15]);
-    // BG3: month units
-    setUserNibble(bits, mUnits, [20,21,22,23]);
-    // BG4: month tens
-    setUserNibble(bits, mTens, [28,29,30,31]);
-    // BG5: year units
-    setUserNibble(bits, yUnits, [36,37,38,39]);
-    // BG6: year tens
-    setUserNibble(bits, yTens, [44,45,46,47]);
+    if (userBitsMode === "date") {
+      setBGFFlagsDate(bits);
 
-    // Timezone-Code (6 Bit) + DST + MJD-Flag in BG7/BG8
-    // Hier: Code 0 (= UTC) als sicherer Standard,
-    // DST=0, MJD=0 (YYMMDD-Format)
-    const tzCode = 0;  // 0..63
-    const dstFlag = 0;
-    const mjdFlag = 0;
+      const d = dateInfo.day;
+      const m = dateInfo.month;
+      const y = dateInfo.year % 100;
 
-    const tzLow  = tzCode & 0x0F;        // BG7
-    const tzHigh = (tzCode >> 4) & 0x03; // in BG8 Bits 0..1
+      const dUnits = d % 10;
+      const dTens  = Math.floor(d / 10);
+      const mUnits = m % 10;
+      const mTens  = Math.floor(m / 10);
+      const yUnits = y % 10;
+      const yTens  = Math.floor(y / 10);
 
-    const bg7Nib = tzLow;
-    const bg8Nib = tzHigh | (dstFlag << 2) | (mjdFlag << 3);
+      // BG1..6 -> DDMMYY
+      setUserNibble(bits, dUnits, bgNibbles[0]); // BG1
+      setUserNibble(bits, dTens,  bgNibbles[1]); // BG2
+      setUserNibble(bits, mUnits, bgNibbles[2]); // BG3
+      setUserNibble(bits, mTens,  bgNibbles[3]); // BG4
+      setUserNibble(bits, yUnits, bgNibbles[4]); // BG5
+      setUserNibble(bits, yTens,  bgNibbles[5]); // BG6
 
-    // BG7: bits 52..55, BG8: bits 60..63
-    setUserNibble(bits, bg7Nib, [52,53,54,55]);
-    setUserNibble(bits, bg8Nib, [60,61,62,63]);
+      // BG7/BG8: Timezone aktuell auf 0 (UTC±0000), um keine Probleme zu machen
+      setUserNibble(bits, 0x0, bgNibbles[6]);
+      setUserNibble(bits, 0x0, bgNibbles[7]);
+    }
   }
 
   function buildFrameBits(h, m, s, f, fpsTcVal, dateInfo) {
@@ -440,19 +630,19 @@
     setBcd(bits, m, [32,33,34,35], [40,41,42]);
     setBcd(bits, h, [48,49,50,51], [56,57]);
 
-    // Flags: non-drop, kein spezielles Color-Frame-Flag
-    bits[10] = 0; // DF
-    bits[11] = 0; // CF
+    // Flags
+    bits[10] = dropFrame ? 1 : 0;
+    bits[11] = colorFrame ? 1 : 0;
 
-    // User Bits + BGF nach Mode
+    // User Bits
     applyUserBits(bits, dateInfo);
 
-    // Sync-Word (64–79)
+    // Sync-Word
     const syncPattern = [0,0,1,1, 1,1,1,1, 1,1,1,1, 1,1,0,1];
     for (let i = 0; i < 16; i++) bits[64 + i] = syncPattern[i];
 
-    // Parity / Phase Correction (libltc: 25fps vs. 24/30)
-    const parityIndex = (Math.round(fpsTcVal) === 25) ? 59 : 27;
+    // Parität (even number of 0s)
+    let parityIndex = (fpsTcVal === 25) ? 59 : 27;
     bits[parityIndex] = 0;
     let zeroCount = 0;
     for (let i = 0; i < 80; i++) if (bits[i] === 0) zeroCount++;
@@ -477,18 +667,19 @@
     }
   }
 
-  function resetBitstream(dateInfo) {
+  function resetBitstream() {
     bitRate = fpsSignal * 80;
     bitDuration = 1.0 / bitRate;
     timeInBit = 0.0;
     bitIndex = 0;
     phase = 1.0;
     midTransitionDone = false;
+    const dateInfo = getCurrentDateInfo();
     currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fpsTc, dateInfo);
     updateTcDisplay();
   }
 
-  function generateSample(dateInfo) {
+  function generateSample() {
     if (!running) return 0.0;
     const dt = 1.0 / sampleRate;
     timeInBit += dt;
@@ -517,36 +708,65 @@
     return phase * 0.6;
   }
 
-  function getCurrentDateInfo() {
-    const now = new Date();
-    const offsetMs = (utcOffset * 3600 * 1000) + msOffset;
-    const local = new Date(now.getTime() + offsetMs);
-
-    return {
-      year: local.getUTCFullYear() % 100,
-      month: local.getUTCMonth() + 1,
-      day: local.getUTCDate()
-    };
-  }
-
   function syncToClock() {
     const now = new Date();
-    const offsetMs = (utcOffset * 3600 * 1000) + msOffset;
-    const local = new Date(now.getTime() + offsetMs);
+    let baseMs =
+      now.getUTCHours() * 3600 * 1000 +
+      now.getUTCMinutes() * 60 * 1000 +
+      now.getUTCSeconds() * 1000 +
+      now.getUTCMilliseconds();
 
-    hours = local.getUTCHours();
-    minutes = local.getUTCMinutes();
-    seconds = local.getUTCSeconds();
-    const ms = local.getUTCMilliseconds();
+    baseMs += utcOffset * 3600 * 1000;
+    baseMs += msOffset;
+
+    const dayMs = 24 * 3600 * 1000;
+    baseMs = ((baseMs % dayMs) + dayMs) % dayMs;
+
+    let h = Math.floor(baseMs / (3600 * 1000));
+    let rem = baseMs % (3600 * 1000);
+    let m = Math.floor(rem / (60 * 1000));
+    rem = rem % (60 * 1000);
+    let s = Math.floor(rem / 1000);
+    let ms = rem % 1000;
 
     let f = Math.floor((ms / 1000) * fpsSignal);
     if (f >= fpsTc) f = fpsTc - 1;
+
+    hours = h;
+    minutes = m;
+    seconds = s;
     frames = f;
 
     updateTimeInputs();
     updateTcDisplay();
-    const dateInfo = getCurrentDateInfo();
-    resetBitstream(dateInfo);
+    resetBitstream();
+  }
+
+  function updateUrlFromState() {
+    const params = new URLSearchParams(window.location.search);
+    params.set("fps", fpsSelect.value);
+    params.set("utc", utcOffset.toString());
+    params.set("ms", msOffset.toString());
+    params.set("ub", userBitsMode);
+    if (userBitsMode === "custom") {
+      params.set("ubhex", userBitsHex);
+    } else {
+      params.delete("ubhex");
+    }
+    if (userBitsMode === "sceneTake") {
+      if (sceneValue !== "") params.set("scene", sceneValue);
+      else params.delete("scene");
+      if (takeValue !== "") params.set("take", takeValue);
+      else params.delete("take");
+    } else {
+      params.delete("scene");
+      params.delete("take");
+    }
+    params.set("df", dropFrame ? "1" : "0");
+    params.set("cf", colorFrame ? "1" : "0");
+
+    const newUrl = window.location.pathname + "?" + params.toString();
+    window.history.replaceState({}, "", newUrl);
   }
 
   function applyFpsFromSelect() {
@@ -568,34 +788,15 @@
     }
   }
 
-  function updateUrlFromState() {
-    const params = new URLSearchParams(window.location.search);
-    params.set("fps", fpsSelect.value);
-    params.set("utc", utcOffset.toString());
-    params.set("ms", msOffset.toString());
-    params.set("ub", userBitsMode);
-    if (userBitsMode === "custom") {
-      params.set("ubhex", userBitsHex);
-    } else {
-      params.delete("ubhex");
-    }
-    const newUrl = window.location.pathname + "?" + params.toString();
-    window.history.replaceState({}, "", newUrl);
-  }
-
-  function updateUbInputDisabled() {
-    const disabled = userBitsMode !== "custom";
-    ubHexInput.disabled = disabled;
-    ubHexInput.style.opacity = disabled ? 0.4 : 1;
-  }
-
   function initializeFromUrl() {
     const params = new URLSearchParams(window.location.search);
 
     const urlFps = params.get("fps");
     if (urlFps) {
       const options = Array.from(fpsSelect.options).map(o => o.value);
-      if (options.includes(urlFps)) fpsSelect.value = urlFps;
+      if (options.includes(urlFps)) {
+        fpsSelect.value = urlFps;
+      }
     }
     applyFpsFromSelect();
 
@@ -604,7 +805,7 @@
       const val = parseFloat(urlUtc);
       if (!isNaN(val)) utcOffset = val;
     }
-    utcOffsetInput.value = utcOffset.toString();
+    utcOffsetSelect.value = utcOffset.toString();
 
     const urlMs = params.get("ms");
     if (urlMs !== null) {
@@ -614,7 +815,7 @@
     msOffsetInput.value = msOffset.toString();
 
     const urlUb = params.get("ub");
-    if (urlUb === "date" || urlUb === "custom" || urlUb === "off") {
+    if (urlUb === "date" || urlUb === "custom" || urlUb === "sceneTake" || urlUb === "off") {
       userBitsMode = urlUb;
     } else {
       userBitsMode = "off";
@@ -627,45 +828,67 @@
     }
     ubHexInput.value = userBitsHex;
 
-    updateUbInputDisabled();
-    syncToClock();
-    updateUrlFromState();
+    const urlScene = params.get("scene");
+    if (urlScene) {
+      sceneValue = urlScene.replace(/[^\d]/g, "");
+      sceneInput.value = sceneValue;
+    }
+
+    const urlTake = params.get("take");
+    if (urlTake) {
+      takeValue = urlTake.replace(/[^\d]/g, "");
+      takeInput.value = takeValue;
+    }
+
+    const urlDf = params.get("df");
+    dropFrame = (urlDf === "1");
+    dfFlag.checked = dropFrame;
+
+    const urlCf = params.get("cf");
+    colorFrame = (urlCf === "1");
+    cfFlag.checked = colorFrame;
+
+    updateUbInputsVisible();
   }
 
-  function startLTCInternal() {
-    applyFpsFromSelect();
-    utcOffset = parseFloat(utcOffsetInput.value) || 0;
-    msOffset = parseFloat(msOffsetInput.value) || 0;
-    syncToClock();
-    running = true;
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-    logStatus("läuft", true);
-    updateUrlFromState();
+  function ensureAudioRunning() {
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume().then(() => {
+        audioGate.style.display = "none";
+      });
+    }
   }
 
-  function startLTCWithUserGesture() {
+  function startLTC() {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       sampleRate = audioCtx.sampleRate;
       scriptNode = audioCtx.createScriptProcessor(1024, 0, 1);
       scriptNode.onaudioprocess = function(e) {
-        const out = e.outputBuffer.getChannelData(0);
-        const dateInfo = getCurrentDateInfo();
-        for (let i = 0; i < out.length; i++) {
-          out[i] = generateSample(dateInfo);
-        }
+        let out = e.outputBuffer.getChannelData(0);
+        for (let i = 0; i < out.length; i++) out[i] = generateSample();
       };
       scriptNode.connect(audioCtx.destination);
     } else {
       sampleRate = audioCtx.sampleRate;
     }
 
-    audioCtx.resume().then(() => {
-      startLTCInternal();
-    }).catch(() => {
-      logStatus("Tap zum Starten", false);
-    });
+    applyFpsFromSelect();
+    utcOffset = parseFloat(utcOffsetSelect.value) || 0;
+    msOffset = parseFloat(msOffsetInput.value) || 0;
+
+    syncToClock();
+    running = true;
+    ensureAudioRunning();
+
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    logStatus("läuft", true);
+    updateUrlFromState();
+
+    if (audioCtx.state === "suspended") {
+      audioGate.style.display = "flex";
+    }
   }
 
   function stopLTC() {
@@ -676,7 +899,7 @@
   }
 
   // UI Events
-  startBtn.addEventListener("click", startLTCWithUserGesture);
+  startBtn.addEventListener("click", startLTC);
   stopBtn.addEventListener("click", stopLTC);
 
   resyncBtn.addEventListener("click", function() {
@@ -688,40 +911,97 @@
     applyFpsFromSelect();
     updateUrlFromState();
     syncToClock();
-    if (running) resetBitstream(getCurrentDateInfo());
+    if (running) {
+      resetBitstream();
+      ensureAudioRunning();
+    }
   });
 
-  utcOffsetInput.addEventListener("change", function() {
+  utcOffsetSelect.addEventListener("change", function() {
     utcOffset = parseFloat(this.value) || 0;
     updateUrlFromState();
     syncToClock();
-    if (running) resetBitstream(getCurrentDateInfo());
+    if (running) {
+      resetBitstream();
+      ensureAudioRunning();
+    }
   });
 
   msOffsetInput.addEventListener("change", function() {
     msOffset = parseFloat(this.value) || 0;
     updateUrlFromState();
     syncToClock();
-    if (running) resetBitstream(getCurrentDateInfo());
+    if (running) {
+      resetBitstream();
+      ensureAudioRunning();
+    }
   });
 
   ubModeSelect.addEventListener("change", function() {
     userBitsMode = this.value;
-    updateUbInputDisabled();
+    updateUbInputsVisible();
+    resetBitstream();
     updateUrlFromState();
-    if (running) resetBitstream(getCurrentDateInfo());
   });
 
   ubHexInput.addEventListener("input", function() {
     userBitsHex = this.value.toUpperCase().replace(/[^0-9A-F]/g, "").slice(0,8);
     this.value = userBitsHex;
+    resetBitstream();
     updateUrlFromState();
-    if (running) resetBitstream(getCurrentDateInfo());
   });
+
+  sceneInput.addEventListener("input", function() {
+    sceneValue = this.value.replace(/[^\d]/g, "");
+    this.value = sceneValue;
+    if (userBitsMode === "sceneTake") {
+      resetBitstream();
+      updateUrlFromState();
+    }
+  });
+
+  takeInput.addEventListener("input", function() {
+    takeValue = this.value.replace(/[^\d]/g, "");
+    this.value = takeValue;
+    if (userBitsMode === "sceneTake") {
+      resetBitstream();
+      updateUrlFromState();
+    }
+  });
+
+  dfFlag.addEventListener("change", function() {
+    dropFrame = this.checked;
+    resetBitstream();
+    updateUrlFromState();
+  });
+
+  cfFlag.addEventListener("change", function() {
+    colorFrame = this.checked;
+    resetBitstream();
+    updateUrlFromState();
+  });
+
+  audioGateBtn.addEventListener("click", function() {
+    if (audioCtx) {
+      audioCtx.resume().then(() => {
+        audioGate.style.display = "none";
+      });
+    }
+  });
+
+  function handleFirstUserGesture() {
+    ensureAudioRunning();
+    window.removeEventListener("click", handleFirstUserGesture);
+    window.removeEventListener("touchstart", handleFirstUserGesture);
+  }
+  window.addEventListener("click", handleFirstUserGesture, { once: true });
+  window.addEventListener("touchstart", handleFirstUserGesture, { once: true });
 
   window.addEventListener("load", function() {
     initializeFromUrl();
-    logStatus("stopp", false);
+    syncToClock();
+    updateUrlFromState();
+    startLTC();
   });
 })();
 </script>
