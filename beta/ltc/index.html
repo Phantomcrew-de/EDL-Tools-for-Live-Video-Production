@@ -13,9 +13,7 @@
       --pc-grey: #ACACAC;
       --pc-light: #ECEBED;
     }
-
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       padding: 0;
@@ -27,7 +25,6 @@
       align-items: center;
       justify-content: center;
     }
-
     .card {
       width: 100%;
       max-width: 420px;
@@ -38,17 +35,13 @@
       border: 1px solid rgba(201, 148, 67, 0.5);
       box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(10px);
-      position: relative;
-      z-index: 1;
     }
-
     .title-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
     }
-
     h1 {
       font-size: 1.1rem;
       margin: 0;
@@ -58,7 +51,6 @@
       align-items: center;
       gap: 0.45rem;
     }
-
     .logo-dot {
       width: 9px;
       height: 9px;
@@ -66,7 +58,6 @@
       background: var(--pc-accent-red);
       box-shadow: 0 0 10px var(--pc-accent-red);
     }
-
     .status-pill {
       display: inline-flex;
       align-items: center;
@@ -77,7 +68,6 @@
       background: rgba(12, 29, 71, 0.9);
       border: 1px solid rgba(201, 148, 67, 0.5);
     }
-
     .status-dot {
       width: 7px;
       height: 7px;
@@ -89,9 +79,7 @@
       background: var(--pc-grey);
       box-shadow: none;
     }
-
     .status-text { margin: 0; }
-
     .tc-display {
       margin: 6px 0 10px;
       font-family: "SF Mono", "Roboto Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -103,7 +91,6 @@
       border: 1px solid rgba(201, 148, 67, 0.7);
       text-align: center;
     }
-
     .row {
       display: flex;
       align-items: center;
@@ -112,13 +99,11 @@
       margin-bottom: 8px;
       font-size: 0.78rem;
     }
-
     .row-label {
       color: var(--pc-grey);
       min-width: 60px;
     }
-
-    select, input[type="number"] {
+    select, input[type="number"], input[type="text"] {
       background: rgba(0, 4, 54, 0.98);
       border-radius: 999px;
       border: 1px solid rgba(201, 148, 67, 0.7);
@@ -130,25 +115,26 @@
       -moz-appearance: none;
       -webkit-appearance: none;
     }
-
     select { padding-right: 22px; }
-
     .compact-input {
       width: 60px;
       text-align: center;
     }
-
+    .hex-input {
+      width: 90px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
     .time-inputs {
       display: flex;
       gap: 4px;
       align-items: center;
     }
-
     .time-inputs span.sep {
       font-size: 0.78rem;
       color: var(--pc-grey);
     }
-
     .buttons-row {
       display: flex;
       justify-content: space-between;
@@ -156,7 +142,6 @@
       margin-top: 6px;
       gap: 6px;
     }
-
     button {
       border-radius: 999px;
       border: none;
@@ -169,20 +154,17 @@
       gap: 6px;
       white-space: nowrap;
     }
-
     #startBtn {
       background: var(--pc-accent-red);
       color: #fff;
       box-shadow: 0 0 12px rgba(255, 80, 80, 0.5);
       flex: 1;
     }
-
     #stopBtn {
       background: rgba(12, 29, 71, 1);
       color: var(--pc-light);
       border: 1px solid rgba(172, 172, 172, 0.6);
     }
-
     #resyncBtn {
       background: rgba(201, 148, 67, 0.12);
       color: var(--pc-gold);
@@ -190,54 +172,17 @@
       font-size: 0.78rem;
       padding: 5px 10px;
     }
-
     button:disabled {
       opacity: 0.4;
       box-shadow: none;
       cursor: default;
     }
-
     .hint {
       margin-top: 6px;
       font-size: 0.7rem;
       color: var(--pc-grey);
       text-align: right;
     }
-
-    #audioGate {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.8);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-    }
-
-    #audioGateInner {
-      padding: 14px 18px;
-      border-radius: 14px;
-      background: rgba(0, 4, 54, 0.96);
-      border: 1px solid rgba(201,148,67,0.7);
-      text-align: center;
-      max-width: 280px;
-      color: var(--pc-light);
-      box-shadow: 0 18px 45px rgba(0,0,0,0.7);
-      font-size: 0.8rem;
-    }
-
-    #audioGateInner button {
-      margin-top: 10px;
-      background: var(--pc-accent-red);
-      color: #fff;
-      padding: 7px 16px;
-      font-size: 0.82rem;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 0 12px rgba(255, 80, 80, 0.5);
-    }
-
     @media (max-width: 380px) {
       .tc-display {
         font-size: 1.15rem;
@@ -247,13 +192,6 @@
   </style>
 </head>
 <body>
-<div id="audioGate">
-  <div id="audioGateInner">
-    Audio freigeben
-    <button id="audioGateBtn">Start</button>
-  </div>
-</div>
-
 <div class="card">
   <div class="title-row">
     <h1><span class="logo-dot"></span>Phantomcrew LTC</h1>
@@ -292,6 +230,18 @@
   </div>
 
   <div class="row">
+    <div class="row-label">User Bits</div>
+    <div class="time-inputs">
+      <select id="ubMode">
+        <option value="off">aus</option>
+        <option value="date">Datum (ST 309)</option>
+        <option value="custom">Custom</option>
+      </select>
+      <input id="ubHex" type="text" maxlength="8" placeholder="8 HEX" class="hex-input">
+    </div>
+  </div>
+
+  <div class="row">
     <div class="row-label">Start</div>
     <div class="time-inputs">
       <input id="h" type="number" min="0" max="23" value="0" class="compact-input"><span class="sep">:</span>
@@ -308,7 +258,7 @@
   </div>
 
   <div class="hint">
-    URL: <code>?fps=23.976&amp;utc=1&amp;ms=-80</code>
+    URL: <code>?fps=25&amp;utc=1&amp;ms=-80&amp;ub=date</code>
   </div>
 </div>
 
@@ -318,14 +268,16 @@
   let scriptNode = null;
   let running = false;
 
-  // fpsSignal = echte LTC-Frames pro Sekunde (kann krumm sein)
-  // fpsTc     = Frames pro TC-Sekunde im Zählwerk (immer ganzzahlig)
+  // fpsSignal = echte LTC Frames/s (krumm möglich)
+  // fpsTc     = Frames/s im angezeigten TC (ganzzahlig)
   let fpsSignal = 25;
   let fpsTc = 25;
 
   let hours = 0, minutes = 0, seconds = 0, frames = 0;
-  let utcOffset = 0;
-  let msOffset = 0;
+  let utcOffset = 0;   // Stunden
+  let msOffset = 0;    // beliebig
+  let userBitsMode = "off"; // "off" | "date" | "custom"
+  let userBitsHex = "";
 
   let sampleRate = 48000;
   let bitRate = fpsSignal * 80;
@@ -341,13 +293,12 @@
   const fpsSelect = document.getElementById("fps");
   const utcOffsetInput = document.getElementById("utcOffset");
   const msOffsetInput = document.getElementById("msOffset");
+  const ubModeSelect = document.getElementById("ubMode");
+  const ubHexInput = document.getElementById("ubHex");
   const startBtn = document.getElementById("startBtn");
   const stopBtn = document.getElementById("stopBtn");
   const resyncBtn = document.getElementById("resyncBtn");
   const tcDisplay = document.getElementById("tcDisplay");
-
-  const audioGate = document.getElementById("audioGate");
-  const audioGateBtn = document.getElementById("audioGateBtn");
 
   function logStatus(text, isRunning) {
     statusEl.textContent = text;
@@ -378,22 +329,130 @@
     }
   }
 
-  function buildFrameBits(h, m, s, f, fpsTcVal) {
+  function setUserNibble(bits, nibbleVal, bitIdxArray) {
+    nibbleVal = nibbleVal & 0xF;
+    for (let i = 0; i < 4; i++) {
+      bits[bitIdxArray[i]] = (nibbleVal >> i) & 1;
+    }
+  }
+
+  function setBit(bits, idx, val) {
+    bits[idx] = val ? 1 : 0;
+  }
+
+  function setBGFFlags(bits, hasDateTimezone) {
+    const is25 = (Math.round(fpsTc) === 25);
+    const bgf0Index = is25 ? 27 : 43;
+    const bgf1Index = 58;
+    const bgf2Index = is25 ? 43 : 59;
+
+    // Clock time immer an, Date/Timezone nur bei Mode "date"
+    const BGF0 = 0;
+    const BGF1 = 1;                  // Clock time / Wall clock
+    const BGF2 = hasDateTimezone ? 1 : 0;
+
+    setBit(bits, bgf0Index, BGF0);
+    setBit(bits, bgf1Index, BGF1);
+    setBit(bits, bgf2Index, BGF2);
+  }
+
+  function applyUserBits(bits, dateInfo) {
+    // dateInfo: {day, month, year} mit year = 0..99
+    if (userBitsMode === "off") {
+      setBGFFlags(bits, false);
+      return;
+    }
+
+    if (userBitsMode === "custom") {
+      setBGFFlags(bits, false);
+      let hex = (userBitsHex || "").toUpperCase().replace(/[^0-9A-F]/g, "");
+      while (hex.length < 8) hex += "0";
+      if (hex.length > 8) hex = hex.slice(0, 8);
+      for (let i = 0; i < 8; i++) {
+        const val = parseInt(hex[i], 16);
+        const nib = isNaN(val) ? 0 : val;
+        switch (i) {
+          case 0: setUserNibble(bits, nib, [4,5,6,7]); break;
+          case 1: setUserNibble(bits, nib, [12,13,14,15]); break;
+          case 2: setUserNibble(bits, nib, [20,21,22,23]); break;
+          case 3: setUserNibble(bits, nib, [28,29,30,31]); break;
+          case 4: setUserNibble(bits, nib, [36,37,38,39]); break;
+          case 5: setUserNibble(bits, nib, [44,45,46,47]); break;
+          case 6: setUserNibble(bits, nib, [52,53,54,55]); break;
+          case 7: setUserNibble(bits, nib, [60,61,62,63]); break;
+        }
+      }
+      return;
+    }
+
+    // Mode "date" -> SMPTE ST 309 YYMMDD + Timezone-Code
+    setBGFFlags(bits, true);
+
+    const d = dateInfo.day;
+    const m = dateInfo.month;
+    const y = dateInfo.year % 100;
+
+    const dUnits = d % 10;
+    const dTens  = Math.floor(d / 10);
+    const mUnits = m % 10;
+    const mTens  = Math.floor(m / 10);
+    const yUnits = y % 10;
+    const yTens  = Math.floor(y / 10);
+
+    // Binary Groups 1..6 -> BCD-Digits (YYMMDD nach ST 309)
+    // BG1: day units
+    setUserNibble(bits, dUnits, [4,5,6,7]);
+    // BG2: day tens
+    setUserNibble(bits, dTens, [12,13,14,15]);
+    // BG3: month units
+    setUserNibble(bits, mUnits, [20,21,22,23]);
+    // BG4: month tens
+    setUserNibble(bits, mTens, [28,29,30,31]);
+    // BG5: year units
+    setUserNibble(bits, yUnits, [36,37,38,39]);
+    // BG6: year tens
+    setUserNibble(bits, yTens, [44,45,46,47]);
+
+    // Timezone-Code (6 Bit) + DST + MJD-Flag in BG7/BG8
+    // Hier: Code 0 (= UTC) als sicherer Standard,
+    // DST=0, MJD=0 (YYMMDD-Format)
+    const tzCode = 0;  // 0..63
+    const dstFlag = 0;
+    const mjdFlag = 0;
+
+    const tzLow  = tzCode & 0x0F;        // BG7
+    const tzHigh = (tzCode >> 4) & 0x03; // in BG8 Bits 0..1
+
+    const bg7Nib = tzLow;
+    const bg8Nib = tzHigh | (dstFlag << 2) | (mjdFlag << 3);
+
+    // BG7: bits 52..55, BG8: bits 60..63
+    setUserNibble(bits, bg7Nib, [52,53,54,55]);
+    setUserNibble(bits, bg8Nib, [60,61,62,63]);
+  }
+
+  function buildFrameBits(h, m, s, f, fpsTcVal, dateInfo) {
     let bits = new Array(80).fill(0);
 
+    // Timecode BCD
     setBcd(bits, f, [0,1,2,3], [8,9]);
     setBcd(bits, s, [16,17,18,19], [24,25,26]);
     setBcd(bits, m, [32,33,34,35], [40,41,42]);
     setBcd(bits, h, [48,49,50,51], [56,57]);
 
-    bits[10] = 0; // drop-flag (immer non-drop)
-    bits[11] = 0; // color-flag
-    bits[58] = 0; // BGF1 (hier 0, wir signalisieren nur implizit über fps)
+    // Flags: non-drop, kein spezielles Color-Frame-Flag
+    bits[10] = 0; // DF
+    bits[11] = 0; // CF
 
+    // User Bits + BGF nach Mode
+    applyUserBits(bits, dateInfo);
+
+    // Sync-Word (64–79)
     const syncPattern = [0,0,1,1, 1,1,1,1, 1,1,1,1, 1,1,0,1];
     for (let i = 0; i < 16; i++) bits[64 + i] = syncPattern[i];
 
-    let parityIndex = (fpsTcVal === 25) ? 59 : 27;
+    // Parity / Phase Correction (libltc: 25fps vs. 24/30)
+    const parityIndex = (Math.round(fpsTcVal) === 25) ? 59 : 27;
     bits[parityIndex] = 0;
     let zeroCount = 0;
     for (let i = 0; i < 80; i++) if (bits[i] === 0) zeroCount++;
@@ -418,18 +477,18 @@
     }
   }
 
-  function resetBitstream() {
+  function resetBitstream(dateInfo) {
     bitRate = fpsSignal * 80;
     bitDuration = 1.0 / bitRate;
     timeInBit = 0.0;
     bitIndex = 0;
     phase = 1.0;
     midTransitionDone = false;
-    currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fpsTc);
+    currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fpsTc, dateInfo);
     updateTcDisplay();
   }
 
-  function generateSample() {
+  function generateSample(dateInfo) {
     if (!running) return 0.0;
     const dt = 1.0 / sampleRate;
     timeInBit += dt;
@@ -450,75 +509,84 @@
       if (bitIndex >= 80) {
         bitIndex = 0;
         incrementTimecode();
-        currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fpsTc);
+        const dateInfoNow = getCurrentDateInfo();
+        currentFrameBits = buildFrameBits(hours, minutes, seconds, frames, fpsTc, dateInfoNow);
         updateTcDisplay();
       }
     }
     return phase * 0.6;
   }
 
+  function getCurrentDateInfo() {
+    const now = new Date();
+    const offsetMs = (utcOffset * 3600 * 1000) + msOffset;
+    const local = new Date(now.getTime() + offsetMs);
+
+    return {
+      year: local.getUTCFullYear() % 100,
+      month: local.getUTCMonth() + 1,
+      day: local.getUTCDate()
+    };
+  }
+
   function syncToClock() {
     const now = new Date();
-    let baseMs =
-      now.getUTCHours() * 3600 * 1000 +
-      now.getUTCMinutes() * 60 * 1000 +
-      now.getUTCSeconds() * 1000 +
-      now.getUTCMilliseconds();
+    const offsetMs = (utcOffset * 3600 * 1000) + msOffset;
+    const local = new Date(now.getTime() + offsetMs);
 
-    baseMs += utcOffset * 3600 * 1000;
-    baseMs += msOffset;
+    hours = local.getUTCHours();
+    minutes = local.getUTCMinutes();
+    seconds = local.getUTCSeconds();
+    const ms = local.getUTCMilliseconds();
 
-    const dayMs = 24 * 3600 * 1000;
-    baseMs = ((baseMs % dayMs) + dayMs) % dayMs;
-
-    let h = Math.floor(baseMs / (3600 * 1000));
-    let rem = baseMs % (3600 * 1000);
-    let m = Math.floor(rem / (60 * 1000));
-    rem = rem % (60 * 1000);
-    let s = Math.floor(rem / 1000);
-    let ms = rem % 1000;
-
-    // Frames aus echter Signal-Rate, aber auf fpsTc geklemmt
     let f = Math.floor((ms / 1000) * fpsSignal);
     if (f >= fpsTc) f = fpsTc - 1;
-
-    hours = h;
-    minutes = m;
-    seconds = s;
     frames = f;
 
     updateTimeInputs();
     updateTcDisplay();
-    resetBitstream();
-  }
-
-  function updateUrlFromState() {
-    const params = new URLSearchParams(window.location.search);
-    params.set("fps", fpsSelect.value); // Anzeige-Wert (23.976, 29.97, etc.)
-    params.set("utc", utcOffset.toString());
-    params.set("ms", msOffset.toString());
-    const newUrl = window.location.pathname + "?" + params.toString();
-    window.history.replaceState({}, "", newUrl);
+    const dateInfo = getCurrentDateInfo();
+    resetBitstream(dateInfo);
   }
 
   function applyFpsFromSelect() {
     const valStr = fpsSelect.value;
     const val = parseFloat(valStr);
 
-    // Mapping: krumme Framerates → Signal & TC
     if (Math.abs(val - 23.976) < 0.001) {
-      fpsSignal = 24000 / 1001; // ≈ 23.976
+      fpsSignal = 24000 / 1001;
       fpsTc = 24;
     } else if (Math.abs(val - 29.97) < 0.001) {
-      fpsSignal = 30000 / 1001; // ≈ 29.97
+      fpsSignal = 30000 / 1001;
       fpsTc = 30;
     } else if (Math.abs(val - 59.94) < 0.001) {
-      fpsSignal = 60000 / 1001; // ≈ 59.94
+      fpsSignal = 60000 / 1001;
       fpsTc = 60;
     } else {
       fpsSignal = val;
-      fpsTc = Math.round(val); // 12,24,25,30,48,50,60
+      fpsTc = Math.round(val);
     }
+  }
+
+  function updateUrlFromState() {
+    const params = new URLSearchParams(window.location.search);
+    params.set("fps", fpsSelect.value);
+    params.set("utc", utcOffset.toString());
+    params.set("ms", msOffset.toString());
+    params.set("ub", userBitsMode);
+    if (userBitsMode === "custom") {
+      params.set("ubhex", userBitsHex);
+    } else {
+      params.delete("ubhex");
+    }
+    const newUrl = window.location.pathname + "?" + params.toString();
+    window.history.replaceState({}, "", newUrl);
+  }
+
+  function updateUbInputDisabled() {
+    const disabled = userBitsMode !== "custom";
+    ubHexInput.disabled = disabled;
+    ubHexInput.style.opacity = disabled ? 0.4 : 1;
   }
 
   function initializeFromUrl() {
@@ -526,11 +594,8 @@
 
     const urlFps = params.get("fps");
     if (urlFps) {
-      // nur setzen, wenn wir die Option kennen
       const options = Array.from(fpsSelect.options).map(o => o.value);
-      if (options.includes(urlFps)) {
-        fpsSelect.value = urlFps;
-      }
+      if (options.includes(urlFps)) fpsSelect.value = urlFps;
     }
     applyFpsFromSelect();
 
@@ -547,46 +612,60 @@
       if (!isNaN(valMs)) msOffset = valMs;
     }
     msOffsetInput.value = msOffset.toString();
-  }
 
-  function ensureAudioRunning() {
-    if (audioCtx && audioCtx.state === "suspended") {
-      audioCtx.resume().then(() => {
-        audioGate.style.display = "none";
-      });
+    const urlUb = params.get("ub");
+    if (urlUb === "date" || urlUb === "custom" || urlUb === "off") {
+      userBitsMode = urlUb;
+    } else {
+      userBitsMode = "off";
     }
+    ubModeSelect.value = userBitsMode;
+
+    const urlUbHex = params.get("ubhex");
+    if (urlUbHex) {
+      userBitsHex = urlUbHex.toUpperCase().replace(/[^0-9A-F]/g, "").slice(0,8);
+    }
+    ubHexInput.value = userBitsHex;
+
+    updateUbInputDisabled();
+    syncToClock();
+    updateUrlFromState();
   }
 
-  function startLTC() {
+  function startLTCInternal() {
+    applyFpsFromSelect();
+    utcOffset = parseFloat(utcOffsetInput.value) || 0;
+    msOffset = parseFloat(msOffsetInput.value) || 0;
+    syncToClock();
+    running = true;
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    logStatus("läuft", true);
+    updateUrlFromState();
+  }
+
+  function startLTCWithUserGesture() {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       sampleRate = audioCtx.sampleRate;
       scriptNode = audioCtx.createScriptProcessor(1024, 0, 1);
       scriptNode.onaudioprocess = function(e) {
-        let out = e.outputBuffer.getChannelData(0);
-        for (let i = 0; i < out.length; i++) out[i] = generateSample();
+        const out = e.outputBuffer.getChannelData(0);
+        const dateInfo = getCurrentDateInfo();
+        for (let i = 0; i < out.length; i++) {
+          out[i] = generateSample(dateInfo);
+        }
       };
       scriptNode.connect(audioCtx.destination);
     } else {
       sampleRate = audioCtx.sampleRate;
     }
 
-    applyFpsFromSelect();
-    utcOffset = parseFloat(utcOffsetInput.value) || 0;
-    msOffset = parseFloat(msOffsetInput.value) || 0;
-
-    syncToClock();
-    running = true;
-    ensureAudioRunning();
-
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-    logStatus("läuft", true);
-    updateUrlFromState();
-
-    if (audioCtx.state === "suspended") {
-      audioGate.style.display = "flex";
-    }
+    audioCtx.resume().then(() => {
+      startLTCInternal();
+    }).catch(() => {
+      logStatus("Tap zum Starten", false);
+    });
   }
 
   function stopLTC() {
@@ -597,7 +676,7 @@
   }
 
   // UI Events
-  startBtn.addEventListener("click", startLTC);
+  startBtn.addEventListener("click", startLTCWithUserGesture);
   stopBtn.addEventListener("click", stopLTC);
 
   resyncBtn.addEventListener("click", function() {
@@ -609,53 +688,40 @@
     applyFpsFromSelect();
     updateUrlFromState();
     syncToClock();
-    if (running) {
-      resetBitstream();
-      ensureAudioRunning();
-    }
+    if (running) resetBitstream(getCurrentDateInfo());
   });
 
   utcOffsetInput.addEventListener("change", function() {
     utcOffset = parseFloat(this.value) || 0;
     updateUrlFromState();
     syncToClock();
-    if (running) {
-      resetBitstream();
-      ensureAudioRunning();
-    }
+    if (running) resetBitstream(getCurrentDateInfo());
   });
 
   msOffsetInput.addEventListener("change", function() {
-    msOffset = parseFloat(this.value) || 0; // kein Limit
+    msOffset = parseFloat(this.value) || 0;
     updateUrlFromState();
     syncToClock();
-    if (running) {
-      resetBitstream();
-      ensureAudioRunning();
-    }
+    if (running) resetBitstream(getCurrentDateInfo());
   });
 
-  audioGateBtn.addEventListener("click", function() {
-    if (audioCtx) {
-      audioCtx.resume().then(() => {
-        audioGate.style.display = "none";
-      });
-    }
+  ubModeSelect.addEventListener("change", function() {
+    userBitsMode = this.value;
+    updateUbInputDisabled();
+    updateUrlFromState();
+    if (running) resetBitstream(getCurrentDateInfo());
   });
 
-  function handleFirstUserGesture() {
-    ensureAudioRunning();
-    window.removeEventListener("click", handleFirstUserGesture);
-    window.removeEventListener("touchstart", handleFirstUserGesture);
-  }
-  window.addEventListener("click", handleFirstUserGesture, { once: true });
-  window.addEventListener("touchstart", handleFirstUserGesture, { once: true });
+  ubHexInput.addEventListener("input", function() {
+    userBitsHex = this.value.toUpperCase().replace(/[^0-9A-F]/g, "").slice(0,8);
+    this.value = userBitsHex;
+    updateUrlFromState();
+    if (running) resetBitstream(getCurrentDateInfo());
+  });
 
   window.addEventListener("load", function() {
     initializeFromUrl();
-    syncToClock();
-    updateUrlFromState();
-    startLTC();
+    logStatus("stopp", false);
   });
 })();
 </script>
