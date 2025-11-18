@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stabiler SMPTE LTC Reader (25/30 fps)</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+    .panel {
+      background: #0f172a;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      max-width: 720px;
+    }
+    label {
+      display: block;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+    select, button {
+      margin-top: 0.25rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.9rem;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      background: #2563eb;
+      font-weight: 500;
+      margin-right: 0.5rem;
+    }
+    button:disabled {
+      background: #1f2937;
+      cursor: not-allowed;
+    }
+    #timecode {
+      margin-top: 1.5rem;
+      font-size: 2.6rem;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+      text-align: center;
+      letter-spacing: 0.15em;
+      background: #000000;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      box-shadow: 0 0 30px rgba(37,99,235,0.45);
+    }
+    #status {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    #debug {
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+      white-space: pre-wrap;
+      background: #020617;
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      padding: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Stabiler SMPTE LTC Reader (25 / 30 fps)</h1>
+
+    <label for="deviceSelect">Audio-Eingang</label>
+    <select id="deviceSelect"></select>
+
+    <label for="fpsSelect">Framerate</label>
+    <select id="fpsSelect">
+      <option value="25">25 fps</option>
+      <option value="30">30 fps</option>
+    </select>
+
+    <div style="margin-top:1rem;">
+      <button id="startBtn">Start</button>
+      <button id="stopBtn" disabled>Stop</button>
+    </div>
+
+    <div id="timecode">--:--:--:--</div>
+    <div id="status">Initialisiere Audiogeräte…</div>
+    <div id="debug"></div>
+  </div>
+
+  <script>
+    const deviceSelect = document.getElementById("deviceSelect");
+    const fpsSelect = document.getElementById("fpsSelect");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const timecodeDisplay = document.getElementById("timecode");
+    const statusDisplay = document.getElementById("status");
+    const debugDisplay = document.getElementById("debug");
+
+    let audioContext = null;
+    let mediaStream = null;
+    let sourceNode = null;
+    let processorNode = null;
+    let ltcDecoder = null;
+
+    // ---- LTC Decoder (getestet mit deinem Bit-Log) ------------------------
+    class LTCDecoder {
+      constructor(sampleRate, fps) {
+        this.sampleRate = sampleRate;
+        this.setFPS(fps);
+
+        // Zero-Cross / Interval-Zeug
+        this.prevSign = 0;
+        this.samplesSinceTransition = 0;
+
+        // Auto-Kalibrierung
+        this.rawIntervals = [];
+        this.calibrated = false;
+        this.shortLen = null;
+        this.longLen = null;
+        this.threshold = null;
+
+        // Biphase-Mark
+        this.pendingShort = false;
+
+        // Bitpuffer
+        this.bitBuffer = [];
+        this.maxBuffer = 800;
+
+        // Stat
+        this.transitionCount = 0;
+        this.bitCount = 0;
+        this.lastDebugUpdate = 0;
+
+        // LTC Sync-Word (Bits 64–79, LSB-first); getestet aus deinem Log
+        this.syncWord = [
+          0,0,1,1,
+          1,1,1,1,1,1,1,1,1,1,
+          0,1
+        ];
+      }
+
+      setFPS(fps) {
+        this.fps = fps;
+        this.targetBitRate = fps * 80;        // 80 Bits pro Frame
+        this.targetBitSamples = this.sampleRate / this.targetBitRate;
+      }
+
+      // sehr simple Auto-Kalibrierung: Short-Cluster & Long-Cluster trennen
+      calibrate() {
+        if (this.rawIntervals.length < 100) return;
+        const arr = [...this.rawIntervals].sort((a,b) => a-b);
+
+        const cut = Math.floor(arr.length * 0.1);
+        const trimmed = arr.slice(cut, arr.length - cut);
+        const mid = Math.floor(trimmed.length / 2);
+
+        const shortPart = trimmed.slice(0, mid);
+        const longPart  = trimmed.slice(mid);
+
+        const avg = list => list.reduce((a,b) => a+b, 0) / list.length;
+
+        this.shortLen = avg(shortPart); // bei dir ~ 9–10 Samples
+        this.longLen  = avg(longPart);  // bei dir ~ 18–19 Samples
+        this.threshold = (this.shortLen + this.longLen) / 2; // ~14–15
+
+        this.calibrated = true;
+      }
+
+      process(buffer, currentTime) {
+        const len = buffer.length;
+        let latestTC = null;
+
+        for (let i=0; i<len; i++) {
+          const s = buffer[i];
+          const sign = s >= 0 ? 1 : -1;
+
+          this.samplesSinceTransition++;
+
+          if (this.prevSign !== 0 && sign !== this.prevSign) {
+            this.transitionCount++;
+            const interval = this.samplesSinceTransition;
+            this.samplesSinceTransition = 0;
+
+            // Phase 1: Sampling für Kalibrierung
+            if (!this.calibrated) {
+              this.rawIntervals.push(interval);
+              if (this.rawIntervals.length > 1000) {
+                this.calibrate();
+                this.rawIntervals = this.rawIntervals.slice(-1000);
+              }
+              this.prevSign = sign;
+              continue;
+            }
+
+            // Phase 2: Biphase-Mark (getestete Logik):
+            //   - kurzer Puls = halbe Bit-Länge
+            //   - langer Puls = ganze Bit-Länge
+            //   - "1" = zwei kurze hintereinander
+            //   - "0" = ein langer
+            const isShort = interval < this.threshold;
+            let bitOut = null;
+
+            if (isShort) {
+              if (this.pendingShort) {
+                bitOut = 1;           // zwei kurze → "1"
+                this.pendingShort = false;
+              } else {
+                this.pendingShort = true;
+              }
+            } else {
+              bitOut = 0;             // ein langer → "0"
+              this.pendingShort = false;
+            }
+
+            if (bitOut !== null) {
+              this.bitCount++;
+              this.bitBuffer.push(bitOut);
+              if (this.bitBuffer.length > this.maxBuffer) {
+                this.bitBuffer.splice(0, this.bitBuffer.length - this.maxBuffer);
+              }
+
+              // Versuche, im aktuellen Buffer ein Sync-Word + Frame zu finden
+              const tc = this.decodeLatestFrame();
+              if (tc) {
+                latestTC = tc;
+              }
+            }
+          }
+
+          this.prevSign = sign;
+        }
+
+        // Debug-Ausgabe
+        if (!this.lastDebugUpdate || (currentTime - this.lastDebugUpdate) > 0.5) {
+          this.lastDebugUpdate = currentTime;
+          this.updateDebug();
+        }
+
+        return latestTC;
+      }
+
+      decodeLatestFrame() {
+        const bits = this.bitBuffer;
+        if (bits.length < 80) return null;
+
+        const searchStart = Math.max(0, bits.length - 400);
+        const searchEnd   = bits.length - 80;
+
+        let bestTC = null;
+
+        for (let offset = searchStart; offset <= searchEnd; offset++) {
+          const frameBits = bits.slice(offset, offset + 80);
+          const syncPart  = frameBits.slice(64);      // Bits 64–79
+
+          if (this.matchesSync(syncPart)) {
+            const data64 = frameBits.slice(0, 64);
+            const tc = this.decodeTimecodeFrom64(data64);
+            if (tc) {
+              bestTC = tc; // nimm die letzte gefundene in diesem Buffer
+            }
+          }
+        }
+        return bestTC;
+      }
+
+      matchesSync(bits16) {
+        if (bits16.length !== 16) return false;
+        for (let i=0; i<16; i++) {
+          if (bits16[i] !== this.syncWord[i]) return false;
+        }
+        return true;
+      }
+
+      extractBCD(bits, unitIdx, tensIdx) {
+        let units = 0;
+        for (let i=0; i<unitIdx.length; i++) {
+          units |= (bits[unitIdx[i]] << i);
+        }
+        let tens = 0;
+        for (let i=0; i<tensIdx.length; i++) {
+          tens |= (bits[tensIdx[i]] << i);
+        }
+        return tens * 10 + units;
+      }
+
+      decodeTimecodeFrom64(bits) {
+        if (bits.length !== 64) return null;
+
+        try {
+          // Mapping wie im Python-Test (funktioniert mit deinem Log):
+          const frames  = this.extractBCD(bits, [0,1,2,3],    [8,9]);
+          const seconds = this.extractBCD(bits, [16,17,18,19],[24,25,26]);
+          const minutes = this.extractBCD(bits, [32,33,34,35],[40,41,42]);
+          const hours   = this.extractBCD(bits, [48,49,50,51],[56,57]);
+
+          if (
+            frames >= 0  && frames < 30 &&
+            seconds >= 0 && seconds < 60 &&
+            minutes >= 0 && minutes < 60 &&
+            hours >= 0   && hours < 24
+          ) {
+            const hh = String(hours).padStart(2, "0");
+            const mm = String(minutes).padStart(2, "0");
+            const ss = String(seconds).padStart(2, "0");
+            const ff = String(frames).padStart(2, "0");
+            return `${hh}:${mm}:${ss}:${ff}`;
+          }
+        } catch (e) {
+          // ignore
+        }
+        return null;
+      }
+
+      updateDebug() {
+        const lastBits = this.bitBuffer.slice(-64).join("") || "(noch keine)";
+        const text =
+          `SampleRate: ${this.sampleRate.toFixed(0)} Hz\n` +
+          `FPS (Soll): ${this.fps}\n` +
+          `Target BitRate: ${(this.fps * 80).toFixed(1)} bit/s\n` +
+          `Target ~Samples/Bit: ${(this.targetBitSamples).toFixed(2)}\n` +
+          `Transitions (gesamt): ${this.transitionCount}\n` +
+          `Calibrated: ${this.calibrated}\n` +
+          `ShortLen: ${this.shortLen ? this.shortLen.toFixed(2) : "n/a"}\n` +
+          `LongLen: ${this.longLen ? this.longLen.toFixed(2) : "n/a"}\n` +
+          `Threshold: ${this.threshold ? this.threshold.toFixed(2) : "n/a"}\n` +
+          `Bits im Buffer: ${this.bitBuffer.length}\n` +
+          `Letzte <=64 Bits:\n${lastBits}`;
+        debugDisplay.textContent = text;
+      }
+    }
+
+    // ---- Audio-Geräte laden -----------------------------------------------
+    async function initDevices() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(d => d.kind === "audioinput");
+
+        deviceSelect.innerHTML = "";
+        audioInputs.forEach(d => {
+          const opt = document.createElement("option");
+          opt.value = d.deviceId;
+          opt.textContent = d.label || `Audioeingang (${d.deviceId})`;
+          deviceSelect.appendChild(opt);
+        });
+
+        if (audioInputs.length === 0) {
+          statusDisplay.textContent = "Keine Audioeingänge gefunden.";
+        } else {
+          statusDisplay.textContent = "Eingang wählen, LTC anlegen, Start drücken.";
+        }
+      } catch (err) {
+        console.error(err);
+        statusDisplay.textContent = "Fehler beim Zugriff auf Audio: " + err.message;
+      }
+    }
+
+    initDevices();
+
+    // ---- Start / Stop ------------------------------------------------------
+    startBtn.addEventListener("click", async () => {
+      const deviceId = deviceSelect.value;
+      const fps = parseInt(fpsSelect.value, 10);
+
+      if (!deviceId) {
+        alert("Bitte zuerst einen Audio-Eingang wählen.");
+        return;
+      }
+
+      try {
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        timecodeDisplay.textContent = "--:--:--:--";
+        statusDisplay.textContent = "Starte Audio-Stream…";
+        debugDisplay.textContent = "";
+
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            deviceId: { exact: deviceId },
+            channelCount: 1,
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        sourceNode = audioContext.createMediaStreamSource(mediaStream);
+
+        const bufferSize = 2048;
+        processorNode = audioContext.createScriptProcessor(bufferSize, 1, 1);
+
+        ltcDecoder = new LTCDecoder(audioContext.sampleRate, fps);
+
+        processorNode.onaudioprocess = (event) => {
+          const input = event.inputBuffer.getChannelData(0);
+          if (!ltcDecoder) return;
+          const tc = ltcDecoder.process(input, audioContext.currentTime);
+          if (tc) {
+            timecodeDisplay.textContent = tc;
+            statusDisplay.textContent = "LTC erkannt.";
+          }
+        };
+
+        sourceNode.connect(processorNode);
+        processorNode.connect(audioContext.destination);
+        statusDisplay.textContent = "Decoder läuft – Timecode erscheint, sobald ein gültiger Frame erkannt wird.";
+      } catch (err) {
+        console.error(err);
+        statusDisplay.textContent = "Fehler beim Starten: " + err.message;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      if (processorNode) {
+        processorNode.disconnect();
+        processorNode.onaudioprocess = null;
+        processorNode = null;
+      }
+      if (sourceNode) {
+        sourceNode.disconnect();
+        sourceNode = null;
+      }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
+      }
+      if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+      }
+      ltcDecoder = null;
+
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      statusDisplay.textContent = "Gestoppt.";
+    });
+  </script>
+</body>
+</html>
