@@ -104,6 +104,7 @@
       <option value="50">50 fps</option>
       <option value="60">60 fps</option>
     </select>
+
     <label for="channelMode">Kanalauswahl</label>
     <select id="channelMode">
       <option value="L">Nur Kanal 1 (Links)</option>
@@ -123,9 +124,7 @@
       <div id="dateDisplay">Datum: --.--.----</div>
       <div id="tzDisplay">Zeitzone: --</div>
       <div id="sysTCDisplay">System: --:--:--:--</div>
-      <div id="latencyDisplay">
-        Offset (letzte): -- ms
-      </div>
+      <div id="latencyDisplay">Offset (Ø 2 s): -- ms</div>
     </div>
 
     <div id="status">Initialisiere Audiogeräte…</div>
@@ -158,21 +157,11 @@
     let ltcDecoder = null;
     let debugVisible = false;
 
-    // Anzeige / Offset-State
-    let lastAcceptedFrameNumber = null;
-    let lastAcceptedTime = null;  // AudioContext time
-    let lastOffsetSeconds = null; // stabilisierter Offset (LTC - System)
-
-    // Offset-Warmup
-    let offsetLocked = false;
-    let offsetWarmup = []; // Sekunden
-    const OFFSET_WARMUP_MIN_SAMPLES = 40;      // ~1–2s
-    const OFFSET_WARMUP_MAX_SAMPLES = 200;
-    const OFFSET_WARMUP_STD_THRESHOLD = 0.02;  // ~20 ms
-
-    // Offset-Historie
-    let latencySamples = []; // {t: timestampMs, v: offsetMs}
-    let lastLatencyDisplayUpdate = 0; // max. 2 Updates/s
+    // Anzeige / Latenz-State
+    let lastDecodedTC = null;
+    let lastOffsetSeconds = null;
+    let latencySamples = []; // { t: ms, v: ms }
+    let lastLatencyDisplayUpdate = 0;
 
     toggleDebugBtn.addEventListener("click", () => {
       debugVisible = !debugVisible;
@@ -180,26 +169,7 @@
       toggleDebugBtn.textContent = debugVisible ? "Debug ausblenden" : "Debug anzeigen";
     });
 
-    // ---------- Frame <-> Timecode Hilfsfunktionen ----------
-    function tcToFrameNumber(tc, fps) {
-      const parts = tc.split(":").map(Number);
-      if (parts.length !== 4 || parts.some(x => !Number.isFinite(x))) return null;
-      const [hh, mm, ss, ff] = parts;
-      return ((hh * 3600 + mm * 60 + ss) * fps) + ff;
-    }
-
-    function frameNumberToTC(frameNumber, fps) {
-      const framesPerDay = 24 * 3600 * fps;
-      let f = ((frameNumber % framesPerDay) + framesPerDay) % framesPerDay;
-      const totalSeconds = Math.floor(f / fps);
-      const ff = f % fps;
-      const hh = Math.floor(totalSeconds / 3600);
-      const mm = Math.floor((totalSeconds % 3600) / 60);
-      const ss = totalSeconds % 60;
-      const pad = (n, d=2) => String(n).padStart(d,"0");
-      return `${pad(hh)}:${pad(mm)}:${pad(ss)}:${pad(ff)}`;
-    }
-
+    // ---------- Frame <-> Timecode ----------
     function tcToSecondsOfDay(tc, fps) {
       const parts = tc.split(":").map(Number);
       if (parts.length !== 4 || parts.some(x => !Number.isFinite(x))) return null;
@@ -225,69 +195,70 @@
 
       requestAnimationFrame(updateSystemTC);
     }
-
     requestAnimationFrame(updateSystemTC);
 
-    // ---------- Offset-Handling ----------
-    function addOffsetSample(offsetSeconds) {
-      const now = Date.now();
-      const offsetMs = offsetSeconds * 1000;
-      latencySamples.push({ t: now, v: offsetMs });
+    // ---------- Latenz-Handling ----------
+    function resetLatencyState() {
+      lastDecodedTC = null;
+      lastOffsetSeconds = null;
+      latencySamples = [];
+      lastLatencyDisplayUpdate = 0;
+      latencyDisplay.textContent = "Offset (Ø 2 s): -- ms";
+    }
 
-      // älter als 70 s wegwerfen
-      const cutoff = now - 70000;
+    function addLatencySample(offsetSeconds) {
+      const now = Date.now();
+      const vMs = offsetSeconds * 1000;
+      latencySamples.push({ t: now, v: vMs });
+
+      // max ~7s Historie
+      const cutoff = now - 7000;
       latencySamples = latencySamples.filter(s => s.t >= cutoff);
 
       lastOffsetSeconds = offsetSeconds;
     }
 
+    // robuster Mittelwert mit Ausreißer-Filterung (Median + MAD)
+    function filteredAverage(samples) {
+      if (samples.length === 0) return null;
+      const values = samples.map(s => s.v).slice().sort((a,b) => a - b);
+      const n = values.length;
+      const median = values[Math.floor(n / 2)];
+
+      const deviations = values.map(v => Math.abs(v - median)).sort((a,b) => a - b);
+      const mad = deviations[Math.floor(n / 2)];
+
+      const k = 3;
+      const maxDev = mad * k;
+
+      const filtered = mad === 0
+        ? samples
+        : samples.filter(s => Math.abs(s.v - median) <= maxDev);
+
+      if (filtered.length === 0) return median;
+      const sum = filtered.reduce((a, s) => a + s.v, 0);
+      return sum / filtered.length;
+    }
+
     function updateLatencyDisplay() {
       const now = Date.now();
-      if (now - lastLatencyDisplayUpdate < 500) return; // max. 2 Updates/s
+      // max alle 250ms
+      if (now - lastLatencyDisplayUpdate < 250) return;
       lastLatencyDisplayUpdate = now;
 
-      let lastStr = "--";
+      const cutoff2 = now - 2000;
+      const window2 = latencySamples.filter(s => s.t >= cutoff2);
+      const avg2 = filteredAverage(window2);
 
-      if (lastOffsetSeconds != null) {
-        const s = lastOffsetSeconds * 1000;
-        const sign = s >= 0 ? "+" : "";
-        lastStr = `${sign}${s.toFixed(1)} ms`;
+      if (avg2 == null) {
+        latencyDisplay.textContent = "Offset (Ø 2 s): -- ms";
+        return;
       }
-
-      latencyDisplay.textContent = `Offset (letzte): ${lastStr}`;
+      const sign = avg2 >= 0 ? "+" : "";
+      latencyDisplay.textContent = `Offset (Ø 2 s): ${sign}${avg2.toFixed(1)} ms`;
     }
 
-    function resetOffsetState() {
-      lastAcceptedFrameNumber = null;
-      lastAcceptedTime = null;
-      lastOffsetSeconds = null;
-      offsetLocked = false;
-      offsetWarmup = [];
-      latencySamples = [];
-      updateLatencyDisplay();
-    }
-
-    function pushWarmupOffset(offset) {
-      offsetWarmup.push(offset);
-      if (offsetWarmup.length > OFFSET_WARMUP_MAX_SAMPLES) {
-        offsetWarmup.shift();
-      }
-
-      if (!offsetLocked && offsetWarmup.length >= OFFSET_WARMUP_MIN_SAMPLES) {
-        const n = offsetWarmup.length;
-        const mean = offsetWarmup.reduce((a,b) => a + b, 0) / n;
-        const variance = offsetWarmup.reduce((a,b) => a + (b - mean) * (b - mean), 0) / n;
-        const std = Math.sqrt(variance);
-        if (std < OFFSET_WARMUP_STD_THRESHOLD) {
-          offsetLocked = true;
-          lastOffsetSeconds = mean;
-          latencySamples = [];
-          statusDisplay.textContent = "LTC erkannt (Offset kalibriert).";
-        }
-      }
-    }
-
-    // --------- LTC Decoder (unverändert, inkl. Datum/TZ) ----------
+    // --------- LTC Decoder ----------
     class LTCDecoder {
       constructor(sampleRate, fps) {
         this.sampleRate = sampleRate;
@@ -401,7 +372,7 @@
           this.prevSign = sign;
         }
 
-        if (!this.lastDebugUpdate || (currentTime - this.lastDebugUpdate) > 0.5) {
+        if (debugVisible && (!this.lastDebugUpdate || (currentTime - this.lastDebugUpdate) > 0.5)) {
           this.lastDebugUpdate = currentTime;
           this.updateDebug();
         }
@@ -473,7 +444,7 @@
           const year2 = ubs[5] * 10 + ubs[4];
           const year  = 2000 + year2;
 
-          const tzHour = 1; // fest auf UTC+1
+          const tzHour = 1;
           const tzMin  = 0;
 
           this.lastUserBitsInterpreted = { day, month, year, tzHour, tzMin };
@@ -536,7 +507,7 @@
             `Zeitzone (Interpretation): UTC${tzStr}`;
         }
 
-        // Offset-Auswertung für Debug (letzte, Ø2s, Ø5s)
+        // Latenz-Auswertung für Debug (letzte, Ø2s, Ø5s)
         const nowMs = Date.now();
         let offsetLastStr = "--";
         let avg2Str = "--";
@@ -550,18 +521,11 @@
 
         const cutoff2 = nowMs - 2000;
         const cutoff5 = nowMs - 5000;
-
         const shortSamples = latencySamples.filter(s => s.t >= cutoff2);
         const longSamples  = latencySamples.filter(s => s.t >= cutoff5);
 
-        function avgMs(arr) {
-          if (arr.length === 0) return null;
-          const sum = arr.reduce((a, b) => a + b.v, 0);
-          return sum / arr.length;
-        }
-
-        const avg2 = avgMs(shortSamples);
-        const avg5 = avgMs(longSamples);
+        const avg2 = filteredAverage(shortSamples);
+        const avg5 = filteredAverage(longSamples);
 
         if (avg2 != null) {
           const sign = avg2 >= 0 ? "+" : "";
@@ -599,10 +563,10 @@
         const fps = parseInt(fpsSelect.value, 10);
         ltcDecoder.setFPS(fps);
       }
-      resetOffsetState();
+      resetLatencyState();
     });
 
-    // --------- Audio-Geräte ------------------------------------------
+    // --------- Audio-Geräte ----------
     async function initDevices() {
       try {
         await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -627,7 +591,6 @@
         statusDisplay.textContent = "Fehler beim Zugriff auf Audio: " + err.message;
       }
     }
-
     initDevices();
 
     function getMonoLTCBuffer(event) {
@@ -661,7 +624,7 @@
       return out;
     }
 
-    // --------- Start / Stop ------------------------------------------
+    // --------- Start / Stop ----------
     startBtn.addEventListener("click", async () => {
       const deviceId = deviceSelect.value;
       const fps = parseInt(fpsSelect.value, 10);
@@ -679,7 +642,7 @@
         debugDisplay.textContent = "";
         dateDisplay.textContent = "Datum: --.--.----";
         tzDisplay.textContent = "Zeitzone: --";
-        resetOffsetState();
+        resetLatencyState();
 
         mediaStream = await navigator.mediaDevices.getUserMedia({
           audio: {
@@ -709,84 +672,35 @@
           const tc = ltcDecoder.process(input, now);
 
           if (tc) {
-            const frameNum = tcToFrameNumber(tc, fpsNow);
-            if (frameNum !== null) {
-              let accept = false;
+            lastDecodedTC = tc;
+            timecodeDisplay.textContent = tc;
 
-              if (lastAcceptedFrameNumber === null || lastAcceptedTime === null) {
-                accept = true;
-              } else {
-                const deltaT = now - lastAcceptedTime;
-                const stale = deltaT > 2.0;
+            const ltcSeconds = tcToSecondsOfDay(tc, fpsNow);
+            if (ltcSeconds != null) {
+              const sysNow = new Date();
+              const sysSeconds =
+                sysNow.getHours() * 3600 +
+                sysNow.getMinutes() * 60 +
+                sysNow.getSeconds() +
+                sysNow.getMilliseconds() / 1000;
 
-                const smallThresholdFrames = 1;           // max. ±1 Frame Toleranz
-                const jumpThresholdFrames  = fpsNow * 60; // >= 60 s -> echter Sprung
+              let offset = ltcSeconds - sysSeconds;
 
-                if (stale) {
-                  // nach 2 s ohne Update neu synchronisieren
-                  accept = true;
-                  resetOffsetState();
-                } else {
-                  const expectedAdvance = Math.round(deltaT * fpsNow);
-                  const predicted = lastAcceptedFrameNumber + expectedAdvance;
-                  const diffPred = frameNum - predicted;
-                  const diffFromLast = frameNum - lastAcceptedFrameNumber;
+              // in Bereich [-12h, +12h] falten
+              if (offset > 43200) offset -= 86400;
+              if (offset < -43200) offset += 86400;
 
-                  if (diffFromLast < 0 && Math.abs(diffFromLast) < jumpThresholdFrames) {
-                    // kleiner Rücksprung -> Glitch -> ignorieren
-                    accept = false;
-                  } else if (Math.abs(diffPred) <= smallThresholdFrames) {
-                    // normaler kontinuierlicher Lauf
-                    accept = true;
-                  } else if (Math.abs(diffFromLast) >= jumpThresholdFrames) {
-                    // großer Sprung (z.B. Stunde geändert) -> akzeptieren
-                    accept = true;
-                  } else {
-                    // mittlere Abweichung -> Glitch
-                    accept = false;
-                  }
-                }
-              }
-
-              if (accept) {
-                lastAcceptedFrameNumber = frameNum;
-                lastAcceptedTime = now;
-
-                timecodeDisplay.textContent = frameNumberToTC(frameNum, fpsNow);
-                if (!offsetLocked) {
-                  statusDisplay.textContent = "LTC erkannt – Offset kalibrieren…";
-                }
-
-                const ltcSeconds = tcToSecondsOfDay(tc, fpsNow);
-                if (ltcSeconds != null) {
-                  const sysNow = new Date();
-                  const sysSeconds =
-                    sysNow.getHours() * 3600 +
-                    sysNow.getMinutes() * 60 +
-                    sysNow.getSeconds() +
-                    sysNow.getMilliseconds() / 1000;
-
-                  let offset = ltcSeconds - sysSeconds;
-
-                  // in Bereich [-12h, +12h] falten
-                  if (offset > 43200) offset -= 86400;
-                  if (offset < -43200) offset += 86400;
-
-                  if (!offsetLocked) {
-                    pushWarmupOffset(offset);
-                  } else {
-                    addOffsetSample(offset);
-                    updateLatencyDisplay();
-                  }
-                }
-              }
+              addLatencySample(offset);
+              updateLatencyDisplay();
             }
+
+            statusDisplay.textContent = "LTC erkannt.";
           }
         };
 
         sourceNode.connect(processorNode);
         processorNode.connect(audioContext.destination);
-        statusDisplay.textContent = "Decoder läuft – wartet auf stabilen LTC.";
+        statusDisplay.textContent = "Decoder läuft – wartet auf LTC.";
       } catch (err) {
         console.error(err);
         statusDisplay.textContent = "Fehler beim Starten: " + err.message;
@@ -814,7 +728,7 @@
         audioContext = null;
       }
       ltcDecoder = null;
-      resetOffsetState();
+      resetLatencyState();
 
       startBtn.disabled = false;
       stopBtn.disabled = true;
