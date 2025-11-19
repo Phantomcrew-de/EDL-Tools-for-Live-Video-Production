@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stabiler SMPTE LTC Reader</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+    .panel {
+      background: #0f172a;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      max-width: 820px;
+    }
+    label {
+      display: block;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+    select, button {
+      margin-top: 0.25rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.9rem;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      background: #2563eb;
+      font-weight: 500;
+      margin-right: 0.5rem;
+    }
+    button:disabled {
+      background: #1f2937;
+      cursor: not-allowed;
+    }
+    #timecode {
+      margin-top: 1.5rem;
+      font-size: 2.6rem;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+      text-align: center;
+      letter-spacing: 0.15em;
+      background: #000000;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      box-shadow: 0 0 30px rgba(37,99,235,0.45);
+    }
+    #infoRow {
+      margin-top: 0.75rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.5rem 1rem;
+      font-size: 0.9rem;
+      color: #d1d5db;
+    }
+    #status {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    #debugContainer {
+      margin-top: 0.75rem;
+    }
+    #debug {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+      white-space: pre-wrap;
+      background: #020617;
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      padding: 0.5rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Stabiler SMPTE LTC Reader</h1>
+
+    <label for="deviceSelect">Audio-Eingang</label>
+    <select id="deviceSelect"></select>
+
+    <label for="fpsSelect">Framerate</label>
+    <select id="fpsSelect">
+      <option value="12">12 fps</option>
+      <option value="24">24 fps</option>
+      <option value="25" selected>25 fps</option>
+      <option value="30">30 fps</option>
+      <option value="48">48 fps</option>
+      <option value="50">50 fps</option>
+      <option value="60">60 fps</option>
+    </select>
+    <label for="channelMode">Kanalauswahl</label>
+    <select id="channelMode">
+      <option value="L">Nur Kanal 1 (Links)</option>
+      <option value="R">Nur Kanal 2 (Rechts)</option>
+      <option value="LR_SUM" selected>Beide Kanäle (L+R)</option>
+      <option value="LR_DIFF">L minus R (Störanteile auslöschen)</option>
+    </select>
+
+    <div style="margin-top:1rem;">
+      <button id="startBtn">Start</button>
+      <button id="stopBtn" disabled>Stop</button>
+    </div>
+
+    <div id="timecode">--:--:--:--</div>
+
+    <div id="infoRow">
+      <div id="dateDisplay">Datum: --.--.----</div>
+      <div id="tzDisplay">Zeitzone: --</div>
+      <div id="sysTCDisplay">System: --:--:--:--</div>
+      <div id="latencyDisplay">
+        Offset (letzte): -- ms
+      </div>
+    </div>
+
+    <div id="status">Initialisiere Audiogeräte…</div>
+
+    <div id="debugContainer">
+      <button id="toggleDebugBtn">Debug anzeigen</button>
+      <div id="debug"></div>
+    </div>
+  </div>
+
+  <script>
+    const deviceSelect = document.getElementById("deviceSelect");
+    const fpsSelect = document.getElementById("fpsSelect");
+    const channelModeSelect = document.getElementById("channelMode");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const timecodeDisplay = document.getElementById("timecode");
+    const statusDisplay = document.getElementById("status");
+    const debugDisplay = document.getElementById("debug");
+    const toggleDebugBtn = document.getElementById("toggleDebugBtn");
+    const dateDisplay = document.getElementById("dateDisplay");
+    const tzDisplay = document.getElementById("tzDisplay");
+    const sysTCDisplay = document.getElementById("sysTCDisplay");
+    const latencyDisplay = document.getElementById("latencyDisplay");
+
+    let audioContext = null;
+    let mediaStream = null;
+    let sourceNode = null;
+    let processorNode = null;
+    let ltcDecoder = null;
+    let debugVisible = false;
+
+    // Anzeige / Offset-State
+    let lastAcceptedFrameNumber = null;
+    let lastAcceptedTime = null;  // AudioContext time
+    let lastOffsetSeconds = null; // stabilisierter Offset (LTC - System)
+
+    // Offset-Warmup
+    let offsetLocked = false;
+    let offsetWarmup = []; // Sekunden
+    const OFFSET_WARMUP_MIN_SAMPLES = 40;      // ~1–2s
+    const OFFSET_WARMUP_MAX_SAMPLES = 200;
+    const OFFSET_WARMUP_STD_THRESHOLD = 0.02;  // ~20 ms
+
+    // Offset-Historie
+    let latencySamples = []; // {t: timestampMs, v: offsetMs}
+    let lastLatencyDisplayUpdate = 0; // max. 2 Updates/s
+
+    toggleDebugBtn.addEventListener("click", () => {
+      debugVisible = !debugVisible;
+      debugDisplay.style.display = debugVisible ? "block" : "none";
+      toggleDebugBtn.textContent = debugVisible ? "Debug ausblenden" : "Debug anzeigen";
+    });
+
+    // ---------- Frame <-> Timecode Hilfsfunktionen ----------
+    function tcToFrameNumber(tc, fps) {
+      const parts = tc.split(":").map(Number);
+      if (parts.length !== 4 || parts.some(x => !Number.isFinite(x))) return null;
+      const [hh, mm, ss, ff] = parts;
+      return ((hh * 3600 + mm * 60 + ss) * fps) + ff;
+    }
+
+    function frameNumberToTC(frameNumber, fps) {
+      const framesPerDay = 24 * 3600 * fps;
+      let f = ((frameNumber % framesPerDay) + framesPerDay) % framesPerDay;
+      const totalSeconds = Math.floor(f / fps);
+      const ff = f % fps;
+      const hh = Math.floor(totalSeconds / 3600);
+      const mm = Math.floor((totalSeconds % 3600) / 60);
+      const ss = totalSeconds % 60;
+      const pad = (n, d=2) => String(n).padStart(d,"0");
+      return `${pad(hh)}:${pad(mm)}:${pad(ss)}:${pad(ff)}`;
+    }
+
+    function tcToSecondsOfDay(tc, fps) {
+      const parts = tc.split(":").map(Number);
+      if (parts.length !== 4 || parts.some(x => !Number.isFinite(x))) return null;
+      const [hh, mm, ss, ff] = parts;
+      return hh * 3600 + mm * 60 + ss + ff / fps;
+    }
+
+    // ---------- System-Uhrzeit als Timecode ----------
+    function updateSystemTC() {
+      const fpsNow = parseInt(fpsSelect.value, 10) || 25;
+      const frameDurMs = 1000 / fpsNow;
+      const now = new Date();
+
+      const hh = now.getHours();
+      const mm = now.getMinutes();
+      const ss = now.getSeconds();
+      const ms = now.getMilliseconds();
+
+      const frame = Math.floor(ms / frameDurMs);
+      const pad = (n, d=2) => String(n).padStart(d,"0");
+      const sysTC = `${pad(hh)}:${pad(mm)}:${pad(ss)}:${pad(frame)}`;
+      sysTCDisplay.textContent = `System: ${sysTC}`;
+
+      requestAnimationFrame(updateSystemTC);
+    }
+
+    requestAnimationFrame(updateSystemTC);
+
+    // ---------- Offset-Handling ----------
+    function addOffsetSample(offsetSeconds) {
+      const now = Date.now();
+      const offsetMs = offsetSeconds * 1000;
+      latencySamples.push({ t: now, v: offsetMs });
+
+      // älter als 70 s wegwerfen
+      const cutoff = now - 70000;
+      latencySamples = latencySamples.filter(s => s.t >= cutoff);
+
+      lastOffsetSeconds = offsetSeconds;
+    }
+
+    function updateLatencyDisplay() {
+      const now = Date.now();
+      if (now - lastLatencyDisplayUpdate < 500) return; // max. 2 Updates/s
+      lastLatencyDisplayUpdate = now;
+
+      let lastStr = "--";
+
+      if (lastOffsetSeconds != null) {
+        const s = lastOffsetSeconds * 1000;
+        const sign = s >= 0 ? "+" : "";
+        lastStr = `${sign}${s.toFixed(1)} ms`;
+      }
+
+      latencyDisplay.textContent = `Offset (letzte): ${lastStr}`;
+    }
+
+    function resetOffsetState() {
+      lastAcceptedFrameNumber = null;
+      lastAcceptedTime = null;
+      lastOffsetSeconds = null;
+      offsetLocked = false;
+      offsetWarmup = [];
+      latencySamples = [];
+      updateLatencyDisplay();
+    }
+
+    function pushWarmupOffset(offset) {
+      offsetWarmup.push(offset);
+      if (offsetWarmup.length > OFFSET_WARMUP_MAX_SAMPLES) {
+        offsetWarmup.shift();
+      }
+
+      if (!offsetLocked && offsetWarmup.length >= OFFSET_WARMUP_MIN_SAMPLES) {
+        const n = offsetWarmup.length;
+        const mean = offsetWarmup.reduce((a,b) => a + b, 0) / n;
+        const variance = offsetWarmup.reduce((a,b) => a + (b - mean) * (b - mean), 0) / n;
+        const std = Math.sqrt(variance);
+        if (std < OFFSET_WARMUP_STD_THRESHOLD) {
+          offsetLocked = true;
+          lastOffsetSeconds = mean;
+          latencySamples = [];
+          statusDisplay.textContent = "LTC erkannt (Offset kalibriert).";
+        }
+      }
+    }
+
+    // --------- LTC Decoder (unverändert, inkl. Datum/TZ) ----------
+    class LTCDecoder {
+      constructor(sampleRate, fps) {
+        this.sampleRate = sampleRate;
+        this.setFPS(fps);
+
+        this.prevSign = 0;
+        this.samplesSinceTransition = 0;
+
+        this.rawIntervals = [];
+        this.calibrated = false;
+        this.shortLen = null;
+        this.longLen = null;
+        this.threshold = null;
+
+        this.pendingShort = false;
+
+        this.bitBuffer = [];
+        this.maxBuffer = 800;
+
+        this.transitionCount = 0;
+        this.bitCount = 0;
+        this.lastDebugUpdate = 0;
+
+        this.syncWord = [
+          0,0,1,1,
+          1,1,1,1,1,1,1,1,1,1,
+          0,1
+        ];
+
+        this.lastUserBits = null;
+        this.lastUserBitsInterpreted = null;
+      }
+
+      setFPS(fps) {
+        this.fps = fps;
+        this.targetBitRate = fps * 80;
+        this.targetBitSamples = this.sampleRate / this.targetBitRate;
+      }
+
+      calibrate() {
+        if (this.rawIntervals.length < 100) return;
+        const arr = [...this.rawIntervals].sort((a,b) => a-b);
+        const cut = Math.floor(arr.length * 0.1);
+        const trimmed = arr.slice(cut, arr.length - cut);
+        const mid = Math.floor(trimmed.length / 2);
+
+        const shortPart = trimmed.slice(0, mid);
+        const longPart  = trimmed.slice(mid);
+
+        const avg = list => list.reduce((a,b)=>a+b, 0) / list.length;
+
+        this.shortLen = avg(shortPart);
+        this.longLen  = avg(longPart);
+        this.threshold = (this.shortLen + this.longLen) / 2;
+        this.calibrated = true;
+      }
+
+      process(buffer, currentTime) {
+        const len = buffer.length;
+        let latestTC = null;
+
+        for (let i=0; i<len; i++) {
+          const s = buffer[i];
+          const sign = s >= 0 ? 1 : -1;
+          this.samplesSinceTransition++;
+
+          if (this.prevSign !== 0 && sign !== this.prevSign) {
+            this.transitionCount++;
+            const interval = this.samplesSinceTransition;
+            this.samplesSinceTransition = 0;
+
+            if (!this.calibrated) {
+              this.rawIntervals.push(interval);
+              if (this.rawIntervals.length > 1000) {
+                this.calibrate();
+                this.rawIntervals = this.rawIntervals.slice(-1000);
+              }
+              this.prevSign = sign;
+              continue;
+            }
+
+            const isShort = interval < this.threshold;
+            let bitOut = null;
+
+            if (isShort) {
+              if (this.pendingShort) {
+                bitOut = 1;
+                this.pendingShort = false;
+              } else {
+                this.pendingShort = true;
+              }
+            } else {
+              bitOut = 0;
+              this.pendingShort = false;
+            }
+
+            if (bitOut !== null) {
+              this.bitCount++;
+              this.bitBuffer.push(bitOut);
+              if (this.bitBuffer.length > this.maxBuffer) {
+                this.bitBuffer.splice(0, this.bitBuffer.length - this.maxBuffer);
+              }
+
+              const tc = this.decodeLatestFrame();
+              if (tc) {
+                latestTC = tc;
+              }
+            }
+          }
+
+          this.prevSign = sign;
+        }
+
+        if (!this.lastDebugUpdate || (currentTime - this.lastDebugUpdate) > 0.5) {
+          this.lastDebugUpdate = currentTime;
+          this.updateDebug();
+        }
+
+        return latestTC;
+      }
+
+      decodeLatestFrame() {
+        const bits = this.bitBuffer;
+        if (bits.length < 80) return null;
+
+        const searchStart = Math.max(0, bits.length - 400);
+        const searchEnd   = bits.length - 80;
+
+        let bestTC = null;
+
+        for (let offset = searchStart; offset <= searchEnd; offset++) {
+          const frameBits = bits.slice(offset, offset + 80);
+          const syncPart  = frameBits.slice(64);
+
+          if (this.matchesSync(syncPart)) {
+            const data64 = frameBits.slice(0, 64);
+            const tc = this.decodeTimecodeFrom64(data64);
+            if (tc) bestTC = tc;
+          }
+        }
+        return bestTC;
+      }
+
+      matchesSync(bits16) {
+        if (bits16.length !== 16) return false;
+        for (let i=0; i<16; i++) {
+          if (bits16[i] !== this.syncWord[i]) return false;
+        }
+        return true;
+      }
+
+      extractBCD(bits, unitIdx, tensIdx) {
+        let units = 0;
+        for (let i=0; i<unitIdx.length; i++) {
+          units |= (bits[unitIdx[i]] << i);
+        }
+        let tens = 0;
+        for (let i=0; i<tensIdx.length; i++) {
+          tens |= (bits[tensIdx[i]] << i);
+        }
+        return tens * 10 + units;
+      }
+
+      extractUserBits(bits) {
+        const starts = [4,12,20,28,36,44,52,60];
+        const ubs = [];
+        for (const s of starts) {
+          if (s + 3 >= bits.length) {
+            ubs.push(null);
+            continue;
+          }
+          let val = 0;
+          for (let i=0; i<4; i++) {
+            val |= bits[s + i] << i;
+          }
+          ubs.push(val);
+        }
+        this.lastUserBits = ubs;
+
+        if (ubs.every(v => v !== null)) {
+          const day   = ubs[1] * 10 + ubs[0];
+          const month = ubs[3] * 10 + ubs[2];
+          const year2 = ubs[5] * 10 + ubs[4];
+          const year  = 2000 + year2;
+
+          const tzHour = 1; // fest auf UTC+1
+          const tzMin  = 0;
+
+          this.lastUserBitsInterpreted = { day, month, year, tzHour, tzMin };
+        } else {
+          this.lastUserBitsInterpreted = null;
+        }
+      }
+
+      decodeTimecodeFrom64(bits) {
+        if (bits.length !== 64) return null;
+        try {
+          const frames  = this.extractBCD(bits, [0,1,2,3],    [8,9]);
+          const seconds = this.extractBCD(bits, [16,17,18,19],[24,25,26]);
+          const minutes = this.extractBCD(bits, [32,33,34,35],[40,41,42]);
+          const hours   = this.extractBCD(bits, [48,49,50,51],[56,57]);
+
+          if (
+            frames >= 0  && frames < 30 &&
+            seconds >= 0 && seconds < 60 &&
+            minutes >= 0 && minutes < 60 &&
+            hours >= 0   && hours < 24
+          ) {
+            this.extractUserBits(bits);
+            const hh = String(hours).padStart(2, "0");
+            const mm = String(minutes).padStart(2, "0");
+            const ss = String(seconds).padStart(2, "0");
+            const ff = String(frames).padStart(2, "0");
+            return `${hh}:${mm}:${ss}:${ff}`;
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      updateDebug() {
+        const lastBits = this.bitBuffer.slice(-64).join("") || "(noch keine)";
+        let ubLine = "noch keine";
+        let ubInterp = "keine Interpretation";
+
+        if (this.lastUserBits) {
+          const dec = this.lastUserBits.map(v =>
+            v === null ? "--" : v.toString(10).padStart(2,"0")
+          ).join(" ");
+          const hex = this.lastUserBits.map(v =>
+            v === null ? "--" : v.toString(16).toUpperCase().padStart(2,"0")
+          ).join(" ");
+          ubLine = `dez: ${dec}\nhex: ${hex}`;
+        }
+
+        if (this.lastUserBitsInterpreted) {
+          const { day, month, year, tzHour, tzMin } = this.lastUserBitsInterpreted;
+          const tzSign = tzHour >= 0 ? "+" : "-";
+          const tzStr  = `${tzSign}${String(Math.abs(tzHour)).padStart(2,"0")}:${String(tzMin).padStart(2,"0")}`;
+
+          dateDisplay.textContent =
+            `Datum: ${String(day).padStart(2,"0")}.${String(month).padStart(2,"0")}.${year}`;
+          tzDisplay.textContent = `Zeitzone: UTC${tzStr}`;
+
+          ubInterp =
+            `Datum (Interpretation): ${String(day).padStart(2,"0")}.${String(month).padStart(2,"0")}.${year}\n` +
+            `Zeitzone (Interpretation): UTC${tzStr}`;
+        }
+
+        // Offset-Auswertung für Debug (letzte, Ø2s, Ø5s)
+        const nowMs = Date.now();
+        let offsetLastStr = "--";
+        let avg2Str = "--";
+        let avg5Str = "--";
+
+        if (lastOffsetSeconds != null) {
+          const ms = lastOffsetSeconds * 1000;
+          const sign = ms >= 0 ? "+" : "";
+          offsetLastStr = `${sign}${ms.toFixed(1)} ms`;
+        }
+
+        const cutoff2 = nowMs - 2000;
+        const cutoff5 = nowMs - 5000;
+
+        const shortSamples = latencySamples.filter(s => s.t >= cutoff2);
+        const longSamples  = latencySamples.filter(s => s.t >= cutoff5);
+
+        function avgMs(arr) {
+          if (arr.length === 0) return null;
+          const sum = arr.reduce((a, b) => a + b.v, 0);
+          return sum / arr.length;
+        }
+
+        const avg2 = avgMs(shortSamples);
+        const avg5 = avgMs(longSamples);
+
+        if (avg2 != null) {
+          const sign = avg2 >= 0 ? "+" : "";
+          avg2Str = `${sign}${avg2.toFixed(1)} ms`;
+        }
+
+        if (avg5 != null) {
+          const sign = avg5 >= 0 ? "+" : "";
+          avg5Str = `${sign}${avg5.toFixed(1)} ms`;
+        }
+
+        let text =
+          `SampleRate: ${this.sampleRate.toFixed(0)} Hz\n` +
+          `FPS (Decoder): ${this.fps}\n` +
+          `Target BitRate: ${(this.fps * 80).toFixed(1)} bit/s\n` +
+          `Target ~Samples/Bit: ${this.targetBitSamples.toFixed(2)}\n` +
+          `Transitions (gesamt): ${this.transitionCount}\n` +
+          `Calibrated: ${this.calibrated}\n` +
+          `ShortLen: ${this.shortLen ? this.shortLen.toFixed(2) : "n/a"}\n` +
+          `LongLen: ${this.longLen ? this.longLen.toFixed(2) : "n/a"}\n` +
+          `Threshold: ${this.threshold ? this.threshold.toFixed(2) : "n/a"}\n` +
+          `Bits im Buffer: ${this.bitBuffer.length}\n` +
+          `Letzte <=64 Bits:\n${lastBits}\n\n` +
+          `User Bits (UB0–UB7):\n${ubLine}\n\n` +
+          `${ubInterp}\n\n` +
+          `Offset (letzte): ${offsetLastStr}\n` +
+          `Offset (Ø 2 s): ${avg2Str}\n` +
+          `Offset (Ø 5 s): ${avg5Str}`;
+        debugDisplay.textContent = text;
+      }
+    }
+
+    fpsSelect.addEventListener("change", () => {
+      if (ltcDecoder) {
+        const fps = parseInt(fpsSelect.value, 10);
+        ltcDecoder.setFPS(fps);
+      }
+      resetOffsetState();
+    });
+
+    // --------- Audio-Geräte ------------------------------------------
+    async function initDevices() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(d => d.kind === "audioinput");
+
+        deviceSelect.innerHTML = "";
+        audioInputs.forEach(d => {
+          const opt = document.createElement("option");
+          opt.value = d.deviceId;
+          opt.textContent = d.label || `Audioeingang (${d.deviceId})`;
+          deviceSelect.appendChild(opt);
+        });
+
+        if (audioInputs.length === 0) {
+          statusDisplay.textContent = "Keine Audioeingänge gefunden.";
+        } else {
+          statusDisplay.textContent = "Eingang wählen, LTC anlegen, Start drücken.";
+        }
+      } catch (err) {
+        console.error(err);
+        statusDisplay.textContent = "Fehler beim Zugriff auf Audio: " + err.message;
+      }
+    }
+
+    initDevices();
+
+    function getMonoLTCBuffer(event) {
+      const inBuf = event.inputBuffer;
+      const chCount = inBuf.numberOfChannels;
+      const mode = channelModeSelect.value || "LR_SUM";
+      const left = chCount > 0 ? inBuf.getChannelData(0) : null;
+      const right = chCount > 1 ? inBuf.getChannelData(1) : null;
+      const len = left ? left.length : (right ? right.length : 0);
+      const out = new Float32Array(len);
+
+      for (let i = 0; i < len; i++) {
+        let v = 0;
+        switch (mode) {
+          case "L":
+            v = left ? left[i] : 0;
+            break;
+          case "R":
+            v = right ? right[i] : (left ? left[i] : 0);
+            break;
+          case "LR_DIFF":
+            v = (left ? left[i] : 0) - (right ? right[i] : 0);
+            break;
+          case "LR_SUM":
+          default:
+            v = ((left ? left[i] : 0) + (right ? right[i] : 0)) * 0.5;
+            break;
+        }
+        out[i] = v;
+      }
+      return out;
+    }
+
+    // --------- Start / Stop ------------------------------------------
+    startBtn.addEventListener("click", async () => {
+      const deviceId = deviceSelect.value;
+      const fps = parseInt(fpsSelect.value, 10);
+
+      if (!deviceId) {
+        alert("Bitte zuerst einen Audio-Eingang wählen.");
+        return;
+      }
+
+      try {
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        timecodeDisplay.textContent = "--:--:--:--";
+        statusDisplay.textContent = "Starte Audio-Stream…";
+        debugDisplay.textContent = "";
+        dateDisplay.textContent = "Datum: --.--.----";
+        tzDisplay.textContent = "Zeitzone: --";
+        resetOffsetState();
+
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            deviceId: { exact: deviceId },
+            channelCount: 2,
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        sourceNode = audioContext.createMediaStreamSource(mediaStream);
+
+        const bufferSize = 1024;
+        processorNode = audioContext.createScriptProcessor(bufferSize, 2, 1);
+
+        ltcDecoder = new LTCDecoder(audioContext.sampleRate, fps);
+
+        processorNode.onaudioprocess = (event) => {
+          const input = getMonoLTCBuffer(event);
+          if (!ltcDecoder) return;
+
+          const now = audioContext.currentTime;
+          const fpsNow = parseInt(fpsSelect.value, 10) || 25;
+
+          const tc = ltcDecoder.process(input, now);
+
+          if (tc) {
+            const frameNum = tcToFrameNumber(tc, fpsNow);
+            if (frameNum !== null) {
+              let accept = false;
+
+              if (lastAcceptedFrameNumber === null || lastAcceptedTime === null) {
+                accept = true;
+              } else {
+                const deltaT = now - lastAcceptedTime;
+                const stale = deltaT > 2.0;
+
+                const smallThresholdFrames = 1;           // max. ±1 Frame Toleranz
+                const jumpThresholdFrames  = fpsNow * 60; // >= 60 s -> echter Sprung
+
+                if (stale) {
+                  // nach 2 s ohne Update neu synchronisieren
+                  accept = true;
+                  resetOffsetState();
+                } else {
+                  const expectedAdvance = Math.round(deltaT * fpsNow);
+                  const predicted = lastAcceptedFrameNumber + expectedAdvance;
+                  const diffPred = frameNum - predicted;
+                  const diffFromLast = frameNum - lastAcceptedFrameNumber;
+
+                  if (diffFromLast < 0 && Math.abs(diffFromLast) < jumpThresholdFrames) {
+                    // kleiner Rücksprung -> Glitch -> ignorieren
+                    accept = false;
+                  } else if (Math.abs(diffPred) <= smallThresholdFrames) {
+                    // normaler kontinuierlicher Lauf
+                    accept = true;
+                  } else if (Math.abs(diffFromLast) >= jumpThresholdFrames) {
+                    // großer Sprung (z.B. Stunde geändert) -> akzeptieren
+                    accept = true;
+                  } else {
+                    // mittlere Abweichung -> Glitch
+                    accept = false;
+                  }
+                }
+              }
+
+              if (accept) {
+                lastAcceptedFrameNumber = frameNum;
+                lastAcceptedTime = now;
+
+                timecodeDisplay.textContent = frameNumberToTC(frameNum, fpsNow);
+                if (!offsetLocked) {
+                  statusDisplay.textContent = "LTC erkannt – Offset kalibrieren…";
+                }
+
+                const ltcSeconds = tcToSecondsOfDay(tc, fpsNow);
+                if (ltcSeconds != null) {
+                  const sysNow = new Date();
+                  const sysSeconds =
+                    sysNow.getHours() * 3600 +
+                    sysNow.getMinutes() * 60 +
+                    sysNow.getSeconds() +
+                    sysNow.getMilliseconds() / 1000;
+
+                  let offset = ltcSeconds - sysSeconds;
+
+                  // in Bereich [-12h, +12h] falten
+                  if (offset > 43200) offset -= 86400;
+                  if (offset < -43200) offset += 86400;
+
+                  if (!offsetLocked) {
+                    pushWarmupOffset(offset);
+                  } else {
+                    addOffsetSample(offset);
+                    updateLatencyDisplay();
+                  }
+                }
+              }
+            }
+          }
+        };
+
+        sourceNode.connect(processorNode);
+        processorNode.connect(audioContext.destination);
+        statusDisplay.textContent = "Decoder läuft – wartet auf stabilen LTC.";
+      } catch (err) {
+        console.error(err);
+        statusDisplay.textContent = "Fehler beim Starten: " + err.message;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      if (processorNode) {
+        processorNode.disconnect();
+        processorNode.onaudioprocess = null;
+        processorNode = null;
+      }
+      if (sourceNode) {
+        sourceNode.disconnect();
+        sourceNode = null;
+      }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
+      }
+      if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+      }
+      ltcDecoder = null;
+      resetOffsetState();
+
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      statusDisplay.textContent = "Gestoppt.";
+    });
+  </script>
+</body>
+</html>

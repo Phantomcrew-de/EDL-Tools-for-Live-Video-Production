@@ -1,0 +1,2335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit List for Live Productions – Custom Layout</title>
+
+  <!-- Mobile: Zoom deaktivieren + Notch ausnutzen -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+  <!-- Farbe für Browser-/App-Bar -->
+  <meta name="theme-color" content="#02030a" />
+
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at top left, #1f3b70, #060814 60%);
+      --glass-bg: rgba(20, 26, 48, 0.78);
+      --glass-border: rgba(255, 255, 255, 0.16);
+      --glass-soft: rgba(255, 255, 255, 0.05);
+      --text-main: #f8f8ff;
+      --text-muted: #b0badc;
+      --accent: #ffb347;
+      --accent-soft: rgba(255, 179, 71, 0.2);
+      --danger: #ff5c7a;
+      --radius-lg: 18px;
+      --shadow-3d: 0 18px 40px rgba(0, 0, 0, 0.55);
+      --transition-fast: 0.18s ease-out;
+      --button-padding: 1rem 1.3rem;
+      --button-radius: 16px;
+
+      /* Marker-Button-Scale (wird per Slider verändert) */
+      --marker-btn-scale: 1;
+      --marker-btn-padding-y: 1rem;
+      --marker-btn-padding-x: 1.3rem;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    html {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      height: 100%;
+      background: #02030a;
+      color: var(--text-main);
+      overflow-x: hidden;
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+      overscroll-behavior: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      height: 100%;
+      color: var(--text-main);
+      background: var(--bg-gradient);
+      overflow-x: hidden;
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+      overscroll-behavior: none;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1120px;
+      margin: 24px auto 32px;
+      padding: 24px 24px 28px;
+      border-radius: 24px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-3d);
+      backdrop-filter: blur(26px) saturate(150%);
+      width: 100%;
+    }
+
+    @media (max-width: 1024px) {
+      .app-shell {
+        margin: 16px auto 24px;
+        padding: 18px 14px 22px;
+        width: calc(100% - 24px);
+      }
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: clamp(1.4rem, 2vw + 1rem, 1.9rem);
+      font-weight: 650;
+      letter-spacing: 0.02em;
+    }
+    h6 {
+      margin: 4px 0 6px;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+
+    #info-button {
+      cursor: pointer;
+      font-size: 1.4rem;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--glass-soft);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      transition: transform var(--transition-fast),
+        box-shadow var(--transition-fast), background var(--transition-fast);
+    }
+    #info-button:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Verbreiterter, mobiltauglicher Language Switch */
+    #lang-switch {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(8, 10, 20, 0.9);
+      color: var(--text-main);
+      padding: 4px 12px;
+      font-size: 0.85rem;
+      outline: none;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    #info-box {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 50%;
+      transform: translateX(50%);
+      max-width: 520px;
+      background: rgba(12, 19, 40, 0.96);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      padding: 18px 18px 20px;
+      z-index: 50;
+      backdrop-filter: blur(24px) saturate(160%);
+    }
+    @media (max-width: 600px) {
+      #info-box {
+        right: 10px;
+        left: 10px;
+        transform: none;
+      }
+      #lang-switch {
+        font-size: 0.9rem;
+      }
+    }
+    #info-box h4 { margin: 4px 0 4px; }
+    #info-box p {
+      margin: 4px 0 8px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    #info-box-close {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(10, 10, 24, 0.9);
+      color: var(--text-main);
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color var(--transition-fast),
+        box-shadow var(--transition-fast), background var(--transition-fast);
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+      background: rgba(14, 20, 40, 0.95);
+    }
+    select {
+      appearance: none;
+      background-image: linear-gradient(45deg,transparent 50%,#fff 50%),
+        linear-gradient(135deg,#fff 50%,transparent 50%),
+        linear-gradient(to right,transparent,transparent);
+      background-position: calc(100% - 18px) 14px,
+        calc(100% - 13px) 14px,
+        calc(100% - 38px) 0.5em;
+      background-size: 6px 6px, 6px 6px, 1px 1.6em;
+      background-repeat: no-repeat;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 2fr 1.4fr;
+      gap: 10px;
+      align-items: end;
+      width: 100%;
+    }
+    @media (max-width: 720px) {
+      .grid-two { grid-template-columns: 1fr; }
+    }
+    .grid-three {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      width: 100%;
+    }
+    @media (max-width: 900px) {
+      .grid-three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 600px) {
+      .grid-three { grid-template-columns: 1fr; }
+    }
+
+    .timer-shell {
+      margin-top: 10px;
+      padding: 12px 14px 10px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(125deg,
+        rgba(255, 255, 255, 0.08),
+        rgba(0, 0, 0, 0.25));
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+    }
+    #timer {
+      font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: clamp(1.3rem, 3vw + 0.9rem, 1.8rem);
+      letter-spacing: 0.16em;
+    }
+
+    button { cursor: pointer; border: none; background: none; color: inherit; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: var(--button-padding);
+      border-radius: var(--button-radius);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: radial-gradient(circle at top left,
+        rgba(255, 255, 255, 0.12),
+        rgba(0, 0, 0, 0.3));
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: transform var(--transition-fast),
+        box-shadow var(--transition-fast), background var(--transition-fast),
+        border-color var(--transition-fast);
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .btn span.emoji { font-size: 1.3rem; }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.55);
+      background: radial-gradient(circle at top left,
+        rgba(255, 255, 255, 0.2),
+        rgba(0, 0, 0, 0.35));
+    }
+    .btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
+    }
+    .btn-small {
+      padding: 0.5rem 0.8rem;
+      font-size: 0.82rem;
+      border-radius: 999px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    }
+    .btn-ghost {
+      background: rgba(8, 10, 20, 0.9);
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+    }
+    .btn-ghost:hover { background: rgba(16, 20, 40, 0.95); }
+    .btn-danger {
+      border-color: rgba(255, 92, 122, 0.7);
+      background: linear-gradient(135deg,
+        rgba(255, 92, 122, 0.3),
+        rgba(180, 32, 64, 0.85));
+    }
+
+    .btn-cut {
+      border-color: #f199b0;
+      background: linear-gradient(135deg,
+        rgba(241, 153, 176, 0.35),
+        rgba(192, 122, 140, 0.7));
+    }
+    .btn-start {
+      border-color: #f3d241;
+      background: linear-gradient(135deg,
+        rgba(243, 210, 65, 0.35),
+        rgba(194, 168, 52, 0.7));
+    }
+    .btn-end {
+      border-color: #ed3023;
+      background: linear-gradient(135deg,
+        rgba(237, 48, 35, 0.4),
+        rgba(189, 38, 28, 0.8));
+    }
+    .btn-sync {
+      border-color: #4ec057;
+      background: linear-gradient(135deg,
+        rgba(78, 192, 87, 0.4),
+        rgba(62, 153, 69, 0.85));
+    }
+    .btn-continue {
+      border-color: #01b7ba;
+      background: linear-gradient(135deg,
+        rgba(1, 183, 186, 0.4),
+        rgba(0, 146, 148, 0.85));
+    }
+    .btn-outtake {
+      border-color: #ff44c8;
+      background: linear-gradient(135deg,
+        rgba(255, 68, 200, 0.4),
+        rgba(204, 54, 160, 0.85));
+    }
+    .btn-again {
+      border-color: #d6c199;
+      background: linear-gradient(135deg,
+        rgba(214, 193, 153, 0.35),
+        rgba(171, 154, 122, 0.85));
+    }
+    .btn-check {
+      border-color: #6e5143;
+      background: linear-gradient(135deg,
+        rgba(110, 81, 67, 0.5),
+        rgba(88, 64, 53, 0.9));
+    }
+    .btn-slomo {
+      border-color: #8ad3ff;
+      background: linear-gradient(135deg,
+        rgba(138, 211, 255, 0.4),
+        rgba(110, 168, 204, 0.85));
+    }
+    .btn-transition,
+    .btn-vfx,
+    .btn-comment {
+      border-color: #3a78c3;
+      background: linear-gradient(135deg,
+        rgba(58, 120, 195, 0.45),
+        rgba(46, 96, 156, 0.88));
+    }
+    .btn-besttake {
+      border-color: #c299ff;
+      background: linear-gradient(135deg,
+        rgba(194, 153, 255, 0.45),
+        rgba(155, 122, 204, 0.88));
+    }
+
+    .marker-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      width: 100%;
+    }
+    .marker-slot {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .marker-slot-controls {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+    }
+    .marker-slot-controls button {
+      padding: 0.2rem 0.45rem;
+      font-size: 0.72rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(5, 6, 18, 0.9);
+      opacity: 0.85;
+    }
+    .marker-slot-controls button:hover {
+      opacity: 1;
+      background: rgba(12, 16, 35, 0.95);
+    }
+    .marker-slot-controls button[data-delete="true"] {
+      border-color: rgba(255, 92, 122, 0.7);
+      color: #ffc2d1;
+    }
+
+    /* Marker-Buttons skalieren */
+    .marker-button {
+      padding: calc(var(--marker-btn-padding-y) * var(--marker-btn-scale))
+               calc(var(--marker-btn-padding-x) * var(--marker-btn-scale));
+      font-size: calc(0.95rem * var(--marker-btn-scale));
+    }
+    .marker-button span.emoji {
+      font-size: calc(1.3rem * var(--marker-btn-scale));
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 22px;
+      margin-bottom: 6px;
+    }
+    .section-header h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+    .subtext {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .footer-row {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+    .footer-row .left,
+    .footer-row .right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .badge {
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: var(--text-muted);
+    }
+
+    /* -------- Marker List -------- */
+    #comment-list {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0;
+      width: 100%;
+    }
+    #comment-list li {
+      display: grid;
+      grid-template-columns: auto 130px minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: 8px;
+      margin-bottom: 7px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(8, 10, 24, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      width: 100%;
+    }
+    #comment-list input[type="text"] {
+      background: rgba(16, 18, 35, 0.98);
+      border-radius: 8px;
+      padding: 5px 7px;
+      font-size: 0.92rem;
+      color: var(--text-main);
+      border-width: 1px;
+      width: 100%;
+    }
+    #comment-list input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+    .marker-time-input {
+      font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      width: 100%;
+    }
+    .marker-comment-input {
+      min-width: 0;
+      width: 100%;
+    }
+    .delete-marker-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: radial-gradient(circle at top left,
+        rgba(255, 92, 122, 0.26),
+        rgba(80, 10, 20, 0.9));
+      color: #ffd5e0;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .delete-marker-btn:hover {
+      border-color: rgba(255, 113, 145, 0.85);
+    }
+    .color-box {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 1px solid rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+    }
+    .new-entry {
+      animation: slide-in 0.4s ease-out;
+    }
+    .deleted-entry {
+      animation: slide-out 0.45s ease-in forwards;
+    }
+    @keyframes slide-in {
+      from { transform: translateY(-10%); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes slide-out {
+      from { transform: translateX(0);   opacity: 1; }
+      to   { transform: translateX(-100%); opacity: 0; }
+    }
+
+    #color-picker {
+      position: absolute;
+      background: rgba(12, 19, 40, 0.98);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 6px;
+      display: grid;
+      grid-template-columns: repeat(4, 20px);
+      gap: 4px;
+      z-index: 999;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(14px);
+    }
+    #color-picker div {
+      border-radius: 6px;
+      border: 1px solid rgba(0, 0, 0, 0.5);
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      #comment-list li {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-rows: auto auto;
+        grid-template-areas:
+          "color time delete"
+          "color comment delete";
+      }
+      .color-box { grid-area: color; }
+      .marker-time-input { grid-area: time; }
+      .marker-comment-input { grid-area: comment; }
+      .delete-marker-btn { grid-area: delete; }
+
+      .marker-time-input,
+      .marker-comment-input {
+        width: 100%;
+      }
+    }
+
+    .preset-buttons {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .preset-buttons button {
+      flex: 1 1 140px;
+      max-width: 100%;
+    }
+    @media (max-width: 600px) {
+      .preset-buttons button {
+        flex: 1 1 100%;
+      }
+    }
+
+    /* ==== Marker-Size-Slider ==== */
+    .marker-edit-panel {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .marker-size-wrapper {
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+    .marker-size-wrapper label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    #marker-size-slider {
+      width: 110px;
+    }
+
+    /* ==== Custom Button Dialog ==== */
+    #custom-button-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 60;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-y: auto;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    }
+    #custom-button-dialog {
+      width: min(480px, 92vw);
+      background: rgba(12, 19, 40, 0.98);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.7);
+      padding: 16px 18px 14px;
+      margin: 24px auto;
+    }
+    #custom-button-dialog h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+    .custom-dialog-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .custom-dialog-row label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .custom-dialog-row input,
+    .custom-dialog-row select {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(10, 10, 24, 0.9);
+      color: var(--text-main);
+      padding: 7px 9px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .custom-dialog-row input:focus,
+    .custom-dialog-row select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+    .custom-dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    #custom-color-swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .custom-color-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.6);
+    }
+    .custom-color-swatch.selected {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.6);
+    }
+
+    /* ===== ANDROID-SCALING ===== */
+    html.android {
+      font-size: 15px;
+    }
+    html.android h1 {
+      font-size: 1.6rem;
+    }
+    html.android .btn {
+      font-size: 0.9rem;
+      padding: 0.85rem 1.1rem;
+    }
+
+    /* ===== Copy/Share Bubble-Toast ===== */
+    #copy-toast {
+      position: absolute;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(10, 14, 30, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: var(--text-main);
+      font-size: 0.78rem;
+      box-shadow: 0 12px 26px rgba(0,0,0,0.65);
+      z-index: 9999;
+      transform: translateX(-50%);
+      opacity: 1;
+      pointer-events: none;
+      transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+      white-space: nowrap;
+    }
+    #copy-toast.fade-out {
+      opacity: 0;
+      transform: translate(-50%, -6px);
+    }
+  </style>
+</head>
+<body>
+  <div id="info-box">
+    <div style="text-align: right;">
+      <button id="info-box-close">❌</button>
+    </div>
+    <h4 id="info-title">About this App</h4>
+    <p id="info-text-1">
+      This web application is a timecode &amp; marker tracker for live productions
+      (ATEM Mini/Pro ISO etc.).
+    </p>
+    <h4 id="info-title-resolve">Export to DaVinci Resolve</h4>
+    <p id="info-text-2">
+      Use <strong>💾 Download EDL</strong> and then in DaVinci Resolve:
+      right-click the timeline → <em>Import → Timeline Markers from EDL</em>.
+    </p>
+  </div>
+
+  <main class="app-shell">
+    <header class="app-header">
+      <div>
+        <h1 id="main-title">Edit List for Live Productions</h1>
+        <h6 id="main-subtitle">Marker &amp; EDL Helper with Custom Layout</h6>
+      </div>
+      <div class="header-right">
+        <select id="lang-switch">
+          <option value="en">EN</option>
+          <option value="de">DE</option>
+        </select>
+
+        <button
+          class="btn btn-ghost btn-small"
+          id="copy-ltc-url-btn"
+          type="button"
+          title="LTC-URL kopieren"
+        >
+          LTC
+        </button>
+        
+        <button
+          class="btn btn-ghost btn-small"
+          id="share-url-btn"
+          type="button"
+          title="URL teilen"
+        >
+          📤
+        </button>
+        
+         <button
+          class="btn btn-ghost btn-small"
+          id="copy-url-btn"
+          type="button"
+          title="URL kopieren"
+        >
+          📋
+        </button>
+
+        <div id="info-button" title="About this app">ℹ️</div>
+      </div>
+    </header>
+
+    <!-- Projects & Presets -->
+    <section>
+      <h6 id="projects-presets-title">Projects &amp; Presets</h6>
+      <div class="grid-two">
+        <div>
+          <label for="project-title" id="label-project-title">Title</label>
+          <input type="text" id="project-title" placeholder="Enter a project title" />
+        </div>
+        <div class="grid-two">
+          <div>
+            <label for="project-dropdown" id="label-saved-projects">Saved projects</label>
+            <select id="project-dropdown">
+              <option value="" disabled selected>Select project</option>
+            </select>
+          </div>
+          <div class="preset-buttons">
+            <button class="btn btn-ghost btn-small" id="btn-new-project">🆕 New</button>
+            <button class="btn btn-ghost btn-small" id="btn-save-project">💾 Save</button>
+            <button class="btn btn-danger btn-small" id="btn-delete-project">🗑 Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;" class="grid-three">
+        <div>
+          <label for="preset-select" id="label-preset-select">Production preset</label>
+          <select id="preset-select">
+            <option value="default">Default – All markers</option>
+            <option value="musicVideo">Music Video</option>
+            <option value="talkshow">Talkshow / Interview</option>
+            <option value="event">Live Event / Stage</option>
+          </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <div class="preset-buttons">
+            <button class="btn btn-ghost btn-small" id="btn-save-preset">⭐ Save as preset</button>
+            <button class="btn btn-ghost btn-small" id="btn-delete-preset">✖ Remove preset</button>
+          </div>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <div class="subtext" id="preset-hint"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Timecode -->
+    <section style="margin-top:16px;">
+      <h6 id="timecode-settings-title">Timecode settings</h6>
+      <div class="grid-three">
+        <div>
+          <label for="timezone-selector" id="label-timezone">Timezone</label>
+          <select id="timezone-selector">
+            <option value="UTC-12">UTC-12</option>
+            <option value="UTC-11">UTC-11</option>
+            <option value="UTC-10">UTC-10</option>
+            <option value="UTC-9">UTC-9</option>
+            <option value="UTC-8">UTC-8</option>
+            <option value="UTC-7">UTC-7</option>
+            <option value="UTC-6">UTC-6</option>
+            <option value="UTC-5">UTC-5</option>
+            <option value="UTC-4">UTC-4</option>
+            <option value="UTC-3">UTC-3</option>
+            <option value="UTC-2">UTC-2</option>
+            <option value="UTC-1">UTC-1</option>
+            <option value="UTC">UTC</option>
+            <option value="UTC+1" selected>UTC+1</option>
+            <option value="UTC+2">UTC+2</option>
+            <option value="UTC+3">UTC+3</option>
+            <option value="UTC+4">UTC+4</option>
+            <option value="UTC+5">UTC+5</option>
+            <option value="UTC+6">UTC+6</option>
+            <option value="UTC+7">UTC+7</option>
+            <option value="UTC+8">UTC+8</option>
+            <option value="UTC+9">UTC+9</option>
+            <option value="UTC+10">UTC+10</option>
+            <option value="UTC+11">UTC+11</option>
+            <option value="UTC+12">UTC+12</option>
+          </select>
+        </div>
+        <div>
+          <label for="framerate-selector" id="label-framerate">Framerate</label>
+          <select id="framerate-selector">
+            <option value="24">24 fps</option>
+            <option value="25" selected>25 fps</option>
+            <option value="30">30 fps</option>
+            <option value="50">50 fps</option>
+            <option value="60">60 fps</option>
+            <option value="120">120 fps</option>
+          </select>
+        </div>
+        <div>
+          <label for="latency-input" id="label-latency">Latency (ms)</label>
+          <input type="number" id="latency-input" value="0" />
+        </div>
+      </div>
+      <div class="timer-shell">
+        <div id="timer">00:00:00:00</div>
+      </div>
+    </section>
+
+    <!-- Marker Buttons -->
+    <section>
+      <div class="section-header">
+        <div>
+          <h3 id="marker-buttons-title">Marker buttons (built-in &amp; custom)</h3>
+          <div class="subtext" id="marker-subtext"></div>
+        </div>
+        <div class="marker-edit-panel">
+          <div class="marker-size-wrapper" id="marker-size-wrapper">
+            <label for="marker-size-slider" id="marker-size-label">Size</label>
+            <input type="range" id="marker-size-slider" min="80" max="150" value="100">
+          </div>
+          <button class="btn btn-ghost btn-small" id="layout-edit-toggle">
+            🛠 Layout-Edit: OFF
+          </button>
+          <button class="btn btn-ghost btn-small" id="btn-add-custom-button">
+            ➕ Custom button
+          </button>
+        </div>
+      </div>
+      <div class="marker-grid" id="marker-buttons"></div>
+    </section>
+
+    <!-- Marker List -->
+    <section>
+      <div class="section-header" style="margin-top:20px;">
+        <div>
+          <h3 id="marker-list-title">Marker list</h3>
+          <div class="subtext" id="marker-list-subtext"></div>
+        </div>
+      </div>
+      <ul id="comment-list"></ul>
+    </section>
+
+    <!-- Footer -->
+    <section class="footer-row">
+      <div class="left">
+        <button class="btn btn-start" id="btn-download-edl">💾 Download EDL</button>
+      </div>
+      <div class="right">
+        <span class="badge" id="storage-hint">
+          Projects, custom buttons &amp; presets are stored in this browser.
+        </span>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==== Custom Button Dialog ==== -->
+  <div id="custom-button-overlay">
+    <div id="custom-button-dialog">
+      <h3 id="custom-dialog-title">New custom button</h3>
+
+      <div class="custom-dialog-row">
+        <label for="custom-preset-select" id="custom-dialog-preset-label">Load preset</label>
+        <select id="custom-preset-select"></select>
+      </div>
+
+      <div class="custom-dialog-row">
+        <label for="custom-label-input" id="custom-dialog-label-label">Button label</label>
+        <input id="custom-label-input" type="text" autocomplete="off">
+      </div>
+
+      <div class="custom-dialog-row">
+        <label for="custom-comment-input" id="custom-dialog-comment-label">
+          Comment text for EDL markers
+        </label>
+        <input id="custom-comment-input" type="text" autocomplete="off"
+          placeholder="You can use {text} as a variable">
+      </div>
+
+      <div class="custom-dialog-row">
+        <label for="custom-emoji-select" id="custom-dialog-emoji-label">Emoji / prefix</label>
+        <select id="custom-emoji-select"></select>
+        <input id="custom-emoji-input" type="text" autocomplete="off"
+          placeholder="…or type your own emoji">
+      </div>
+
+      <div class="custom-dialog-row">
+        <label for="custom-color-select" id="custom-dialog-color-label">Resolve color</label>
+        <select id="custom-color-select"></select>
+        <div id="custom-color-swatches"></div>
+      </div>
+
+      <div class="custom-dialog-actions">
+        <button class="btn btn-ghost btn-small" id="custom-dialog-cancel">Cancel</button>
+        <button class="btn btn-start btn-small" id="custom-dialog-save">Save button</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    window.onbeforeunload = () =>
+      "Are you sure you want to leave? Any unsaved data will be lost.";
+
+    // iOS Pinch-Zoom blocken
+    ["gesturestart","gesturechange","gestureend"].forEach(ev=>{
+      document.addEventListener(ev, e => e.preventDefault(), {passive:false});
+    });
+
+    // Android-Scaling
+    if (/Android/i.test(navigator.userAgent)) {
+      document.documentElement.classList.add("android");
+    }
+
+    let timecodeList = [];
+    let customButtons = [];
+    let customPresets = {};
+    let currentLayout = [];
+    let editMode = false;
+    let currentLang = "en";
+    let markerButtonScale = 1;
+
+    document.documentElement.style.setProperty("--marker-btn-scale", markerButtonScale);
+
+    const timezoneOffsets = {
+      UTC: 0, "UTC-12": -12, "UTC-11": -11, "UTC-10": -10, "UTC-9": -9,
+      "UTC-8": -8, "UTC-7": -7, "UTC-6": -6, "UTC-5": -5, "UTC-4": -4,
+      "UTC-3": -3, "UTC-2": -2, "UTC-1": -1,
+      "UTC+1": 1, "UTC+2": 2, "UTC+3": 3, "UTC+4": 4, "UTC+5": 5,
+      "UTC+6": 6, "UTC+7": 7, "UTC+8": 8, "UTC+9": 9, "UTC+10": 10,
+      "UTC+11": 11, "UTC+12": 12
+    };
+    const framerates = { "24":24,"25":25,"30":30,"50":50,"60":60,"120":120 };
+
+    const EMOJI_CHOICES = ["⭐","🎬","🎥","🎤","🎧","📸","🎙️","🎛️","🎹","🎵","🚨","🔥","💥","🤣"];
+    const RESOLVE_COLOR_CHOICES = [
+      "ResolveColorBlue","ResolveColorCyan","ResolveColorGreen","ResolveColorYellow",
+      "ResolveColorRed","ResolveColorPink","ResolveColorPurple","ResolveColorFuchsia",
+      "ResolveColorRose","ResolveColorLavender","ResolveColorSky","ResolveColorMint",
+      "ResolveColorLemon","ResolveColorSand","ResolveColorCocoa","ResolveColorCream"
+    ];
+
+    const RESOLVE_COLOR_MAP = {
+      ResolveColorBlue:"#007FE3",
+      ResolveColorCyan:"#01B7BA",
+      ResolveColorGreen:"#4EC057",
+      ResolveColorYellow:"#F3D241",
+      ResolveColorRed:"#ED3023",
+      ResolveColorPink:"#F199B0",
+      ResolveColorFuchsia:"#FF44C8",
+      ResolveColorLavender:"#C299FF",
+      ResolveColorSky:"#8AD3FF",
+      ResolveColorSand:"#D6C199",
+      ResolveColorCocoa:"#6E5143",
+      ResolveColorPurple:"#9B59B6",
+      ResolveColorRose:"#F78DA7",
+      ResolveColorMint:"#B9E269",
+      ResolveColorLemon:"#FFF176",
+      ResolveColorCream:"#F5EBE1"
+    };
+
+    const MARKERS = {
+      comment: {
+        emoji:"✍️", btnClass:"btn-comment", color:"ResolveColorBlue",
+        label:{en:"Comment",de:"Kommentar"},
+        comment:{en:null,de:null}
+      },
+      start: {
+        emoji:"▶️", btnClass:"btn-start", color:"ResolveColorYellow",
+        label:{en:"Start",de:"Start"},
+        comment:{en:"Start",de:"Start"}
+      },
+      cut: {
+        emoji:"✂️", btnClass:"btn-cut", color:"ResolveColorPink",
+        label:{en:"Cut",de:"Schnitt"},
+        comment:{en:"Cut",de:"Schnitt"}
+      },
+      continue: {
+        emoji:"🚶‍♀️", btnClass:"btn-continue", color:"ResolveColorCyan",
+        label:{en:"Continue",de:"Weiter"},
+        comment:{en:"Continue",de:"Weiter"}
+      },
+      again: {
+        emoji:"🔁", btnClass:"btn-again", color:"ResolveColorSand",
+        label:{en:"Again",de:"Nochmal"},
+        comment:{en:"Again",de:"Nochmal"}
+      },
+      outtake: {
+        emoji:"🤣", btnClass:"btn-outtake", color:"ResolveColorFuchsia",
+        label:{en:"Outtake",de:"Outtake"},
+        comment:{en:"Outtake",de:"Outtake"}
+      },
+      end: {
+        emoji:"✋", btnClass:"btn-end", color:"ResolveColorRed",
+        label:{en:"End",de:"Ende"},
+        comment:{en:"End",de:"Ende"}
+      },
+      check: {
+        emoji:"🚨", btnClass:"btn-check", color:"ResolveColorCocoa",
+        label:{en:"Error",de:"Fehler"},
+        comment:{
+          en:"Check this part for an Error",
+          de:"Diesen Teil auf Fehler prüfen"
+        }
+      },
+      slomo: {
+        emoji:"🐢/🐇", btnClass:"btn-slomo", color:"ResolveColorSky",
+        label:{en:"Speed",de:"Tempo"},
+        comment:{
+          en:"Slow motion or timelapse",
+          de:"Zeitlupe oder Zeitraffer"
+        }
+      },
+      transition: {
+        emoji:"🔥", btnClass:"btn-transition", color:"ResolveColorBlue",
+        label:{en:"Transition",de:"Übergang"},
+        comment:{en:"Transition",de:"Übergang"}
+      },
+      vfx: {
+        emoji:"💥", btnClass:"btn-vfx", color:"ResolveColorBlue",
+        label:{en:"Effect",de:"Effekt"},
+        comment:{en:"Visual effects or SFX/Music",de:"VFX oder SFX/Musik"}
+      },
+      besttake: {
+        emoji:"🤎", btnClass:"btn-besttake", color:"ResolveColorLavender",
+        label:{en:"Best Take",de:"Beste Take"},
+        comment:{en:"Best Take",de:"Beste Take"}
+      },
+      sync: {
+        emoji:"🎬", btnClass:"btn-sync", color:"ResolveColorGreen",
+        label:{en:"Sync",de:"Sync"},
+        comment:{en:"Syncpoint",de:"Syncpunkt"}
+      }
+    };
+
+    const DEFAULT_LAYOUT = Object.keys(MARKERS).map(id => ({kind:"builtin",id}));
+
+    const BUILTIN_PRESETS = {
+      default: {
+        framerate:"25",
+        latency:0,
+        buttonScale:1,
+        layout: DEFAULT_LAYOUT
+      },
+      musicVideo: {
+        framerate:"25",
+        latency:0,
+        buttonScale:1,
+        layout:["start","sync","cut","transition","vfx","besttake","again","end"]
+          .map(id => ({kind:"builtin",id}))
+      },
+      talkshow: {
+        framerate:"25",
+        latency:0,
+        buttonScale:1,
+        layout:["start","sync","cut","continue","again","check","outtake","end"]
+          .map(id => ({kind:"builtin",id}))
+      },
+      event: {
+        framerate:"50",
+        latency:0,
+        buttonScale:1,
+        layout:["start","sync","cut","slomo","transition","besttake","end"]
+          .map(id => ({kind:"builtin",id}))
+      }
+    };
+
+    const i18n = {
+      en: {
+        mainTitle: "Edit List for Live Productions",
+        mainSubtitle: "Live EDL marker",
+        infoTitle: "About this App",
+        infoText1: "This web application is a timecode & marker tracker for live productions (ATEM Mini/Pro ISO etc.).",
+        infoTitleResolve: "Export to DaVinci Resolve",
+        infoText2: "Use 💾 Download EDL and then in DaVinci Resolve: right-click the timeline → \"Import → Timeline Markers from EDL\".",
+        projectsPresets: "Projects & Presets",
+        labelProjectTitle: "Title",
+        labelSavedProjects: "Saved projects",
+        labelPresetSelect: "Production preset",
+        timecodeSettings: "Timecode settings",
+        labelTimezone: "Timezone",
+        labelFramerate: "Framerate",
+        labelLatency: "Latency (ms)",
+        markerButtonsTitle: "Marker buttons (built-in & custom)",
+        markerListTitle: "Marker list",
+        storageHint: "Projects, custom buttons & presets are stored in this browser.",
+        btnNewProject: "🆕 New",
+        btnSaveProject: "💾 Save",
+        btnDeleteProject: "🗑 Delete",
+        btnSavePreset: "⭐ Save preset",
+        btnDeletePreset: "🗑 Delete preset",
+        btnDownloadEDL: "💾 Download EDL",
+        btnAddCustom: "➕ Custom button",
+        layoutEditOff: "🛠 Layout-Edit: OFF",
+        layoutEditOn: "🛠 Layout-Edit: ON",
+        placeholderProjectTitle: "Enter a project title",
+        alertNoMarkers: "No markers found. Add at least one marker before downloading the EDL.",
+        confirmDeleteProject: name => `Delete project "${name}"?`,
+        confirmDeletePreset: name => `Remove preset "${name}"?`,
+        promptComment: "Enter your comment:",
+        promptPresetName: "Name for this custom preset (e.g. 'Podcast Show A'):",
+        onlyCustomPresetRemovable: "Only custom presets can be removed.",
+        customDialogTitle: "New custom button",
+        customDialogPresetLabel: "Load preset",
+        customDialogPresetPlaceholder: "None / choose preset…",
+        customDialogLabelLabel: "Button label",
+        customDialogCommentLabel: "Comment text for EDL markers (you can use {text})",
+        customDialogEmojiLabel: "Emoji / prefix",
+        customDialogEmojiPlaceholder: "Choose an emoji…",
+        customDialogEmojiOwnPlaceholder: "…or type your own emoji",
+        customDialogColorLabel: "Resolve color",
+        customDialogColorPlaceholder: "Choose a Resolve color…",
+        customDialogSave: "Save button",
+        customDialogCancel: "Cancel",
+        customDialogLabelRequired: "Please enter a label for the button.",
+        customDialogCommentPlaceholder: "You can use {text} as a variable",
+        markerSizeLabel: "Size"
+      },
+      de: {
+        mainTitle: "Edit-Liste für Live-Produktionen",
+        mainSubtitle: "Echtzeit EDL Marken",
+        infoTitle: "Über diese App",
+        infoText1: "Diese Web-App ist ein Timecode- & Marker-Tracker für Live-Produktionen (ATEM Mini/Pro ISO etc.).",
+        infoTitleResolve: "Export nach DaVinci Resolve",
+        infoText2: "Nutze 💾 Download EDL und in DaVinci Resolve: Rechtsklick auf die Timeline → „Import → Timeline Markers from EDL“.",
+        projectsPresets: "Projekte & Presets",
+        labelProjectTitle: "Titel",
+        labelSavedProjects: "Gespeicherte Projekte",
+        labelPresetSelect: "Produktions-Preset",
+        timecodeSettings: "Timecode-Einstellungen",
+        labelTimezone: "Zeitzone",
+        labelFramerate: "Framerate",
+        labelLatency: "Latenz (ms)",
+        markerButtonsTitle: "Marker-Buttons (Standard & Custom)",
+        markerListTitle: "Marker-Liste",
+        storageHint: "Projekte, Custom-Buttons & Presets werden in diesem Browser gespeichert.",
+        btnNewProject: "🆕 Neu",
+        btnSaveProject: "💾 Speichern",
+        btnDeleteProject: "🗑 Löschen",
+        btnSavePreset: "⭐ Preset speichern",
+        btnDeletePreset: "🗑 Preset entfernen",
+        btnDownloadEDL: "💾 EDL downloaden",
+        btnAddCustom: "➕ Custom-Button",
+        layoutEditOff: "🛠 Layout-Edit: AUS",
+        layoutEditOn: "🛠 Layout-Edit: AN",
+        placeholderProjectTitle: "Projekttitel eingeben",
+        alertNoMarkers: "Keine Marker vorhanden. Füge mindestens einen Marker hinzu, bevor du die EDL lädst.",
+        confirmDeleteProject: name => `Projekt „${name}“ löschen?`,
+        confirmDeletePreset: name => `Preset „${name}“ entfernen?`,
+        promptComment: "Kommentar eingeben:",
+        promptPresetName: "Name für dieses Custom-Preset (z. B. „Podcast Show A“):",
+        onlyCustomPresetRemovable: "Nur Custom-Presets können entfernt werden.",
+        customDialogTitle: "Neuer Custom-Button",
+        customDialogPresetLabel: "Preset laden",
+        customDialogPresetPlaceholder: "Keins / Preset wählen …",
+        customDialogLabelLabel: "Button-Beschriftung",
+        customDialogCommentLabel: "Kommentartext für die EDL-Marker (du kannst {text} benutzen)",
+        customDialogEmojiLabel: "Emoji / Präfix",
+        customDialogEmojiPlaceholder: "Emoji auswählen …",
+        customDialogEmojiOwnPlaceholder: "…oder eigenes Emoji eintippen",
+        customDialogColorLabel: "Resolve-Farbe",
+        customDialogColorPlaceholder: "Resolve-Farbe auswählen …",
+        customDialogSave: "Button speichern",
+        customDialogCancel: "Abbrechen",
+        customDialogLabelRequired: "Bitte gib eine Beschriftung für den Button ein.",
+        customDialogCommentPlaceholder: "Du kannst {text} als Variable benutzen",
+        markerSizeLabel: "Größe"
+      }
+    };
+
+    const textBindings = [
+      ["main-title", "mainTitle"],
+      ["main-subtitle", "mainSubtitle"],
+      ["info-title", "infoTitle"],
+      ["info-text-1", "infoText1"],
+      ["info-title-resolve", "infoTitleResolve"],
+      ["info-text-2", "infoText2"],
+      ["projects-presets-title","projectsPresets"],
+      ["label-project-title","labelProjectTitle"],
+      ["label-saved-projects","labelSavedProjects"],
+      ["label-preset-select","labelPresetSelect"],
+      ["timecode-settings-title","timecodeSettings"],
+      ["label-timezone","labelTimezone"],
+      ["label-framerate","labelFramerate"],
+      ["label-latency","labelLatency"],
+      ["marker-buttons-title","markerButtonsTitle"],
+      ["marker-list-title","markerListTitle"],
+      ["storage-hint","storageHint"],
+      ["btn-new-project","btnNewProject"],
+      ["btn-save-project","btnSaveProject"],
+      ["btn-delete-project","btnDeleteProject"],
+      ["btn-save-preset","btnSavePreset"],
+      ["btn-delete-preset","btnDeletePreset"],
+      ["btn-download-edl","btnDownloadEDL"],
+      ["btn-add-custom-button","btnAddCustom"],
+      ["custom-dialog-title","customDialogTitle"],
+      ["custom-dialog-preset-label","customDialogPresetLabel"],
+      ["custom-dialog-label-label","customDialogLabelLabel"],
+      ["custom-dialog-comment-label","customDialogCommentLabel"],
+      ["custom-dialog-emoji-label","customDialogEmojiLabel"],
+      ["custom-dialog-color-label","customDialogColorLabel"],
+      ["custom-dialog-cancel","customDialogCancel"],
+      ["custom-dialog-save","customDialogSave"],
+      ["marker-size-label","markerSizeLabel"]
+    ];
+
+    function t(key, ...args) {
+      const value = i18n[currentLang][key];
+      return typeof value === "function" ? value(...args) : value;
+    }
+
+    function applyLanguage() {
+      textBindings.forEach(([id, key]) => {
+        const el = $(id);
+        if (el) el.textContent = t(key);
+      });
+
+      $("project-title").placeholder = t("placeholderProjectTitle");
+      $("custom-comment-input").placeholder = t("customDialogCommentPlaceholder");
+      $("custom-emoji-input").placeholder = t("customDialogEmojiOwnPlaceholder");
+
+      $("preset-hint").textContent = "";
+      $("marker-subtext").textContent = "";
+      $("marker-list-subtext").textContent = "";
+
+      buildCustomDialogOptions();
+      setEditMode(editMode);
+      renderMarkerButtons();
+    }
+
+    function formatNumber(n){return n.toString().padStart(2,"0");}
+    function formatNumberThree(n){return n.toString().padStart(3,"0");}
+
+    function updateTime() {
+      const tz = $("timezone-selector").value;
+      const fr = $("framerate-selector").value;
+      const latency = parseInt($("latency-input").value || "0",10);
+      const offset = timezoneOffsets[tz] || 0;
+      const fps = framerates[fr] || 25;
+
+      let now = new Date();
+      now.setMilliseconds(now.getMilliseconds() + latency);
+
+      let h = (now.getUTCHours() + offset) % 24;
+      if (h < 0) h += 24;
+      const m  = now.getUTCMinutes();
+      const s  = now.getUTCSeconds();
+      const ms = now.getUTCMilliseconds();
+      const frame = Math.round((ms/1000)*fps);
+      $("timer").textContent =
+        `${formatNumber(h)}:${formatNumber(m)}:${formatNumber(s)}:${formatNumber(frame)}`;
+    }
+
+    function resolveColorToHex(c){
+      return RESOLVE_COLOR_MAP[c] || "#3A78C3";
+    }
+
+    function getColorForCommentFallback(comment){
+      switch(comment){
+        case "Outtake":
+        case "Outtake ": return "ResolveColorFuchsia";
+        case "Cut":
+        case "Schnitt":  return "ResolveColorPink";
+        case "Start":    return "ResolveColorYellow";
+        case "Syncpoint":
+        case "Syncpunkt":return "ResolveColorGreen";
+        case "Continue":
+        case "Weiter":   return "ResolveColorCyan";
+        case "Again":
+        case "Nochmal":  return "ResolveColorSand";
+        case "End":
+        case "Ende":     return "ResolveColorRed";
+        case "Check this part for an Error":
+        case "Diesen Teil auf Fehler prüfen": return "ResolveColorCocoa";
+        case "Best Take":
+        case "Beste Take": return "ResolveColorLavender";
+        case "Slow motion or timelapse":
+        case "Zeitlupe oder Zeitraffer": return "ResolveColorSky";
+        default: return "ResolveColorBlue";
+      }
+    }
+
+    function getMarkerConfig(id){
+      return MARKERS[id] || null;
+    }
+
+    function addMarker(commentText, explicitColor){
+      const tc = $("timer").textContent || "00:00:00:00";
+      const item = {timecode:tc,comment:commentText,id:Date.now()};
+      if(explicitColor) item.color = explicitColor;
+      timecodeList.push(item);
+      saveProject();
+    }
+
+    function addCommentMarker(){
+      const c = prompt(t("promptComment"));
+      if(c === null) return;
+      const cfg = getMarkerConfig("comment");
+      const tc = $("timer").textContent || "00:00:00:00";
+      timecodeList.unshift({
+        timecode:tc,
+        comment:c,
+        id:Date.now(),
+        color: cfg ? cfg.color : "ResolveColorBlue"
+      });
+      saveProject();
+    }
+
+    function syncBeepAndMarker(){
+      try{ new Audio("sfx/beepsound.mp3").play(); }catch(e){}
+      const cfg = getMarkerConfig("sync");
+      const text = (cfg && cfg.comment[currentLang]) || "Syncpoint";
+      addMarker(text, cfg ? cfg.color : "ResolveColorGreen");
+    }
+
+    function renderList(){
+      timecodeList.sort((a,b)=>b.id-a.id);
+      const container=$("comment-list");
+      container.innerHTML = timecodeList.map(({timecode,comment,id,color},index)=>{
+        const colorCode=color||getColorForCommentFallback(comment);
+        const hex=resolveColorToHex(colorCode);
+        return `
+          <li id="item_${id}" ${index===0?'class="new-entry"':''}>
+            <div id="colorbox_${id}" class="color-box" style="background-color:${hex}"></div>
+            <input type="text" value="${timecode}" id="timecode_${id}" class="marker-time-input">
+            <input type="text" value="${(comment||"").replace(/"/g,"&quot;")}" id="comment_${id}" class="marker-comment-input">
+            <button class="delete-marker-btn" data-id="${id}">✕</button>
+          </li>`;
+      }).join("");
+
+      timecodeList.forEach(({id})=>{
+        const tInput=$(`timecode_${id}`);
+        const cInput=$(`comment_${id}`);
+        const d=container.querySelector(`button[data-id="${id}"]`);
+        const box=$(`colorbox_${id}`);
+        if(tInput) tInput.addEventListener("blur",()=>editComment(id));
+        if(cInput) cInput.addEventListener("blur",()=>editComment(id));
+        if(d) d.addEventListener("click",()=>deleteComment(id));
+        if(box) box.addEventListener("click",()=>changeColor(id));
+      });
+    }
+
+    function deleteComment(id){
+      const li=$(`item_${id}`);
+      if(li){
+        li.classList.add("deleted-entry");
+        setTimeout(()=>{
+          timecodeList=timecodeList.filter(x=>x.id!==id);
+          saveProject();
+        },450);
+      }else{
+        timecodeList=timecodeList.filter(x=>x.id!==id);
+        saveProject();
+      }
+    }
+
+    function editComment(id){
+      const tInput=$(`timecode_${id}`);
+      const cInput=$(`comment_${id}`);
+      const item=timecodeList.find(x=>x.id===id);
+      if(!item||!tInput||!cInput) return;
+      item.timecode=tInput.value;
+      item.comment=cInput.value;
+      saveProject();
+    }
+
+    function changeColor(id){
+      const existing=$("color-picker");
+      if(existing) existing.remove();
+      const picker=document.createElement("div");
+      picker.id="color-picker";
+      const colorBox=$(`colorbox_${id}`);
+      const rect=colorBox.getBoundingClientRect();
+      picker.style.left=rect.left+"px";
+      picker.style.top=(rect.bottom+window.scrollY+4)+"px";
+
+      RESOLVE_COLOR_CHOICES.forEach(name=>{
+        const div=document.createElement("div");
+        div.style.backgroundColor=resolveColorToHex(name);
+        div.title=name;
+        div.addEventListener("click",()=>{
+          const item=timecodeList.find(x=>x.id===id);
+          if(item){ item.color=name; saveProject(); }
+          if(document.body.contains(picker)) document.body.removeChild(picker);
+        });
+        picker.appendChild(div);
+      });
+      document.body.appendChild(picker);
+      setTimeout(()=>{
+        document.addEventListener("click",function remove(e){
+          if(!picker.contains(e.target)&&!colorBox.contains(e.target)){
+            if(document.body.contains(picker)) document.body.removeChild(picker);
+            document.removeEventListener("click",remove);
+          }
+        });
+      },0);
+    }
+
+    function downloadList(){
+      const now=new Date();
+      const date=`${now.getFullYear()}-${formatNumber(now.getMonth()+1)}-${formatNumber(now.getDate())}`;
+      const time=`${formatNumber(now.getHours())}-${formatNumber(now.getMinutes())}-${formatNumber(now.getSeconds())}`;
+      let projectTitle=$("project-title").value.trim();
+      if(!projectTitle) projectTitle="UntitledProject";
+      if(timecodeList.length===0){
+        alert(t("alertNoMarkers"));
+        return;
+      }
+      const safeTitle=projectTitle
+        .replace(/ä/g,"ae").replace(/ü/g,"ue").replace(/ö/g,"oe")
+        .replace(/[^a-zA-Z0-9]/g,"_");
+      const filename=`${date}_${time}_${safeTitle}.edl`;
+
+      let nr=1;
+      let content=`TITLE: ${projectTitle} | created in edl webapp by PHANTOMCREW.DE
+FCM: NON-DROP FRAME
+
+`;
+      timecodeList.forEach(item=>{
+        const {timecode,comment,color}=item;
+        const c=color||getColorForCommentFallback(comment);
+        content+=`${formatNumberThree(nr)}  001      V     C        ${timecode} ${timecode} ${timecode} ${timecode} 
+ |C:${c} |M:${comment} |D:1
+
+`;
+        nr++;
+      });
+      const a=document.createElement("a");
+      const file=new Blob([content],{type:"application/octet-stream"});
+      a.href=URL.createObjectURL(file);
+      a.download=filename;
+      a.click();
+    }
+
+    const PROJECT_PREFIX = "edlProject_";
+    const projectKey = name => PROJECT_PREFIX + name;
+
+    function saveProject(){
+      let name=$("project-title").value.trim();
+      if(!name) name="Autosave";
+      localStorage.setItem(projectKey(name),JSON.stringify(timecodeList));
+      populateProjectDropdown();
+      $("project-title").value=name;
+      const dd=$("project-dropdown");
+      if(dd.querySelector(`option[value="${name}"]`)) dd.value=name;
+      renderList();
+      updateURLFromSettings();
+    }
+
+    function populateProjectDropdown(){
+      const dd=$("project-dropdown");
+      const current=$("project-title").value.trim();
+      dd.innerHTML="";
+      const ph=document.createElement("option");
+      ph.value=""; ph.disabled=true; ph.textContent="Select project";
+      dd.appendChild(ph);
+      Object.keys(localStorage)
+        .filter(k=>k.startsWith(PROJECT_PREFIX))
+        .sort()
+        .forEach(key=>{
+          const name=key.replace(PROJECT_PREFIX,"");
+          const opt=document.createElement("option");
+          opt.value=name; opt.textContent=name;
+          dd.appendChild(opt);
+        });
+      dd.value = current && dd.querySelector(`option[value="${current}"]`) ? current : "";
+      dd.onchange=()=>{
+        $("project-title").value=dd.value;
+        loadProject(dd.value);
+        updateURLFromSettings();
+      };
+    }
+
+    function loadProject(name){
+      const n=name||$("project-dropdown").value;
+      if(!n) return;
+      const json=localStorage.getItem(projectKey(n));
+      if(!json) return;
+      try{ timecodeList=JSON.parse(json)||[]; }catch(e){ timecodeList=[]; }
+      renderList();
+    }
+
+    function deleteProject(){
+      const dd=$("project-dropdown");
+      const n=dd.value;
+      if(!n) return;
+      if(!confirm(t("confirmDeleteProject",n))) return;
+      localStorage.removeItem(projectKey(n));
+      if($("project-title").value.trim()===n){
+        $("project-title").value="";
+        timecodeList=[]; renderList();
+      }
+      populateProjectDropdown();
+      updateURLFromSettings();
+    }
+
+    function newProject(){
+      $("project-title").value = "";
+      timecodeList = [];
+      renderList();
+      const dd = $("project-dropdown");
+      if (dd) dd.value = "";
+      updateURLFromSettings();
+    }
+
+    function loadCustomButtonsFromStorage(){
+      try{
+        const raw=localStorage.getItem("edlCustomButtons");
+        customButtons=raw?JSON.parse(raw):[];
+      }catch{customButtons=[];}
+    }
+
+    function saveCustomButtonsToStorage(){
+      localStorage.setItem("edlCustomButtons",JSON.stringify(customButtons));
+      renderMarkerButtons();
+    }
+
+    function getCustomButtonById(id){
+      return customButtons.find(b=>b.id===id);
+    }
+
+    function loadCustomPresetsFromStorage(){
+      try{
+        const raw=localStorage.getItem("edlCustomPresets");
+        customPresets=raw?JSON.parse(raw):{};
+      }catch{customPresets={};}
+      const select=$("preset-select");
+      Array.from(select.options)
+        .filter(o=>o.dataset.custom==="1")
+        .forEach(o=>select.removeChild(o));
+      Object.keys(customPresets).forEach(name=>{
+        const opt=document.createElement("option");
+        opt.value=`custom:${name}`;
+        opt.textContent=`Custom – ${name}`;
+        opt.dataset.custom="1";
+        select.appendChild(opt);
+      });
+    }
+
+    function saveCustomPresetsToStorage(){
+      localStorage.setItem("edlCustomPresets",JSON.stringify(customPresets));
+      loadCustomPresetsFromStorage();
+    }
+
+    function getCurrentLayoutClone(){
+      return currentLayout.map(e=>({kind:e.kind,id:e.id}));
+    }
+
+    function applyPreset(value, skipURL){
+      let preset=value && value.startsWith("custom:")
+        ? customPresets[value.slice("custom:".length)]
+        : BUILTIN_PRESETS[value];
+      if(!preset) return;
+
+      if($("preset-select")) $("preset-select").value = value;
+
+      if(preset.framerate) $("framerate-selector").value=preset.framerate;
+      if(typeof preset.latency==="number") $("latency-input").value=preset.latency;
+
+      markerButtonScale = typeof preset.buttonScale === "number" ? preset.buttonScale : 1;
+      document.documentElement.style.setProperty("--marker-btn-scale", markerButtonScale);
+      const slider = $("marker-size-slider");
+      if(slider) slider.value = Math.round(markerButtonScale * 100);
+
+      currentLayout=(preset.layout && preset.layout.length)
+        ? preset.layout.map(e=>({kind:e.kind,id:e.id}))
+        : DEFAULT_LAYOUT.map(e=>({kind:e.kind,id:e.id}));
+      renderMarkerButtons();
+
+      if(!skipURL) updateURLFromSettings();
+    }
+
+    function saveCurrentAsPreset(){
+      const name=prompt(t("promptPresetName"));
+      if(!name) return;
+      const fr=$("framerate-selector").value;
+      const lat=parseInt($("latency-input").value||"0",10);
+      customPresets[name]={
+        framerate:fr,
+        latency:lat,
+        buttonScale:markerButtonScale,
+        layout:getCurrentLayoutClone()
+      };
+      saveCustomPresetsToStorage();
+      $("preset-select").value=`custom:${name}`;
+      updateURLFromSettings();
+    }
+
+    function deleteCurrentPreset(){
+      const select=$("preset-select");
+      const val=select.value;
+      if(!val.startsWith("custom:")){
+        alert(t("onlyCustomPresetRemovable"));
+        return;
+      }
+      const name=val.slice("custom:".length);
+      if(!confirm(t("confirmDeletePreset",name))) return;
+      delete customPresets[name];
+      saveCustomPresetsToStorage();
+      select.value="default";
+      applyPreset("default");
+    }
+
+    function moveLayoutIndex(index,delta){
+      const ni=index+delta;
+      if(ni<0||ni>=currentLayout.length) return;
+      const tmp=currentLayout[index];
+      currentLayout[index]=currentLayout[ni];
+      currentLayout[ni]=tmp;
+      renderMarkerButtons();
+    }
+
+    function deleteLayoutEntryAtIndex(index){
+      currentLayout.splice(index,1);
+      renderMarkerButtons();
+    }
+
+    function renderMarkerButtons(){
+      const container=$("marker-buttons");
+      container.innerHTML="";
+      if(!currentLayout||!currentLayout.length){
+        currentLayout=DEFAULT_LAYOUT.map(e=>({kind:e.kind,id:e.id}));
+      }
+      currentLayout.forEach((entry,index)=>{
+        let label="",emoji="",btnClass="btn-comment",color=null;
+        if(entry.kind==="builtin"){
+          const cfg=getMarkerConfig(entry.id); if(!cfg) return;
+          label=cfg.label[currentLang] || entry.id;
+          emoji=cfg.emoji;
+          btnClass=cfg.btnClass;
+        }else{
+          const b=getCustomButtonById(entry.id); if(!b) return;
+          label=b.label; emoji=b.emoji||"⭐"; color=b.color||"ResolveColorBlue";
+        }
+
+        const slot=document.createElement("div");
+        slot.className="marker-slot";
+        slot.dataset.index=index;
+
+        const button=document.createElement("button");
+        button.className=`btn marker-button ${btnClass}`;
+        if(entry.kind==="custom"){
+          const hex=resolveColorToHex(color);
+          button.style.borderColor=hex;
+          button.style.background=`linear-gradient(135deg, ${hex}33, rgba(0,0,0,0.8))`;
+        }
+        button.innerHTML=`<span class="emoji">${emoji}</span><span>${label}</span>`;
+        button.addEventListener("click",()=>{
+          if(entry.kind==="builtin"){
+            if(entry.id==="comment"){
+              addCommentMarker();
+            } else if(entry.id==="sync"){
+              syncBeepAndMarker();
+            } else {
+              const cfg=getMarkerConfig(entry.id);
+              if(!cfg) return;
+              const text = cfg.comment[currentLang] ?? cfg.label[currentLang];
+              addMarker(text, cfg.color);
+            }
+          }else{
+            const b=getCustomButtonById(entry.id);
+            if(!b) return;
+            let comment = b.comment || b.label;
+            if(comment && comment.includes("{text}")){
+              const extra = prompt(t("promptComment"));
+              if(extra === null) return;
+              comment = comment.replace(/\{text\}/g, extra);
+            }
+            addMarker(comment, b.color);
+          }
+        });
+
+        slot.appendChild(button);
+
+        if(editMode){
+          const controls=document.createElement("div");
+          controls.className="marker-slot-controls";
+          [["←",-1],["→",1]].forEach(([txt,delta])=>{
+            const btn=document.createElement("button");
+            btn.textContent=txt;
+            btn.addEventListener("click",e=>{
+              e.stopPropagation();
+              moveLayoutIndex(index,delta);
+            });
+            controls.appendChild(btn);
+          });
+          const delBtn=document.createElement("button");
+          delBtn.textContent="✖";
+          delBtn.dataset.delete="true";
+          delBtn.addEventListener("click",e=>{
+            e.stopPropagation();
+            deleteLayoutEntryAtIndex(index);
+          });
+          controls.appendChild(delBtn);
+          slot.appendChild(controls);
+        }
+
+        container.appendChild(slot);
+      });
+    }
+
+    function toggleInfoBox(force){
+      const box=$("info-box");
+      if(force==="close"){ box.style.display="none"; return; }
+      box.style.display=box.style.display==="block"?"none":"block";
+    }
+
+    function setEditMode(on){
+      editMode=on;
+      const btn=$("layout-edit-toggle");
+      const wrapper = $("marker-size-wrapper");
+      if(editMode){
+        btn.textContent=t("layoutEditOn");
+        btn.classList.add("btn-danger");
+        if(wrapper) wrapper.style.display = "flex";
+      }else{
+        btn.textContent=t("layoutEditOff");
+        btn.classList.remove("btn-danger");
+        if(wrapper) wrapper.style.display = "none";
+      }
+      renderMarkerButtons();
+    }
+
+    /* ===== Custom Button Dialog ===== */
+
+    function buildCustomDialogOptions(){
+      const emojiSelect = $("custom-emoji-select");
+      const colorSelect = $("custom-color-select");
+      const presetSelect = $("custom-preset-select");
+      const swatchContainer = $("custom-color-swatches");
+      if(!emojiSelect || !colorSelect || !presetSelect || !swatchContainer) return;
+
+      const currentEmoji = emojiSelect.value;
+      const currentColor = colorSelect.value;
+
+      emojiSelect.innerHTML = "";
+      const emojiPlaceholder = document.createElement("option");
+      emojiPlaceholder.value = "";
+      emojiPlaceholder.disabled = true;
+      emojiPlaceholder.selected = !currentEmoji;
+      emojiPlaceholder.textContent = t("customDialogEmojiPlaceholder");
+      emojiSelect.appendChild(emojiPlaceholder);
+      EMOJI_CHOICES.forEach(e=>{
+        const opt = document.createElement("option");
+        opt.value = e;
+        opt.textContent = e;
+        if(e === currentEmoji) opt.selected = true;
+        emojiSelect.appendChild(opt);
+      });
+
+      colorSelect.innerHTML = "";
+      const colorPlaceholder = document.createElement("option");
+      colorPlaceholder.value = "";
+      colorPlaceholder.disabled = true;
+      colorPlaceholder.selected = !currentColor;
+      colorPlaceholder.textContent = t("customDialogColorPlaceholder");
+      colorSelect.appendChild(colorPlaceholder);
+      RESOLVE_COLOR_CHOICES.forEach(name=>{
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        if(name === currentColor) opt.selected = true;
+        colorSelect.appendChild(opt);
+      });
+
+      swatchContainer.innerHTML = "";
+      RESOLVE_COLOR_CHOICES.forEach(name=>{
+        const sw = document.createElement("div");
+        sw.className = "custom-color-swatch" + (name === currentColor ? " selected" : "");
+        sw.style.backgroundColor = resolveColorToHex(name);
+        sw.title = name;
+        sw.addEventListener("click", ()=>{
+          colorSelect.value = name;
+          Array.from(swatchContainer.children).forEach(c=>c.classList.remove("selected"));
+          sw.classList.add("selected");
+        });
+        swatchContainer.appendChild(sw);
+      });
+
+      presetSelect.innerHTML = "";
+      const presPh = document.createElement("option");
+      presPh.value = "";
+      presPh.textContent = t("customDialogPresetPlaceholder");
+      presPh.selected = true;
+      presetSelect.appendChild(presPh);
+
+      Object.keys(MARKERS).forEach(id=>{
+        const cfg = MARKERS[id];
+        const label = cfg.label[currentLang] || id;
+        const opt = document.createElement("option");
+        opt.value = "builtin:"+id;
+        opt.textContent = `Builtin – ${cfg.emoji} ${label}`;
+        presetSelect.appendChild(opt);
+      });
+
+      customButtons.forEach(b=>{
+        const opt = document.createElement("option");
+        opt.value = "custom:"+b.id;
+        opt.textContent = `Custom – ${b.emoji || "⭐"} ${b.label}`;
+        presetSelect.appendChild(opt);
+      });
+    }
+
+    function openCustomButtonDialog(){
+      const overlay = $("custom-button-overlay");
+      const labelInput = $("custom-label-input");
+      const commentInput = $("custom-comment-input");
+      const emojiSelect = $("custom-emoji-select");
+      const emojiInput = $("custom-emoji-input");
+      const colorSelect = $("custom-color-select");
+      const presetSelect = $("custom-preset-select");
+      if(!overlay || !labelInput || !commentInput ||
+         !emojiSelect || !colorSelect || !presetSelect) return;
+
+      [labelInput,commentInput,emojiInput].forEach(el=>el.value="");
+      emojiSelect.value = "";
+      colorSelect.value = "";
+      presetSelect.value = "";
+
+      buildCustomDialogOptions();
+      overlay.style.display = "flex";
+      document.body.style.overflow = "hidden";
+      labelInput.focus();
+    }
+
+    function closeCustomButtonDialog(){
+      const overlay = $("custom-button-overlay");
+      if(overlay) overlay.style.display = "none";
+      document.body.style.overflow = "";
+    }
+
+    function loadPresetIntoCustomDialog(){
+      const presetSelect = $("custom-preset-select");
+      const value = presetSelect.value;
+      if(!value) return;
+
+      const labelInput = $("custom-label-input");
+      const commentInput = $("custom-comment-input");
+      const emojiSelect = $("custom-emoji-select");
+      const emojiInput = $("custom-emoji-input");
+      const colorSelect = $("custom-color-select");
+
+      if(value.startsWith("builtin:")){
+        const id = value.slice("builtin:".length);
+        const cfg = getMarkerConfig(id);
+        if(!cfg) return;
+        labelInput.value = cfg.label[currentLang] || id;
+        commentInput.value = (id === "comment")
+          ? "{text}"
+          : (cfg.comment[currentLang] ?? cfg.label[currentLang]);
+        emojiSelect.value = cfg.emoji;
+        emojiInput.value = "";
+        colorSelect.value = cfg.color;
+      } else if(value.startsWith("custom:")){
+        const id = value.slice("custom:".length);
+        const b = getCustomButtonById(id);
+        if(!b) return;
+        labelInput.value = b.label;
+        commentInput.value = b.comment || b.label;
+        emojiSelect.value = b.emoji || "";
+        emojiInput.value = "";
+        colorSelect.value = b.color || "ResolveColorBlue";
+      }
+      buildCustomDialogOptions();
+    }
+
+    function submitCustomButtonFromDialog(){
+      const labelInput = $("custom-label-input");
+      const commentInput = $("custom-comment-input");
+      const emojiSelect = $("custom-emoji-select");
+      const emojiInput = $("custom-emoji-input");
+      const colorSelect = $("custom-color-select");
+      if(!labelInput || !emojiSelect || !colorSelect || !emojiInput) return;
+
+      const label = (labelInput.value || "").trim();
+      if(!label){
+        alert(t("customDialogLabelRequired"));
+        labelInput.focus();
+        return;
+      }
+      const commentRaw = (commentInput.value || "").trim();
+      const ownEmoji = (emojiInput.value || "").trim();
+      const emoji = ownEmoji || emojiSelect.value || "⭐";
+      const colorChoice = colorSelect.value || "ResolveColorBlue";
+      const id = `c${Date.now()}`;
+      const btn = {
+        id,
+        label,
+        comment: commentRaw || label,
+        emoji,
+        color: colorChoice
+      };
+      customButtons.push(btn);
+      saveCustomButtonsToStorage();
+      currentLayout.push({kind:"custom",id});
+      renderMarkerButtons();
+      closeCustomButtonDialog();
+    }
+
+    function setMarkerScaleFromSlider(){
+      const slider = $("marker-size-slider");
+      if(!slider) return;
+      markerButtonScale = parseInt(slider.value,10) / 100;
+      document.documentElement.style.setProperty("--marker-btn-scale", markerButtonScale);
+    }
+
+    /* ===== Sprechblasen / Toast-Funktion ===== */
+
+    function showBubble(message, anchorElement) {
+      if (!anchorElement) return;
+
+      const existing = $("copy-toast");
+      if (existing && existing.parentNode) {
+        existing.parentNode.removeChild(existing);
+      }
+
+      const bubble = document.createElement("div");
+      bubble.id = "copy-toast";
+      bubble.textContent = message;
+      document.body.appendChild(bubble);
+
+      const rect = anchorElement.getBoundingClientRect();
+      const top = rect.bottom + window.scrollY + 6;
+      const left = rect.left + rect.width / 2;
+
+      bubble.style.top = `${top}px`;
+      bubble.style.left = `${left}px`;
+
+      setTimeout(() => {
+        bubble.classList.add("fade-out");
+        setTimeout(() => {
+          if (bubble.parentNode) {
+            bubble.parentNode.removeChild(bubble);
+          }
+        }, 250);
+      }, 3000);
+    }
+
+    /* ===== URL-Handling & Sharing ===== */
+
+    function getURLSettings() {
+      const params = new URLSearchParams(window.location.search);
+      const lang = params.get("lang");
+      const utc = params.get("utc");
+      const fr = params.get("fr");
+      const latencyStr = params.get("latency");
+      const title = params.get("title");
+      const preset = params.get("preset");
+      let latency = null;
+      if(latencyStr !== null && latencyStr !== ""){
+        const l = parseInt(latencyStr,10);
+        if(!isNaN(l)) latency = l;
+      }
+      return { lang, utc, fr, latency, title, preset };
+    }
+
+    function updateURLFromSettings(){
+      const params = new URLSearchParams(window.location.search);
+
+      params.set("lang", currentLang);
+
+      const tzVal = $("timezone-selector")?.value;
+      if(tzVal) params.set("utc", tzVal);
+
+      const frVal = $("framerate-selector")?.value;
+      if(frVal) params.set("fr", frVal);
+
+      const latVal = $("latency-input")?.value;
+      if(latVal !== undefined && latVal !== "" && !isNaN(parseInt(latVal,10))) {
+        params.set("latency", parseInt(latVal,10));
+      } else {
+        params.delete("latency");
+      }
+
+      const titleVal = $("project-title")?.value.trim();
+      if(titleVal) params.set("title", titleVal);
+      else params.delete("title");
+
+      const presetVal = $("preset-select")?.value;
+      if(presetVal) params.set("preset", presetVal);
+      else params.delete("preset");
+
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState(null, "", newUrl);
+    }
+
+    function getShareableUrl() {
+      updateURLFromSettings();
+      return window.location.href;
+    }
+
+    async function copyCurrentUrlToClipboard() {
+      const url = getShareableUrl();
+      const btn = $("copy-url-btn");
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          const tmp = document.createElement("textarea");
+          tmp.value = url;
+          tmp.style.position = "fixed";
+          tmp.style.top = "-9999px";
+          document.body.appendChild(tmp);
+          tmp.focus();
+          tmp.select();
+          document.execCommand("copy");
+          document.body.removeChild(tmp);
+        }
+        showBubble(
+          currentLang === "de" ? "URL kopiert ✅" : "URL copied ✅",
+          btn
+        );
+      } catch (err) {
+        showBubble(
+          currentLang === "de" ? "Konnte URL nicht kopieren ❌" : "Could not copy URL ❌",
+          btn
+        );
+      }
+    }
+
+    function buildLtcUrl() {
+      const base = new URL("ltc/", window.location.href);
+      const fps = $("framerate-selector")?.value || "25";
+      const tz = $("timezone-selector")?.value || "UTC";
+      const offset = timezoneOffsets[tz] ?? 0;
+      let ms = parseInt($("latency-input")?.value || "0", 10);
+      if (isNaN(ms)) ms = 0;
+
+      const params = new URLSearchParams();
+      params.set("fps", fps);
+      params.set("utc", offset);
+      params.set("ms", ms);
+      params.set("ub", "date");
+      params.set("df", "0");
+      params.set("cf", "0");
+      params.set("sync", "s0.25");
+      params.set("out", "both");
+
+      base.search = params.toString();
+      return base.toString();
+    }
+
+    async function copyLtcUrlToClipboard() {
+      const url = buildLtcUrl();
+      const btn = $("copy-ltc-url-btn");
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          const tmp = document.createElement("textarea");
+          tmp.value = url;
+          tmp.style.position = "fixed";
+          tmp.style.top = "-9999px";
+          document.body.appendChild(tmp);
+          tmp.focus();
+          tmp.select();
+          document.execCommand("copy");
+          document.body.removeChild(tmp);
+        }
+        showBubble(
+          currentLang === "de" ? "LTC-URL kopiert ✅" : "LTC URL copied ✅",
+          btn
+        );
+      } catch (err) {
+        showBubble(
+          currentLang === "de" ? "Konnte LTC-URL nicht kopieren ❌" : "Could not copy LTC URL ❌",
+          btn
+        );
+      }
+    }
+
+    async function shareCurrentUrl() {
+      const url = getShareableUrl();
+      const btn = $("share-url-btn");
+      const shareData = {
+        title: document.title,
+        text: currentLang === "de"
+          ? "Bearbeite deine EDL-Marker direkt in dieser Ansicht."
+          : "Edit your EDL markers directly in this view.",
+        url
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          if (!err || err.name !== "AbortError") {
+            showBubble(
+              currentLang === "de" ? "Teilen nicht möglich ❌" : "Sharing failed ❌",
+              btn
+            );
+          }
+        }
+      } else {
+        await copyCurrentUrlToClipboard();
+      }
+    }
+
+    function initApp(){
+      setInterval(updateTime,33.3334);
+
+      loadCustomButtonsFromStorage();
+      loadCustomPresetsFromStorage();
+
+      currentLayout=DEFAULT_LAYOUT.map(e=>({kind:e.kind,id:e.id}));
+      renderMarkerButtons();
+      populateProjectDropdown();
+      renderList();
+
+      const urlSettings = getURLSettings();
+
+      // Sprache aus URL
+      if(urlSettings.lang === "de" || urlSettings.lang === "en"){
+        currentLang = urlSettings.lang;
+        if($("lang-switch")) $("lang-switch").value = urlSettings.lang;
+      }
+
+      // Initiales PRESET: aus URL oder default
+      let initialPreset = "default";
+      if(urlSettings.preset &&
+         $("preset-select") &&
+         $("preset-select").querySelector(`option[value="${urlSettings.preset}"]`)){
+        initialPreset = urlSettings.preset;
+      }
+      applyPreset(initialPreset, true); // true = URL jetzt noch nicht anfassen
+
+      // Danach: URL-Overrides auf die Felder anwenden
+      if(urlSettings.utc &&
+         $("timezone-selector") &&
+         $("timezone-selector").querySelector(`option[value="${urlSettings.utc}"]`)){
+        $("timezone-selector").value = urlSettings.utc;
+      }
+
+      if(urlSettings.fr &&
+         $("framerate-selector") &&
+         $("framerate-selector").querySelector(`option[value="${urlSettings.fr}"]`)){
+        $("framerate-selector").value = urlSettings.fr;
+      }
+
+      if(urlSettings.latency !== null && $("latency-input")){
+        $("latency-input").value = urlSettings.latency;
+      }
+
+      if(urlSettings.title !== null && $("project-title")){
+        $("project-title").value = urlSettings.title;
+        loadProject(urlSettings.title);
+      }
+
+      $("preset-select").addEventListener("change",e=>applyPreset(e.target.value));
+
+      $("info-button").addEventListener("click",()=>toggleInfoBox());
+      $("info-box-close").addEventListener("click",()=>toggleInfoBox("close"));
+
+      $("btn-new-project").addEventListener("click", newProject);
+      $("btn-save-project").addEventListener("click",saveProject);
+      $("btn-delete-project").addEventListener("click",deleteProject);
+
+      $("btn-add-custom-button").addEventListener("click",openCustomButtonDialog);
+      $("custom-dialog-cancel").addEventListener("click",closeCustomButtonDialog);
+      $("custom-dialog-save").addEventListener("click",submitCustomButtonFromDialog);
+      $("custom-button-overlay").addEventListener("click",e=>{
+        if(e.target.id === "custom-button-overlay") closeCustomButtonDialog();
+      });
+      $("custom-preset-select").addEventListener("change",loadPresetIntoCustomDialog);
+      document.addEventListener("keydown",e=>{
+        if(e.key === "Escape") closeCustomButtonDialog();
+      });
+
+      $("btn-save-preset").addEventListener("click",saveCurrentAsPreset);
+      $("btn-delete-preset").addEventListener("click",deleteCurrentPreset);
+
+      $("btn-download-edl").addEventListener("click",downloadList);
+
+      $("layout-edit-toggle").addEventListener("click",()=>setEditMode(!editMode));
+
+      const slider = $("marker-size-slider");
+      if(slider){
+        slider.value = Math.round(markerButtonScale * 100);
+        slider.addEventListener("input", () => {
+          setMarkerScaleFromSlider();
+        });
+      }
+
+      $("lang-switch").addEventListener("change",e=>{
+        currentLang = e.target.value;
+        applyLanguage();
+        updateURLFromSettings();
+      });
+
+      $("timezone-selector").addEventListener("change", () => {
+        updateURLFromSettings();
+      });
+      $("framerate-selector").addEventListener("change", () => {
+        updateURLFromSettings();
+      });
+      $("latency-input").addEventListener("input", () => {
+        updateURLFromSettings();
+      });
+      $("project-title").addEventListener("blur", () => {
+        updateURLFromSettings();
+      });
+
+      const copyBtn = $("copy-url-btn");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", copyCurrentUrlToClipboard);
+      }
+      
+      const copyLtcBtn = $("copy-ltc-url-btn");
+      if (copyLtcBtn) {
+        copyLtcBtn.addEventListener("click", copyLtcUrlToClipboard);
+      }
+
+      const shareBtn = $("share-url-btn");
+      if (shareBtn) {
+        shareBtn.addEventListener("click", shareCurrentUrl);
+      }
+
+      applyLanguage();
+      updateURLFromSettings();
+    }
+
+    window.addEventListener("load",initApp);
+  </script>
+</body>
+</html>

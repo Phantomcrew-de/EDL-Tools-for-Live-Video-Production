@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dual SMPTE LTC Reader (direkte Ausgabe A vs. B)</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+    .panel {
+      background: #0f172a;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      max-width: 960px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem 1.5rem;
+    }
+    label {
+      display: block;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+    select, button {
+      margin-top: 0.25rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.9rem;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      background: #2563eb;
+      font-weight: 500;
+      margin-right: 0.5rem;
+    }
+    button:disabled {
+      background: #1f2937;
+      cursor: not-allowed;
+    }
+    #timecode {
+      margin-top: 1.5rem;
+      font-size: 2.6rem;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+      text-align: center;
+      letter-spacing: 0.15em;
+      background: #000000;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      box-shadow: 0 0 30px rgba(37,99,235,0.45);
+    }
+    #infoRow {
+      margin-top: 0.75rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.5rem 1rem;
+      font-size: 0.9rem;
+      color: #d1d5db;
+    }
+    #status {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    #debugContainer {
+      margin-top: 0.75rem;
+    }
+    #debug {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+      white-space: pre-wrap;
+      background: #020617;
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      padding: 0.5rem;
+      display: none;
+    }
+    .sourceTitle {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #e5e7eb;
+      margin-top: 0.5rem;
+      margin-bottom: -0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Dual SMPTE LTC Reader (direkt, Offset A−B)</h1>
+
+    <div class="row">
+      <div>
+        <div class="sourceTitle">Quelle A (Hauptanzeige)</div>
+        <label for="deviceSelectA">Audio-Eingang A</label>
+        <select id="deviceSelectA"></select>
+
+        <label for="channelModeA">Kanalauswahl A</label>
+        <select id="channelModeA">
+          <option value="L">Nur Kanal 1 (Links)</option>
+          <option value="R">Nur Kanal 2 (Rechts)</option>
+          <option value="LR_SUM" selected>Beide Kanäle (L+R)</option>
+          <option value="LR_DIFF">L minus R (normal / invert)</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="sourceTitle">Quelle B (Vergleich)</div>
+        <label for="deviceSelectB">Audio-Eingang B</label>
+        <select id="deviceSelectB"></select>
+
+        <label for="channelModeB">Kanalauswahl B</label>
+        <select id="channelModeB">
+          <option value="L">Nur Kanal 1 (Links)</option>
+          <option value="R">Nur Kanal 2 (Rechts)</option>
+          <option value="LR_SUM" selected>Beide Kanäle (L+R)</option>
+          <option value="LR_DIFF">L minus R (normal / invert)</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="fpsSelect">Framerate</label>
+        <select id="fpsSelect">
+          <option value="12">12 fps</option>
+          <option value="24">24 fps</option>
+          <option value="25" selected>25 fps</option>
+          <option value="30">30 fps</option>
+          <option value="48">48 fps</option>
+          <option value="50">50 fps</option>
+          <option value="60">60 fps</option>
+        </select>
+
+        <div style="margin-top:1rem;">
+          <button id="startBtn">Start</button>
+          <button id="stopBtn" disabled>Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="timecode">--:--:--:--</div>
+
+    <div id="infoRow">
+      <div id="dateDisplay">Datum (UB): --.--.----</div>
+      <div id="tzDisplay">Zeitzone (UB): --</div>
+      <div id="tcADisplay">TC A: --:--:--:--</div>
+      <div id="tcBDisplay">TC B: --:--:--:--</div>
+      <div id="latencyDisplay">Offset A−B (letzte): -- ms</div>
+    </div>
+
+    <div id="status">Initialisiere Audiogeräte…</div>
+
+    <div id="debugContainer">
+      <button id="toggleDebugBtn">Debug anzeigen</button>
+      <div id="debug"></div>
+    </div>
+  </div>
+
+  <script>
+    const deviceSelectA = document.getElementById("deviceSelectA");
+    const deviceSelectB = document.getElementById("deviceSelectB");
+    const fpsSelect = document.getElementById("fpsSelect");
+    const channelModeSelectA = document.getElementById("channelModeA");
+    const channelModeSelectB = document.getElementById("channelModeB");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const timecodeDisplay = document.getElementById("timecode");
+    const statusDisplay = document.getElementById("status");
+    const debugDisplay = document.getElementById("debug");
+    const toggleDebugBtn = document.getElementById("toggleDebugBtn");
+    const dateDisplay = document.getElementById("dateDisplay");
+    const tzDisplay = document.getElementById("tzDisplay");
+    const tcADisplay = document.getElementById("tcADisplay");
+    const tcBDisplay = document.getElementById("tcBDisplay");
+    const latencyDisplay = document.getElementById("latencyDisplay");
+
+    let audioContextA = null;
+    let audioContextB = null;
+    let mediaStreamA = null;
+    let mediaStreamB = null;
+    let sourceNodeA = null;
+    let sourceNodeB = null;
+    let processorNodeA = null;
+    let processorNodeB = null;
+    let ltcDecoderA = null;
+    let ltcDecoderB = null;
+    let debugVisible = false;
+
+    // letzter Timecode als Sekunden im Tag (für Offset A−B)
+    let lastFrameA = null; // {tc, seconds}
+    let lastFrameB = null;
+    let lastOffsetSeconds = null;
+
+    toggleDebugBtn.addEventListener("click", () => {
+      debugVisible = !debugVisible;
+      debugDisplay.style.display = debugVisible ? "block" : "none";
+      toggleDebugBtn.textContent = debugVisible ? "Debug ausblenden" : "Debug anzeigen";
+    });
+
+    // ---------- Frame <-> Timecode ----------
+    function tcToFrameNumber(tc, fps) {
+      const parts = tc.split(":").map(Number);
+      if (parts.length !== 4 || parts.some(x => !Number.isFinite(x))) return null;
+      const [hh, mm, ss, ff] = parts;
+      return ((hh * 3600 + mm * 60 + ss) * fps) + ff;
+    }
+
+    function frameNumberToTC(frameNumber, fps) {
+      const framesPerDay = 24 * 3600 * fps;
+      let f = ((frameNumber % framesPerDay) + framesPerDay) % framesPerDay;
+      const totalSeconds = Math.floor(f / fps);
+      const ff = f % fps;
+      const hh = Math.floor(totalSeconds / 3600);
+      const mm = Math.floor((totalSeconds % 3600) / 60);
+      const ss = totalSeconds % 60;
+      const pad = (n, d=2) => String(n).padStart(d,"0");
+      return `${pad(hh)}:${pad(mm)}:${pad(ss)}:${pad(ff)}`;
+    }
+
+    function tcToSecondsOfDay(tc, fps) {
+      const parts = tc.split(":").map(Number);
+      if (parts.length !== 4 || parts.some(x => !Number.isFinite(x))) return null;
+      const [hh, mm, ss, ff] = parts;
+      return hh * 3600 + mm * 60 + ss + ff / fps;
+    }
+
+    // ---------- Offset A−B ----------
+    function updateLatencyDisplay() {
+      let lastStr = "--";
+
+      if (lastOffsetSeconds != null) {
+        const s = lastOffsetSeconds * 1000;
+        const sign = s >= 0 ? "+" : "";
+        lastStr = `${sign}${s.toFixed(1)} ms`;
+      }
+
+      latencyDisplay.textContent = `Offset A−B (letzte): ${lastStr}`;
+    }
+
+    function resetOffsetState() {
+      lastFrameA = null;
+      lastFrameB = null;
+      lastOffsetSeconds = null;
+      updateLatencyDisplay();
+    }
+
+    function maybeUpdateOffset() {
+      if (!lastFrameA || !lastFrameB) return;
+
+      const fpsNow = parseInt(fpsSelect.value, 10) || 25;
+
+      const secA = lastFrameA.seconds;
+      const secB = lastFrameB.seconds;
+      if (secA == null || secB == null) return;
+
+      let offset = secA - secB;
+
+      // In Bereich [-12h, +12h] falten
+      if (offset > 43200) offset -= 86400;
+      if (offset < -43200) offset += 86400;
+
+      lastOffsetSeconds = offset;
+      updateLatencyDisplay();
+    }
+
+    // --------- LTC Decoder (ohne zusätzliche Glättung) ----------
+    class LTCDecoder {
+      constructor(sampleRate, fps) {
+        this.sampleRate = sampleRate;
+        this.setFPS(fps);
+
+        this.prevSign = 0;
+        this.samplesSinceTransition = 0;
+
+        this.rawIntervals = [];
+        this.calibrated = false;
+        this.shortLen = null;
+        this.longLen = null;
+        this.threshold = null;
+
+        this.pendingShort = false;
+
+        this.bitBuffer = [];
+        this.maxBuffer = 800;
+
+        this.transitionCount = 0;
+        this.bitCount = 0;
+        this.lastDebugUpdate = 0;
+
+        this.syncWord = [
+          0,0,1,1,
+          1,1,1,1,1,1,1,1,1,1,
+          0,1
+        ];
+
+        this.lastUserBits = null;
+        this.lastUserBitsInterpreted = null;
+      }
+
+      setFPS(fps) {
+        this.fps = fps;
+        this.targetBitRate = fps * 80;
+        this.targetBitSamples = this.sampleRate / this.targetBitRate;
+      }
+
+      calibrate() {
+        if (this.rawIntervals.length < 100) return;
+        const arr = [...this.rawIntervals].sort((a,b) => a-b);
+        const cut = Math.floor(arr.length * 0.1);
+        const trimmed = arr.slice(cut, arr.length - cut);
+        const mid = Math.floor(trimmed.length / 2);
+
+        const shortPart = trimmed.slice(0, mid);
+        const longPart  = trimmed.slice(mid);
+
+        const avg = list => list.reduce((a,b)=>a+b, 0) / list.length;
+
+        this.shortLen = avg(shortPart);
+        this.longLen  = avg(longPart);
+        this.threshold = (this.shortLen + this.longLen) / 2;
+        this.calibrated = true;
+      }
+
+      process(buffer, currentTime) {
+        const len = buffer.length;
+        let latestTC = null;
+
+        for (let i=0; i<len; i++) {
+          const s = buffer[i];
+          const sign = s >= 0 ? 1 : -1;
+          this.samplesSinceTransition++;
+
+          if (this.prevSign !== 0 && sign !== this.prevSign) {
+            this.transitionCount++;
+            const interval = this.samplesSinceTransition;
+            this.samplesSinceTransition = 0;
+
+            if (!this.calibrated) {
+              this.rawIntervals.push(interval);
+              if (this.rawIntervals.length > 1000) {
+                this.calibrate();
+                this.rawIntervals = this.rawIntervals.slice(-1000);
+              }
+              this.prevSign = sign;
+              continue;
+            }
+
+            const isShort = interval < this.threshold;
+            let bitOut = null;
+
+            if (isShort) {
+              if (this.pendingShort) {
+                bitOut = 1;
+                this.pendingShort = false;
+              } else {
+                this.pendingShort = true;
+              }
+            } else {
+              bitOut = 0;
+              this.pendingShort = false;
+            }
+
+            if (bitOut !== null) {
+              this.bitCount++;
+              this.bitBuffer.push(bitOut);
+              if (this.bitBuffer.length > this.maxBuffer) {
+                this.bitBuffer.splice(0, this.bitBuffer.length - this.maxBuffer);
+              }
+
+              const tc = this.decodeLatestFrame();
+              if (tc) {
+                latestTC = tc;
+              }
+            }
+          }
+
+          this.prevSign = sign;
+        }
+
+        if (!this.lastDebugUpdate || (currentTime - this.lastDebugUpdate) > 0.5) {
+          this.lastDebugUpdate = currentTime;
+          this.updateDebug();
+        }
+
+        return latestTC;
+      }
+
+      decodeLatestFrame() {
+        const bits = this.bitBuffer;
+        if (bits.length < 80) return null;
+
+        const searchStart = Math.max(0, bits.length - 400);
+        const searchEnd   = bits.length - 80;
+
+        let bestTC = null;
+
+        for (let offset = searchStart; offset <= searchEnd; offset++) {
+          const frameBits = bits.slice(offset, offset + 80);
+          const syncPart  = frameBits.slice(64);
+
+          if (this.matchesSync(syncPart)) {
+            const data64 = frameBits.slice(0, 64);
+            const tc = this.decodeTimecodeFrom64(data64);
+            if (tc) bestTC = tc;
+          }
+        }
+        return bestTC;
+      }
+
+      matchesSync(bits16) {
+        if (bits16.length !== 16) return false;
+        for (let i=0; i<16; i++) {
+          if (bits16[i] !== this.syncWord[i]) return false;
+        }
+        return true;
+      }
+
+      extractBCD(bits, unitIdx, tensIdx) {
+        let units = 0;
+        for (let i=0; i<unitIdx.length; i++) {
+          units |= (bits[unitIdx[i]] << i);
+        }
+        let tens = 0;
+        for (let i=0; i<tensIdx.length; i++) {
+          tens |= (bits[tensIdx[i]] << i);
+        }
+        return tens * 10 + units;
+      }
+
+      extractUserBits(bits) {
+        const starts = [4,12,20,28,36,44,52,60];
+        const ubs = [];
+        for (const s of starts) {
+          if (s + 3 >= bits.length) {
+            ubs.push(null);
+            continue;
+          }
+          let val = 0;
+          for (let i=0; i<4; i++) {
+            val |= bits[s + i] << i;
+          }
+          ubs.push(val);
+        }
+        this.lastUserBits = ubs;
+
+        if (ubs.every(v => v !== null)) {
+          const day   = ubs[1] * 10 + ubs[0];
+          const month = ubs[3] * 10 + ubs[2];
+          const year2 = ubs[5] * 10 + ubs[4];
+          const year  = 2000 + year2;
+
+          const tzHour = 1;
+          const tzMin  = 0;
+
+          this.lastUserBitsInterpreted = { day, month, year, tzHour, tzMin };
+        } else {
+          this.lastUserBitsInterpreted = null;
+        }
+      }
+
+      decodeTimecodeFrom64(bits) {
+        if (bits.length !== 64) return null;
+        try {
+          const frames  = this.extractBCD(bits, [0,1,2,3],    [8,9]);
+          const seconds = this.extractBCD(bits, [16,17,18,19],[24,25,26]);
+          const minutes = this.extractBCD(bits, [32,33,34,35],[40,41,42]);
+          const hours   = this.extractBCD(bits, [48,49,50,51],[56,57]);
+
+          if (
+            frames >= 0  && frames < 30 &&
+            seconds >= 0 && seconds < 60 &&
+            minutes >= 0 && minutes < 60 &&
+            hours >= 0   && hours < 24
+          ) {
+            this.extractUserBits(bits);
+            const hh = String(hours).padStart(2, "0");
+            const mm = String(minutes).padStart(2, "0");
+            const ss = String(seconds).padStart(2, "0");
+            const ff = String(frames).padStart(2, "0");
+            return `${hh}:${mm}:${ss}:${ff}`;
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      updateDebug() {
+        const lastBits = this.bitBuffer.slice(-64).join("") || "(noch keine)";
+        let ubLine = "noch keine";
+        let ubInterp = "keine Interpretation";
+
+        if (this.lastUserBits) {
+          const dec = this.lastUserBits.map(v =>
+            v === null ? "--" : v.toString(10).padStart(2,"0")
+          ).join(" ");
+          const hex = this.lastUserBits.map(v =>
+            v === null ? "--" : v.toString(16).toUpperCase().padStart(2,"0")
+          ).join(" ");
+          ubLine = `dez: ${dec}\nhex: ${hex}`;
+        }
+
+        if (this.lastUserBitsInterpreted) {
+          const { day, month, year, tzHour, tzMin } = this.lastUserBitsInterpreted;
+          const tzSign = tzHour >= 0 ? "+" : "-";
+          const tzStr  = `${tzSign}${String(Math.abs(tzHour)).padStart(2,"0")}:${String(tzMin).padStart(2,"0")}`;
+
+          dateDisplay.textContent =
+            `Datum (UB): ${String(day).padStart(2,"0")}.${String(month).padStart(2,"0")}.${year}`;
+          tzDisplay.textContent = `Zeitzone (UB): UTC${tzStr}`;
+
+          ubInterp =
+            `Datum (Interpretation): ${String(day).padStart(2,"0")}.${String(month).padStart(2,"0")}.${year}\n` +
+            `Zeitzone (Interpretation): UTC${tzStr}`;
+        }
+
+        let offsetLastStr = "--";
+        if (lastOffsetSeconds != null) {
+          const ms = lastOffsetSeconds * 1000;
+          const sign = ms >= 0 ? "+" : "";
+          offsetLastStr = `${sign}${ms.toFixed(1)} ms`;
+        }
+
+        let text =
+          `SampleRate: ${this.sampleRate.toFixed(0)} Hz\n` +
+          `FPS (Decoder): ${this.fps}\n` +
+          `Target BitRate: ${(this.fps * 80).toFixed(1)} bit/s\n` +
+          `Target ~Samples/Bit: ${this.targetBitSamples.toFixed(2)}\n` +
+          `Transitions (gesamt): ${this.transitionCount}\n` +
+          `Calibrated: ${this.calibrated}\n` +
+          `ShortLen: ${this.shortLen ? this.shortLen.toFixed(2) : "n/a"}\n` +
+          `LongLen: ${this.longLen ? this.longLen.toFixed(2) : "n/a"}\n` +
+          `Threshold: ${this.threshold ? this.threshold.toFixed(2) : "n/a"}\n` +
+          `Bits im Buffer: ${this.bitBuffer.length}\n` +
+          `Letzte <=64 Bits:\n${lastBits}\n\n` +
+          `User Bits (UB0–UB7):\n${ubLine}\n\n` +
+          `${ubInterp}\n\n` +
+          `Offset A−B (letzte): ${offsetLastStr}`;
+        debugDisplay.textContent = text;
+      }
+    }
+
+    fpsSelect.addEventListener("change", () => {
+      const fps = parseInt(fpsSelect.value, 10);
+      if (ltcDecoderA) ltcDecoderA.setFPS(fps);
+      if (ltcDecoderB) ltcDecoderB.setFPS(fps);
+      resetOffsetState();
+    });
+
+    // --------- Audio-Geräte ------------------------------------------
+    async function initDevices() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(d => d.kind === "audioinput");
+
+        deviceSelectA.innerHTML = "";
+        deviceSelectB.innerHTML = "";
+        audioInputs.forEach(d => {
+          const optA = document.createElement("option");
+          optA.value = d.deviceId;
+          optA.textContent = d.label || `Audioeingang (${d.deviceId})`;
+          deviceSelectA.appendChild(optA);
+
+          const optB = document.createElement("option");
+          optB.value = d.deviceId;
+          optB.textContent = d.label || `Audioeingang (${d.deviceId})`;
+          deviceSelectB.appendChild(optB);
+        });
+
+        if (audioInputs.length === 0) {
+          statusDisplay.textContent = "Keine Audioeingänge gefunden.";
+        } else {
+          statusDisplay.textContent = "Zwei Eingänge wählen, LTC anlegen, Start drücken.";
+        }
+      } catch (err) {
+        console.error(err);
+        statusDisplay.textContent = "Fehler beim Zugriff auf Audio: " + err.message;
+      }
+    }
+
+    initDevices();
+
+    function getMonoLTCBuffer(event, modeSelect) {
+      const inBuf = event.inputBuffer;
+      const chCount = inBuf.numberOfChannels;
+      const mode = modeSelect.value || "LR_SUM";
+      const left = chCount > 0 ? inBuf.getChannelData(0) : null;
+      const right = chCount > 1 ? inBuf.getChannelData(1) : null;
+      const len = left ? left.length : (right ? right.length : 0);
+      const out = new Float32Array(len);
+
+      for (let i = 0; i < len; i++) {
+        let v = 0;
+        switch (mode) {
+          case "L":
+            v = left ? left[i] : 0;
+            break;
+          case "R":
+            v = right ? right[i] : (left ? left[i] : 0);
+            break;
+          case "LR_DIFF":
+            // L - R: für normal/invert beschaltung, Störungen fallen raus
+            v = (left ? left[i] : 0) - (right ? right[i] : 0);
+            break;
+          case "LR_SUM":
+          default:
+            // L + R: normale Summierung
+            v = ((left ? left[i] : 0) + (right ? right[i] : 0)) * 0.5;
+            break;
+        }
+        out[i] = v;
+      }
+      return out;
+    }
+
+    // --------- Start / Stop ------------------------------------------
+    startBtn.addEventListener("click", async () => {
+      const deviceIdA = deviceSelectA.value;
+      const deviceIdB = deviceSelectB.value;
+      const fps = parseInt(fpsSelect.value, 10);
+
+      if (!deviceIdA || !deviceIdB) {
+        alert("Bitte für Quelle A und B jeweils einen Audio-Eingang wählen.");
+        return;
+      }
+
+      try {
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        timecodeDisplay.textContent = "--:--:--:--";
+        tcADisplay.textContent = "TC A: --:--:--:--";
+        tcBDisplay.textContent = "TC B: --:--:--:--";
+        statusDisplay.textContent = "Starte Audio-Streams…";
+        debugDisplay.textContent = "";
+        dateDisplay.textContent = "Datum (UB): --.--.----";
+        tzDisplay.textContent = "Zeitzone (UB): --";
+        resetOffsetState();
+
+        // Quelle A
+        mediaStreamA = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            deviceId: { exact: deviceIdA },
+            channelCount: 2,
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+        audioContextA = new (window.AudioContext || window.webkitAudioContext)();
+        sourceNodeA = audioContextA.createMediaStreamSource(mediaStreamA);
+        processorNodeA = audioContextA.createScriptProcessor(1024, 2, 1);
+        ltcDecoderA = new LTCDecoder(audioContextA.sampleRate, fps);
+
+        processorNodeA.onaudioprocess = (event) => {
+          const input = getMonoLTCBuffer(event, channelModeSelectA);
+          if (!ltcDecoderA) return;
+
+          const now = audioContextA.currentTime;
+          const fpsNow = parseInt(fpsSelect.value, 10) || 25;
+          const tc = ltcDecoderA.process(input, now);
+
+          if (tc) {
+            // Direkt anzeigen, ohne zusätzliche Logik
+            timecodeDisplay.textContent = tc;
+            tcADisplay.textContent = `TC A: ${tc}`;
+
+            const secA = tcToSecondsOfDay(tc, fpsNow);
+            if (secA != null) {
+              lastFrameA = { tc, seconds: secA };
+              maybeUpdateOffset();
+            }
+          }
+        };
+
+        sourceNodeA.connect(processorNodeA);
+        processorNodeA.connect(audioContextA.destination);
+
+        // Quelle B
+        mediaStreamB = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            deviceId: { exact: deviceIdB },
+            channelCount: 2,
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+        audioContextB = new (window.AudioContext || window.webkitAudioContext)();
+        sourceNodeB = audioContextB.createMediaStreamSource(mediaStreamB);
+        processorNodeB = audioContextB.createScriptProcessor(1024, 2, 1);
+        ltcDecoderB = new LTCDecoder(audioContextB.sampleRate, fps);
+
+        processorNodeB.onaudioprocess = (event) => {
+          const input = getMonoLTCBuffer(event, channelModeSelectB);
+          if (!ltcDecoderB) return;
+
+          const now = audioContextB.currentTime;
+          const fpsNow = parseInt(fpsSelect.value, 10) || 25;
+          const tc = ltcDecoderB.process(input, now);
+
+          if (tc) {
+            tcBDisplay.textContent = `TC B: ${tc}`;
+
+            const secB = tcToSecondsOfDay(tc, fpsNow);
+            if (secB != null) {
+              lastFrameB = { tc, seconds: secB };
+              maybeUpdateOffset();
+            }
+          }
+        };
+
+        sourceNodeB.connect(processorNodeB);
+        processorNodeB.connect(audioContextB.destination);
+
+        statusDisplay.textContent = "Decoder laufen – LTC von A und B wird direkt ausgegeben, Offset = A−B.";
+      } catch (err) {
+        console.error(err);
+        statusDisplay.textContent = "Fehler beim Starten: " + err.message;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      // Quelle A
+      if (processorNodeA) {
+        processorNodeA.disconnect();
+        processorNodeA.onaudioprocess = null;
+        processorNodeA = null;
+      }
+      if (sourceNodeA) {
+        sourceNodeA.disconnect();
+        sourceNodeA = null;
+      }
+      if (mediaStreamA) {
+        mediaStreamA.getTracks().forEach(t => t.stop());
+        mediaStreamA = null;
+      }
+      if (audioContextA) {
+        audioContextA.close();
+        audioContextA = null;
+      }
+      ltcDecoderA = null;
+
+      // Quelle B
+      if (processorNodeB) {
+        processorNodeB.disconnect();
+        processorNodeB.onaudioprocess = null;
+        processorNodeB = null;
+      }
+      if (sourceNodeB) {
+        sourceNodeB.disconnect();
+        sourceNodeB = null;
+      }
+      if (mediaStreamB) {
+        mediaStreamB.getTracks().forEach(t => t.stop());
+        mediaStreamB = null;
+      }
+      if (audioContextB) {
+        audioContextB.close();
+        audioContextB = null;
+      }
+      ltcDecoderB = null;
+
+      resetOffsetState();
+
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      statusDisplay.textContent = "Gestoppt.";
+    });
+  </script>
+</body>
+</html>
