@@ -265,7 +265,7 @@
         this.setFPS(fps);
 
         this.prevSign = 0;
-        this.samplesSinceTransition = 0;
+               this.samplesSinceTransition = 0;
 
         this.rawIntervals = [];
         this.calibrated = false;
@@ -422,7 +422,7 @@
         return tens * 10 + units;
       }
 
-      extractUserBits(bits) {
+      extractUserBits(bits) {  // ★ HIER ändern
         const starts = [4,12,20,28,36,44,52,60];
         const ubs = [];
         for (const s of starts) {
@@ -448,6 +448,15 @@
           const tzMin  = 0;
 
           this.lastUserBitsInterpreted = { day, month, year, tzHour, tzMin };
+
+          // ★ UI direkt aktualisieren – unabhängig vom Debug
+          const dayStr   = String(day).padStart(2, "0");
+          const monthStr = String(month).padStart(2, "0");
+          const tzSign   = tzHour >= 0 ? "+" : "-";
+          const tzStr    = `${tzSign}${String(Math.abs(tzHour)).padStart(2,"0")}:${String(tzMin).padStart(2,"0")}`;
+
+          dateDisplay.textContent = `Datum: ${dayStr}.${monthStr}.${year}`;
+          tzDisplay.textContent   = `Zeitzone: UTC${tzStr}`;
         } else {
           this.lastUserBitsInterpreted = null;
         }
@@ -497,11 +506,6 @@
           const { day, month, year, tzHour, tzMin } = this.lastUserBitsInterpreted;
           const tzSign = tzHour >= 0 ? "+" : "-";
           const tzStr  = `${tzSign}${String(Math.abs(tzHour)).padStart(2,"0")}:${String(tzMin).padStart(2,"0")}`;
-
-          dateDisplay.textContent =
-            `Datum: ${String(day).padStart(2,"0")}.${String(month).padStart(2,"0")}.${year}`;
-          tzDisplay.textContent = `Zeitzone: UTC${tzStr}`;
-
           ubInterp =
             `Datum (Interpretation): ${String(day).padStart(2,"0")}.${String(month).padStart(2,"0")}.${year}\n` +
             `Zeitzone (Interpretation): UTC${tzStr}`;
