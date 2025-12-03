@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -11,127 +12,260 @@
     body{ margin:0; font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); }
     header{ padding:20px; display:grid; grid-template-columns: 1fr auto; gap:var(--gap); align-items:center; border-bottom:1px solid #273055}
     h1{ font-size:20px; margin:0; }
-    .panel{ background:var(--panel); padding:var(--gap); border-radius:var(--radius); }
+    .panel{ background:var(--panel); padding:var(--gap); border-radius:var(--radius); box-shadow: 0 6px 24px rgba(0,0,0,.25); }
     .stack{ display:grid; gap:var(--gap); }
     .row{ display:flex; gap:var(--gap); align-items:center; flex-wrap:wrap; }
     label{ font-size:12px; color:var(--muted); }
     input[type="text"], select { background:#0e1426; color:var(--text); border:1px solid #2a355e; border-radius:8px; padding:10px 12px; min-width:240px; }
     button{ background:#2a355e; color:var(--text); border:0; border-radius:8px; padding:10px 14px; cursor:pointer; }
     button:disabled{ opacity:.5; cursor:not-allowed; }
+
     #player-wrap{ aspect-ratio:16/9; width:100%; background:black; border-radius:10px; overflow:hidden; position:relative }
     #player, #file-player{ position:absolute; inset:0; width:100%; height:100%; }
     #file-player{ display:none; background:black; }
     video{ width:100%; height:100%; }
-    #comments li{ display:flex; gap:8px; align-items:center; padding:6px; }
-    #comments input{ width:100%; background:#0e1426; color:var(--text); border:1px solid #2a355e; border-radius:6px; padding:6px 8px; }
-    .top-right{ justify-self:end; display:flex; gap:8px; align-items:center; }
-    .banner{ display:none; background:var(--warn); color:#111; padding:8px 12px; border-radius:8px; font-size:12px; }
-    .badge{ font-family:ui-monospace, SFMono-Regular, Menlo, monospace; background:#0006; color:#fff; border-radius:6px; padding:2px 6px; }
-    .btn-sm{ padding:6px 10px; line-height:1; }
-    .tc{ width:120px; }
-    .idx{ width:72px; }
-    #comments input{ min-width:0; }
+
+    /* Kommentarbereich Desktop: eigene Scrollspalte rechts */
+    #right-col{
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    #comments{
+      list-style:none;
+      margin:0;
+      padding:0 4px 0 0;
+      flex:1 1 auto;
+      max-height:calc(100vh - 260px);
+      overflow-y:auto;
+    }
+    #comments li{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      padding:6px 6px;
+      position:relative;
+      flex-wrap:nowrap;
+      min-width:0;
+    }
+    #comments input{
+      background:#0e1426;
+      color:var(--text);
+      border:1px solid #2a355e;
+      border-radius:6px;
+      padding:6px 8px;
+    }
+    /* Alle Kommentar-Textfelder dürfen schrumpfen (overridet globale 240px) */
+    #comments input[type="text"]{
+      min-width:0;
+    }
+    /* Kommentartext – nimmt den Löwenanteil, aber schrumpft mit */
+    #comments li input[type="text"]:not(.tc){
+      flex:1 1 220px;
+      min-width:0;
+    }
+    /* Timecode – etwas größer, aber kompakt */
+    #comments .tc{
+      flex:0 1 100px;
+      min-width:90px;
+      max-width:120px;
+      width:auto;
+      text-align:center;
+      padding:4px 2px;
+      font-size:11px;
+    }
+
     footer{ padding:16px; text-align:center; color:var(--muted) }
     #resolver-host{ position:absolute; width:0; height:0; overflow:hidden; opacity:0; pointer-events:none; }
-  
-/* --- Mobile Responsive & No-Zoom Pack --- */
-:root{ --gap:16px; --gap-sm:8px; --radius:12px; --bg:#0b1226; --panel:#0f1832; --text:#e7ecff; --muted:#9aacd6; }
-html, body { background:#0b1226; color:var(--text); -webkit-text-size-adjust:100%; text-size-adjust:100%; touch-action: manipulation; }
 
-/* Layout polish */
-main{ padding-inline:16px; }
-.panel{ background:var(--panel); padding:var(--gap); border-radius:var(--radius); box-shadow: 0 6px 24px rgba(0,0,0,.25); }
-.row{ display:flex; gap:var(--gap); align-items:center; flex-wrap:wrap; }
-.stack{ display:grid; gap:var(--gap); }
+    /* Kommentar-Form als Position-Anchor für die Farbbox */
+    #comment-form{ position:relative; }
 
-/* Controls */
-button{ display:inline-flex; align-items:center; justify-content:center; font-size:16px; background:#2a355e; color:var(--text); border:0; border-radius:8px; padding:10px 14px; cursor:pointer; transition:transform .06s ease, opacity .2s ease; }
-button:active{ transform: translateY(1px); }
-a, button, input, select, textarea{ outline:none; }
-a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{ box-shadow:0 0 0 3px rgba(51,153,255,.4); border-color:#3399ff; }
+    /* --- Mobile Responsive & No-Zoom Pack --- */
+    :root{ --gap:16px; --gap-sm:8px; --radius:12px; --bg:#0b1226; --panel:#0f1832; --text:#e7ecff; --muted:#9aacd6; }
+    html, body { background:#0b1226; color:var(--text); -webkit-text-size-adjust:100%; text-size-adjust:100%; touch-action: manipulation; }
 
-/* Player */
-#player-wrap{ aspect-ratio:16/9; width:100%; background:black; border-radius:10px; overflow:hidden; position:relative }
-#player, #file-player{ position:absolute; inset:0; width:100%; height:100%; }
+    main{ padding-inline:16px; }
+    .row{ display:flex; gap:var(--gap); align-items:center; flex-wrap:wrap; }
+    .stack{ display:grid; gap:var(--gap); }
 
-/* Inputs */
-input[type="text"], select{ background:#0e1426; color:var(--text); border:1px solid #2a355e; border-radius:8px; padding:10px 12px; min-width:240px; }
-input, select, textarea{ font-size:16px !important; } /* prevent iOS focus zoom */
+    /* Zweispalten-Layout: Player größer als Kommentarspalte */
+    .layout-grid{
+      display:grid;
+      grid-template-columns:minmax(0,1.8fr) minmax(0,1.2fr);
+      gap:16px;
+      align-items:flex-start;
+    }
 
-/* Desktop width cap */
-@media (min-width: 1100px){
-  header, main, footer{ max-width:1100px; margin-inline:auto; }
-}
+    button{ display:inline-flex; align-items:center; justify-content:center; font-size:16px; background:#2a355e; color:#f2f5ff; border:0; border-radius:8px; padding:10px 14px; cursor:pointer; transition:transform .06s ease, opacity .2s ease; }
+    button:active{ transform: translateY(1px); }
 
-/* Tablet */
-@media (max-width: 900px){
-  header{ grid-template-columns: 1fr; row-gap: var(--gap); }
-}
+    a, button, input, select, textarea{ outline:none; }
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{ box-shadow:0 0 0 3px rgba(51,153,255,.4); border-color:#3399ff; }
 
-/* Mobile */
-@media (max-width: 700px){
-  :root{ --gap:12px; }
-  html, body{ max-width:100vw; overflow-x:hidden; }
-  header{ padding:14px; position:sticky; top:0; background:var(--bg); z-index:10; border-bottom:1px solid #1a2342; }
-  .row{ flex-direction:column; align-items:stretch; gap: var(--gap-sm); }
-  input[type="text"], select, button, #file-input{ width:100%; min-width:0; }
-  #player-wrap{ border-radius:8px; }
-  #comments li{ display:flex; flex-direction:column; gap: var(--gap-sm); align-items:stretch; padding:6px; }
-  #comments input{ width:100%; min-width:0; background:#0e1426; color:var(--text); border:1px solid #2a355e; border-radius:6px; padding:6px 8px; }
-  /* Compact, single-line comment input + fix 400px flex-basis */
-  #comment-form{ align-items:stretch; gap: var(--gap-sm); }
-  #comment-input{ flex:0 1 auto !important; height:36px !important; min-height:36px !important; max-height:48px !important; padding:8px 10px !important; line-height:1.2 !important; }
-}
+    input[type="text"], select{ background:#0e1426; color:var(--text); border:1px solid #2a355e; border-radius:8px; padding:10px 12px; min-width:240px; }
+    input, select, textarea{ font-size:16px !important; }
 
-/* Ultra-small phones */
-@media (max-width: 360px){
-  main{ padding-inline:10px; }
-}
-/* Avoid double-tap zoom */
-a, button { touch-action: manipulation; }
-/* Media elements and long strings */
-img, video, canvas, iframe { max-width:100%; height:auto; }
-.filename, .clipname, .path, .tc, .idx { overflow-wrap:anywhere; word-break:break-word; }
+    /* Desktop max width breiter */
+    @media (min-width: 1100px){
+      header, main, footer{ max-width:1400px; margin-inline:auto; }
+    }
 
+    @media (max-width: 900px){
+      header{ grid-template-columns: 1fr; row-gap: var(--gap); }
+      .layout-grid{ display:block; }
+    }
 
-/* --- Final Mobile Header Fix (EN/DE button top-right) --- */
-@media (max-width: 700px) {
-  html, body {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden !important;
-  }
-  header {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    position: sticky;
-    top: 0;
-    background: var(--bg);
-    padding: 14px 12px 12px 12px;
-    gap: 10px;
-    border-bottom: 1px solid #1a2342;
-  }
-  header .row {
-    width: 100%;
-    flex-wrap: wrap;
-    margin: 0;
-  }
-  .top-right {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    z-index: 25;
-  }
-  h1 {
-    font-size: 18px;
-    word-break: break-word;
-    margin: 0;
-    padding-right: 60px; /* Platz für Button */
-  }
-}
+    @media (max-width: 700px){
+      :root{ --gap:12px; }
+      html, body{ max-width:100vw; overflow-x:hidden; }
+      header{ padding:14px; position:sticky; top:0; background:var(--bg); z-index:10; border-bottom:1px solid #1a2342; }
+      .row{ flex-direction:column; align-items:stretch; gap: var(--gap-sm); }
+      input[type="text"], select, button, #file-input{ width:100%; min-width:0; }
+      #player-wrap{ border-radius:8px; }
 
-</style>
+      /* MOBILE: Kommentar-Layout umsortieren */
+      #comments{
+        max-height:none;
+        padding-right:0;
+      }
+      #comments li{
+        flex-wrap:wrap;
+        align-items:stretch;
+      }
+      /* Farbe ganz oben */
+      #comments li .comment-color-btn{
+        order:0;
+        flex:0 0 auto;
+        margin-bottom:4px;
+      }
+      /* Kommentar-Feld in eigener Zeile */
+      #comments li input[type="text"]:not(.tc){
+        order:1;
+        flex:1 1 100%;
+      }
+      /* Timecode-Feld darunter, volle Breite */
+      #comments li .tc{
+        order:2;
+        flex:1 1 100%;
+        max-width:none;
+        text-align:left;
+      }
+      /* Button-Reihe ganz unten, 2 Buttons je 50% */
+      #comments li .comment-btn-row{
+        order:3;
+        flex:1 1 100%;
+        max-width:none;
+        gap:6px;
+      }
+      .comment-btn{
+        flex:1 1 50%;
+        width:100%;
+        height:44px;
+      }
+
+      #comment-form{ align-items:stretch; gap: var(--gap-sm); }
+      #comment-input{ flex:0 1 auto !important; height:36px !important; min-height:36px !important; max-height:48px !important; padding:8px 10px !important; line-height:1.2 !important; }
+    }
+
+    @media (max-width: 360px){
+      main{ padding-inline:10px; }
+    }
+
+    a, button { touch-action: manipulation; }
+    img, video, canvas, iframe { max-width:100%; height:auto; }
+    .filename, .clipname, .path, .tc { overflow-wrap:anywhere; word-break:break-word; }
+
+    @media (max-width: 700px) {
+      html, body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden !important;
+      }
+      header {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        position: sticky;
+        top: 0;
+        background: var(--bg);
+        padding: 14px 12px 12px 12px;
+        gap: 10px;
+        border-bottom: 1px solid #1a2342;
+      }
+      header .row {
+        width: 100%;
+        flex-wrap: wrap;
+        margin: 0;
+      }
+      .top-right {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        z-index: 25;
+      }
+      h1 {
+        font-size: 18px;
+        word-break: break-word;
+        margin: 0;
+        padding-right: 60px;
+      }
+    }
+
+    /* Comment color & Button-Spalte (Desktop schmal) */
+    .comment-color-btn{
+      width:32px;
+      height:32px;
+      border-radius:8px;
+      border:1px solid #0008;
+      padding:0;
+      flex:0 0 auto;
+    }
+
+    .comment-btn-row{
+      display:flex;
+      flex-direction:row;
+      gap:4px;
+      flex:0 0 64px;
+      max-width:64px;
+    }
+    .comment-btn{
+      flex:1 1 50%;
+      width:100%;
+      height:44px;
+      border-radius:10px;
+      font-size:18px;
+      justify-content:center;
+      align-items:center;
+      display:inline-flex;
+      padding:0;
+      min-width:0;
+    }
+
+    .marker-color-palette{
+      position:absolute;
+      top:40px;
+      left:6px;
+      background:#151a2d;
+      padding:6px;
+      border-radius:10px;
+      display:none;
+      grid-template-columns:repeat(4,20px);
+      gap:5px;
+      box-shadow:0 8px 24px rgba(0,0,0,.7);
+      z-index:30;
+    }
+    .marker-color-palette button{
+      width:20px;
+      height:20px;
+      border-radius:6px;
+      border:1px solid #0008;
+      padding:0;
+    }
+
+    .badge{ font-family:ui-monospace, SFMono-Regular, Menlo, monospace; background:#0006; color:#fff; border-radius:6px; padding:2px 6px; }
+    #fileproto.banner{ display:none; background:var(--warn); color:#111; padding:8px 12px; border-radius:8px; font-size:12px; }
+  </style>
 </head>
 <body>
 <header>
@@ -153,12 +287,12 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
     </div>
     <div class="row">
       <label id="t_edlimport">.edl Marker importieren</label>
-      <input id="edl-input" type="file" accept=".edl,application/octet-stream"/>
+      <input id="edl-input" type="file" accept=".edl,text/plain"/>
     </div>
     <div id="fileproto" class="banner">
       Hinweis: Du öffnest die Datei über <span class="badge">file://</span>.
       Der YouTube-Player kann so Fehler (<code>2</code>, <code>5</code>) werfen.
-      Starte die Datei besser über einen lokalen Webserver (z. B. <span class="badge">python -m http.server</span>) oder lege sie auf http(s).
+      Starte die Datei besser über einen lokalen Webserver (z. B. <span class="badge">python -m http.server</span>) oder lege sie auf http(s).
     </div>
   </div>
   <div class="top-right">
@@ -166,21 +300,39 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
   </div>
 </header>
 <main class="stack" style="padding:16px">
-  <section class="panel stack">
-    <div id="player-wrap">
-      <div id="player"></div>
-      <video id="file-player" controls></video>
-      <div id="resolver-host"></div>
+  <section class="layout-grid">
+    <!-- Linke Spalte: Player + Kommentar hinzufügen -->
+    <div class="panel stack" id="left-col">
+      <div id="player-wrap">
+        <div id="player"></div>
+        <video id="file-player" controls></video>
+        <div id="resolver-host"></div>
+      </div>
+
+      <!-- Kommentar-Form mit Farbauswahl links -->
+      <form id="comment-form" class="row" onsubmit="return false">
+        <button id="new-color" type="button" class="comment-color-btn" title="Farbe für neuen Kommentar"></button>
+        <input id="comment-input" type="text" placeholder="Kommentar hinzufügen…"/>
+        <button id="add-comment" type="button">Hinzufügen</button>
+        <span id="clip-info" style="font-size:12px;color:var(--muted)"></span>
+      </form>
+
+      <!-- Auto-Pause Toggle -->
+      <div class="row" style="gap:8px;align-items:center;">
+        <label for="autopause" style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+          <input id="autopause" type="checkbox" checked style="width:16px;height:16px;">
+          Auto-Pause beim Arbeiten mit Markern
+        </label>
+      </div>
     </div>
-    <form id="comment-form" class="row" onsubmit="return false">
-      <input id="comment-input" type="text" placeholder="Kommentar hinzufügen…"/>
-      <button id="add-comment" type="button">Add</button>
-      <span id="clip-info" style="font-size:12px;color:var(--muted)"></span>
-    </form>
-    <ul id="comments" class="panel" style="list-style:none; margin:0"></ul>
-    <div class="row">
-      <button id="download-edl" type="button">💾 EDL exportieren</button>
-      <button id="clear-comments" type="button">🗑️ Alle löschen</button>
+
+    <!-- Rechte Spalte: Kommentar-Liste + Export -->
+    <div class="panel stack" id="right-col">
+      <ul id="comments"></ul>
+      <div class="row">
+        <button id="download-edl" type="button">💾 EDL exportieren</button>
+        <button id="clear-comments" type="button">🗑️ Alle löschen</button>
+      </div>
     </div>
   </section>
 </main>
@@ -196,15 +348,100 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
     const commentInput=$('comment-input'), addCommentBtn=$('add-comment');
     const commentsEl=$('comments'), downloadBtn=$('download-edl'), clearBtn=$('clear-comments');
     const edlInput=$('edl-input'), fileVideo=$('file-player'), langToggle=$('lang-toggle');
-    const diag=$('diag'), fileBanner=$('fileproto'), clipInfo=$('clip-info'), resolverHost=$('resolver-host');
+    const diag=$('diag'), fileBanner=$('fileproto'), clipInfo=$('clip-info');
+    const autopause = $('autopause');
+    const newColorBtn = $('new-color');
 
-    // ---------- State ----------
-    const sources=[]; // {type:'video'|'file', id, title, comments, fileUrl, fileName, playlist}
+    const sources=[];
     let current=0; let ytPlayer=null; let ytReady=false;
     let resolver=null; let resolverReady=false;
-    const titleCache=new Map(); // id -> title
+    const titleCache=new Map();
+    let currentCommentColor = 'ResolveColorBlue';
 
-    // ---------- i18n ----------
+    function storageKeyForSource(src){
+      try{
+        if(src.type==='video' && src.id) return 'edl-comments-video-'+src.id;
+        if(src.type==='file' && src.fileName) return 'edl-comments-file-'+src.fileName;
+      }catch(e){}
+      return null;
+    }
+    function loadCommentsForSource(src){
+      const key = storageKeyForSource(src);
+      if(!key) return;
+      try{
+        const raw = localStorage.getItem(key);
+        if(!raw) return;
+        const arr = JSON.parse(raw);
+        if(Array.isArray(arr)) src.comments = arr;
+      }catch(e){}
+    }
+    function saveCommentsForSource(src){
+      const key = storageKeyForSource(src);
+      if(!key) return;
+      try{
+        localStorage.setItem(key, JSON.stringify(src.comments||[]));
+      }catch(e){}
+    }
+    function persistCurrentComments(){
+      const src = sources[current];
+      if(!src) return;
+      saveCommentsForSource(src);
+    }
+
+    const COLOR_PRESETS = [
+      { key:'ResolveColorBlue',     hex:'#4a7dff' },
+      { key:'ResolveColorCyan',     hex:'#32e0ff' },
+      { key:'ResolveColorGreen',    hex:'#4cd964' },
+      { key:'ResolveColorYellow',   hex:'#ffd84d' },
+      { key:'ResolveColorRed',      hex:'#ff4b4b' },
+      { key:'ResolveColorPink',     hex:'#ff6fbf' },
+      { key:'ResolveColorFuchsia',  hex:'#ff3ee5' },
+      { key:'ResolveColorLavender', hex:'#c26bff' },
+      { key:'ResolveColorSky',      hex:'#6fb9ff' },
+      { key:'ResolveColorSand',     hex:'#e3c79b' },
+      { key:'ResolveColorCocoa',    hex:'#a7744f' },
+      { key:'ResolveColorPurple',   hex:'#8b46ff' },
+      { key:'ResolveColorRose',     hex:'#ff8ba5' },
+      { key:'ResolveColorMint',     hex:'#34c9b8' },
+      { key:'ResolveColorLemon',    hex:'#fff799' },
+      { key:'ResolveColorCream',    hex:'#ffe4b5' }
+    ];
+    const DEFAULT_COLOR_KEY = 'ResolveColorBlue';
+    currentCommentColor = DEFAULT_COLOR_KEY;
+    function getColorHex(key){
+      const entry = COLOR_PRESETS.find(c=>c.key===key);
+      return (entry || COLOR_PRESETS[0]).hex;
+    }
+    newColorBtn.style.backgroundColor = getColorHex(currentCommentColor);
+
+    function closeAllColorPickers(){
+      document.querySelectorAll('.marker-color-palette').forEach(el=>{ el.style.display='none'; });
+    }
+    document.addEventListener('click', closeAllColorPickers);
+
+    const newPalette=document.createElement('div');
+    newPalette.className='marker-color-palette';
+    COLOR_PRESETS.forEach(c=>{
+      const sw=document.createElement('button');
+      sw.type='button';
+      sw.style.backgroundColor=c.hex;
+      sw.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        currentCommentColor=c.key;
+        newColorBtn.style.backgroundColor=c.hex;
+        newPalette.style.display='none';
+      });
+      newPalette.appendChild(sw);
+    });
+    newColorBtn.parentNode.insertBefore(newPalette, newColorBtn.nextSibling);
+
+    newColorBtn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const wasOpen = newPalette.style.display==='grid';
+      closeAllColorPickers();
+      newPalette.style.display = wasOpen ? 'none' : 'grid';
+    });
+
     let LANG='de';
     const I18N={
       de:{ title:'Phantomcrew · EDL Review Player', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Datei(en) hinzufügen', sourcelabel:'Quelle wählen', add:'Hinzufügen', addComment:'Kommentar hinzufügen…', edlimport:'.edl Marker importieren', export:'💾 EDL exportieren', clear:'🗑️ Alle löschen' },
@@ -219,42 +456,71 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
     applyLang();
     langToggle.addEventListener('click',()=>{ LANG=LANG==='de'?'en':'de'; applyLang(); });
 
-    // ---------- Helpers ----------
     const two=n=>n<10?('0'+n):(''+n);
-    function formatEDL(seconds){ const fps=30; const h=Math.floor(seconds/3600),m=Math.floor((seconds%3600)/60),s=Math.floor(seconds%60),f=Math.floor((seconds%1)*fps); return `${two(h)}:${two(m)}:${two(s)}:${two(f)}`; }
-    function parseEDLTime(tc){ const [hh,mm,ss,ff]=tc.split(':').map(x=>parseInt(x,10)); const fps=30; if([hh,mm,ss,ff].some(isNaN)) return 0; return hh*3600+mm*60+ss+(ff/fps); }
+    function formatEDL(seconds){
+      const fps=30;
+      const h=Math.floor(seconds/3600);
+      const m=Math.floor((seconds%3600)/60);
+      const s=Math.floor(seconds%60);
+      const f=Math.floor((seconds%1)*fps);
+      return `${two(h)}:${two(m)}:${two(s)}:${two(f)}`;
+    }
+    function parseEDLTime(tc){
+      const [hh,mm,ss,ff]=tc.split(':').map(x=>parseInt(x,10));
+      const fps=30;
+      if([hh,mm,ss,ff].some(isNaN)) return 0;
+      return hh*3600+mm*60+ss+(ff/fps);
+    }
     function isValidVideoId(id){ return /^[A-Za-z0-9_-]{11}$/.test(id||''); }
     function sourceLabel(src){ return src.title || (src.type==='file'?src.fileName: `YouTube ${src.id}`); }
-    function showFilePlayer(show){ $('file-player').style.display=show?'block':'none'; $('player').style.display=show?'none':'block'; }
+    function showFilePlayer(show){
+      $('file-player').style.display=show?'block':'none';
+      $('player').style.display=show?'none':'block';
+    }
+
+    function maybePause(){
+      if(autopause.checked) hardPause();
+    }
 
     function getYouTubeId(u){
       try{
-        const url=new URL(u); const host=url.hostname.replace(/^www\./,'');
+        const url=new URL(u);
+        const host=url.hostname.replace(/^www\./,'');
         const clean=v=>(v||'').replace(/[^a-zA-Z0-9_-]/g,'');
         const list=url.searchParams.get('list'); if(list) return {type:'playlist', id:clean(list)};
-        if(host==='youtu.be'){ const id=clean(url.pathname.substring(1)); if(id) return {type:'video', id}; }
+        if(host==='youtu.be'){
+          const id=clean(url.pathname.substring(1));
+          if(id) return {type:'video', id};
+        }
         const v=url.searchParams.get('v'); if(v) return {type:'video', id:clean(v)};
         if(host.endsWith('youtube.com')){
           const p=url.pathname.split('/').filter(Boolean);
           if(p[0]==='live'&&p[1]) return {type:'video', id:clean(p[1])};
           if(p[0]==='shorts'&&p[1]) return {type:'video', id:clean(p[1])};
-          if(p[0]==='playlist'){ const pl=url.searchParams.get('list'); if(pl) return {type:'playlist', id:clean(pl)}; }
-          if(p[0]==='videoseries'){ const pl=url.searchParams.get('list'); if(pl) return {type:'playlist', id:clean(pl)}; }
+          if(p[0]==='playlist'){
+            const pl=url.searchParams.get('list'); if(pl) return {type:'playlist', id:clean(pl)};
+          }
+          if(p[0]==='videoseries'){
+            const pl=url.searchParams.get('list'); if(pl) return {type:'playlist', id:clean(pl)};
+          }
         }
       }catch(e){}
       return null;
     }
 
-    // ---------- Background title resolver (no flicker) ----------
     function ensureResolver(){
       if(resolver || !window.YT || !YT.Player) return;
       const pv={ rel:0, controls:0, disablekb:1, modestbranding:1, iv_load_policy:3, playsinline:1 };
-      resolver=new YT.Player('resolver-host',{ width:'0', height:'0', playerVars:pv, events:{
-        onReady:()=>{ resolverReady=true; processTitleQueue(); },
-        onError:()=>{ /* ignore resolver errors */ }
-      }});
+      resolver=new YT.Player('resolver-host',{
+        width:'0',
+        height:'0',
+        playerVars:pv,
+        events:{
+          onReady:()=>{ resolverReady=true; processTitleQueue(); },
+          onError:()=>{}
+        }
+      });
     }
-
     async function getTitleById(id){
       if(titleCache.has(id)) return titleCache.get(id);
       if(!resolverReady) await waitFor(()=>resolverReady, 2000);
@@ -266,12 +532,14 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
         try{
           const data = resolver.getVideoData ? resolver.getVideoData() : null;
           const t = data && data.title ? String(data.title) : '';
-          if(t){ titleCache.set(id, t); return t; }
-        }catch(e){ /* try again */ }
+          if(t){
+            titleCache.set(id, t);
+            return t;
+          }
+        }catch(e){}
       }
       return '';
     }
-
     function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
     function waitFor(cond, timeout=2000){
       return new Promise((res)=>{
@@ -284,7 +552,6 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
       });
     }
 
-    // ---------- Title queue ----------
     const titleQueue=[];
     let titleBusy=false;
     async function processTitleQueue(){
@@ -305,91 +572,161 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
       titleBusy=false;
     }
 
-    // ---------- YouTube IFrame API ----------
-    const tag=document.createElement('script'); tag.src="https://www.youtube.com/iframe_api"; document.head.appendChild(tag);
+    const tag=document.createElement('script');
+    tag.src="https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
     window.onYouTubeIframeAPIReady=function(){
       const playerVars={ rel:0, modestbranding:1, iv_load_policy:3, enablejsapi:1, playsinline:1 };
-      if(location.protocol.startsWith('http')){ playerVars.origin=location.origin; } else { fileBanner.style.display='block'; }
-      ytPlayer=new YT.Player('player',{ width:'100%', height:'100%', playerVars, events:{ onReady:onYTReady, onStateChange:onYTState, onError:onYTError } });
+      if(location.protocol.startsWith('http')){
+        playerVars.origin=location.origin;
+      } else {
+        fileBanner.style.display='block';
+      }
+      ytPlayer=new YT.Player('player',{
+        width:'100%',
+        height:'100%',
+        playerVars,
+        events:{ onReady:onYTReady, onStateChange:onYTState, onError:onYTError }
+      });
       ensureResolver();
     };
-    function onYTReady(){ ytReady=true; if(sources[current]) cueCurrent(false); }
-    function onYTState(){ /* no longer used for title loading to avoid flicker */ }
+    function onYTReady(){
+      ytReady=true;
+      if(sources[current]) cueCurrent(false);
+    }
+    function onYTState(){}
     function onYTError(e){
       const code=e?.data;
-      if(diag){ diag.style.display='inline-block'; diag.textContent='YT err '+code; }
+      if(diag){
+        diag.style.display='inline-block';
+        diag.textContent='YT err '+code;
+      }
       if(location.protocol==='file:') fileBanner.style.display='block';
     }
 
-    // ---------- Build sources ----------
     function addVideoById(id, title='', playlistId=null){
-      if(!isValidVideoId(id)){ alert((LANG==='de'?'Ungültige Video-ID: ':'Invalid video ID: ')+id); return; }
+      if(!isValidVideoId(id)){
+        alert((LANG==='de'?'Ungültige Video-ID: ':'Invalid video ID: ')+id);
+        return;
+      }
       const src={type:'video', id, title, comments:[], playlist: playlistId || null};
+      loadCommentsForSource(src);
       sources.push(src);
-      const opt=document.createElement('option'); opt.textContent=sourceLabel(src); selectEl.add(opt);
-      if(!title){ titleQueue.push(sources.length-1); processTitleQueue(); }
-      if(selectEl.selectedIndex<0){ selectEl.selectedIndex=0; current=0; }
+      const opt=document.createElement('option');
+      opt.textContent=sourceLabel(src);
+      selectEl.add(opt);
+      if(!title){
+        titleQueue.push(sources.length-1);
+        processTitleQueue();
+      }
+      if(selectEl.selectedIndex<0){
+        selectEl.selectedIndex=0;
+        current=0;
+      }
       cueCurrent(false);
       updateUrlWithCurrentSource();
     }
 
     async function expandPlaylistToVideos(playlistId, preselectVideoId=null){
-      if(!ytReady || !ytPlayer){ alert(LANG==='de'?'YouTube-API noch nicht bereit.':'YouTube API not ready yet.'); return; }
+      if(!ytReady || !ytPlayer){
+        alert(LANG==='de'?'YouTube-API noch nicht bereit.':'YouTube API not ready yet.');
+        return;
+      }
       try{
         ytPlayer.cuePlaylist({ listType:'playlist', list:playlistId, index:0 });
         await new Promise(r=>setTimeout(r, 900));
         const ids = (ytPlayer.getPlaylist && ytPlayer.getPlaylist()) || [];
-        if(!ids.length){ alert(LANG==='de'?'Playlist konnte nicht geladen werden.':'Could not load playlist.'); return; }
-
+        if(!ids.length){
+          alert(LANG==='de'?'Playlist konnte nicht geladen werden.':'Could not load playlist.');
+          return;
+        }
         const startIdx = sources.length;
         ids.forEach(id=> addVideoById(id, '', playlistId));
-        for(let i=0;i<ids.length;i++){ titleQueue.push(startIdx+i); }
+        for(let i=0;i<ids.length;i++){
+          titleQueue.push(startIdx+i);
+        }
         processTitleQueue();
-
         if(preselectVideoId){
           const idx = sources.findIndex((s, i)=> i>=startIdx && s.type==='video' && s.id===preselectVideoId);
-          if(idx>=0){ selectEl.selectedIndex = idx; current = idx; cueCurrent(false); }
+          if(idx>=0){
+            selectEl.selectedIndex = idx;
+            current = idx;
+            cueCurrent(false);
+          }
         }else{
-          selectEl.selectedIndex = startIdx; current = startIdx; cueCurrent(false);
+          selectEl.selectedIndex = startIdx;
+          current = startIdx;
+          cueCurrent(false);
         }
         updateUrlWithCurrentSource();
-      }catch(err){ if(diag){ diag.style.display='inline-block'; diag.textContent='PL err'; } }
+      }catch(err){
+        if(diag){
+          diag.style.display='inline-block';
+          diag.textContent='PL err';
+        }
+      }
     }
 
     function addSourceFromUrl(u){
       const meta=getYouTubeId(u);
-      if(!meta){ alert(LANG==='de'?'Ungültige YouTube-URL':'Invalid YouTube URL'); return; }
-      if(diag){ diag.style.display='inline-block'; diag.textContent=(meta.type==='video'?'VID:':'PL:')+meta.id; }
-      if(meta.type==='video'){ addVideoById(meta.id,''); }
-      else { 
-    // Minimal patch: respect ?v=... when adding a playlist URL via input
-    let _startV = null;
-    try { _startV = (new URL(u)).searchParams.get('v'); } catch(e){}
-    expandPlaylistToVideos(meta.id, _startV || null); }
+      if(!meta){
+        alert(LANG==='de'?'Ungültige YouTube-URL':'Invalid YouTube URL');
+        return;
+      }
+      if(diag){
+        diag.style.display='inline-block';
+        diag.textContent=(meta.type==='video'?'VID:':'PL:')+meta.id;
+      }
+      if(meta.type==='video'){
+        addVideoById(meta.id,'');
+      } else {
+        let _startV = null;
+        try { _startV = (new URL(u)).searchParams.get('v'); } catch(e){}
+        expandPlaylistToVideos(meta.id, _startV || null);
+      }
     }
 
-    addUrlBtn.addEventListener('click',()=>{ const u=urlInput.value.trim(); if(!u) return; addSourceFromUrl(u); urlInput.value=''; });
-    urlInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); addUrlBtn.click(); }});
+    addUrlBtn.addEventListener('click',()=>{
+      const u=urlInput.value.trim();
+      if(!u) return;
+      addSourceFromUrl(u);
+      urlInput.value='';
+    });
+    urlInput.addEventListener('keydown',(e)=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        addUrlBtn.click();
+      }
+    });
 
-    // ---------- FILES ----------
     fileInput.addEventListener('change',()=>{
       if(fileInput.files?.length){
         for(const f of fileInput.files){
           const url=URL.createObjectURL(f);
           const src={type:'file', id:url, fileUrl:url, fileName:f.name, title:f.name, comments:[]};
+          loadCommentsForSource(src);
           sources.push(src);
-          const opt=document.createElement('option'); opt.textContent=sourceLabel(src); selectEl.add(opt);
+          const opt=document.createElement('option');
+          opt.textContent=sourceLabel(src);
+          selectEl.add(opt);
         }
-        if(selectEl.selectedIndex<0){ selectEl.selectedIndex=0; current=0; }
+        if(selectEl.selectedIndex<0){
+          selectEl.selectedIndex=0;
+          current=0;
+        }
         cueCurrent(false);
       }
     });
 
-    // ---------- Select change ----------
-    selectEl.addEventListener('change',()=>{ current=selectEl.selectedIndex; cueCurrent(false); updateUrlWithCurrentSource(); });
+    selectEl.addEventListener('change',()=>{
+      current=selectEl.selectedIndex;
+      cueCurrent(false);
+      updateUrlWithCurrentSource();
+    });
 
     function cueCurrent(resetTime){
-      const src=sources[current]; if(!src) return;
+      const src=sources[current];
+      if(!src) return;
       if(src.type==='file'){
         showFilePlayer(true);
         if(resetTime!==false) fileVideo.currentTime = 0;
@@ -404,12 +741,16 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
       try{
         ytPlayer.cueVideoById({videoId:src.id});
         setTimeout(()=>{ ytPlayer.pauseVideo?.(); }, 200);
-      }catch(err){ if(diag){ diag.style.display='inline-block'; diag.textContent='cue error'; } }
+      }catch(err){
+        if(diag){
+          diag.style.display='inline-block';
+          diag.textContent='cue error';
+        }
+      }
       updateCommentList();
       clipInfo.textContent='';
     }
 
-    // ---------- URL sync (v & list) ----------
     function updateUrlWithCurrentSource(){
       const src = sources[current];
       const base = location.origin + location.pathname;
@@ -423,80 +764,228 @@ img, video, canvas, iframe { max-width:100%; height:auto; }
       history.replaceState(null, '', `${base}?${params.toString()}`);
     }
 
-    // ---------- Comments ----------
     function updateCommentList(){
-      const src=sources[current]; if(!src) return;
+      const src=sources[current];
+      if(!src) return;
       commentsEl.innerHTML='';
-      (src.comments||[]).forEach((c,i)=>commentsEl.appendChild(formatCommentItem(c,i)));
-      downloadBtn.disabled=(src.comments||[]).length===0;
+      const arr = src.comments || [];
+      for(let i=arr.length-1; i>=0; i--){
+        commentsEl.appendChild(formatCommentItem(arr[i], i));
+      }
+      downloadBtn.disabled=arr.length===0;
     }
+
     function formatCommentItem(obj, idx){
+      if(!obj.color) obj.color = DEFAULT_COLOR_KEY;
       const li=document.createElement('li');
-      const text=document.createElement('input'); text.type='text'; text.value=obj.comment||''; text.addEventListener('input',()=>{ obj.comment=text.value; hardPause(); });
-      const time=document.createElement('input'); time.type='text'; time.value=obj.time||'00:00:00:00'; time.className='tc'; time.addEventListener('input',()=>{ obj.time=time.value; });
-      const gotoBtn=document.createElement('button'); gotoBtn.type='button'; gotoBtn.textContent='Go To';
+
+      const colorBtn=document.createElement('button');
+      colorBtn.type='button';
+      colorBtn.className='comment-color-btn';
+      colorBtn.style.backgroundColor=getColorHex(obj.color);
+      colorBtn.title = LANG==='de' ? 'Markerfarbe ändern' : 'Change marker color';
+
+      const palette=document.createElement('div');
+      palette.className='marker-color-palette';
+      COLOR_PRESETS.forEach(c=>{
+        const sw=document.createElement('button');
+        sw.type='button';
+        sw.style.backgroundColor=c.hex;
+        sw.addEventListener('click',(e)=>{
+          e.stopPropagation();
+          obj.color=c.key;
+          colorBtn.style.backgroundColor=c.hex;
+          persistCurrentComments();
+          palette.style.display='none';
+        });
+        palette.appendChild(sw);
+      });
+
+      colorBtn.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        const wasOpen = palette.style.display==='grid';
+        closeAllColorPickers();
+        palette.style.display = wasOpen ? 'none' : 'grid';
+      });
+
+      const text=document.createElement('input');
+      text.type='text';
+      text.value=obj.comment||'';
+      text.addEventListener('input',()=>{
+        obj.comment=text.value;
+        maybePause();
+        persistCurrentComments();
+      });
+
+      const time=document.createElement('input');
+      time.type='text';
+      time.value=obj.time||'00:00:00:00';
+      time.className='tc';
+      time.addEventListener('input',()=>{
+        obj.time=time.value;
+        persistCurrentComments();
+      });
+
+      const btnRow=document.createElement('div');
+      btnRow.className='comment-btn-row';
+
+      const gotoBtn=document.createElement('button');
+      gotoBtn.type='button';
+      gotoBtn.className='comment-btn goto-btn';
+      gotoBtn.textContent=autopause.checked ? '⏯︎' : '▶';
+      gotoBtn.title = LANG==='de' ? 'Zu diesem Timecode springen' : 'Go to this timecode';
       gotoBtn.onclick=()=>{
-        const seconds=parseEDLTime(obj.time||'00:00:00:00'); const src=sources[current];
-        if(src.type==='file'){ fileVideo.currentTime=seconds; fileVideo.pause(); }
-        else { const was=ytPlayer.getPlayerState?.()===1; ytPlayer.seekTo(seconds,true); if(!was) ytPlayer.pauseVideo?.(); }
+        const seconds=parseEDLTime(obj.time||'00:00:00:00');
+        const src=sources[current];
+        if(src.type==='file'){
+          fileVideo.currentTime=seconds;
+          if(autopause.checked) fileVideo.pause();
+        }else{
+          ytPlayer.seekTo(seconds,true);
+          if(autopause.checked) ytPlayer.pauseVideo?.();
+        }
       };
-      const delBtn=document.createElement('button'); delBtn.type='button'; delBtn.textContent='Delete'; delBtn.onclick=()=>removeCommentAt(idx);
-      li.append(text,time,gotoBtn,delBtn);
+
+      const delBtn=document.createElement('button');
+      delBtn.type='button';
+      delBtn.className='comment-btn';
+      delBtn.textContent='✕';
+      delBtn.title = LANG==='de' ? 'Marker löschen' : 'Delete marker';
+      delBtn.onclick=()=>removeCommentAt(idx);
+
+      btnRow.appendChild(gotoBtn);
+      btnRow.appendChild(delBtn);
+
+      li.appendChild(colorBtn);
+      li.appendChild(text);
+      li.appendChild(time);
+      li.appendChild(btnRow);
+      li.appendChild(palette);
       return li;
     }
-    function removeCommentAt(i){ const src=sources[current]; if(!src) return; src.comments.splice(i,1); updateCommentList(); }
-    function addComment(){
-      const src=sources[current]; if(!src) return; const text=commentInput.value.trim(); if(!text) return; hardPause();
-      const seconds = src.type==='file' ? (fileVideo.currentTime||0) : (ytPlayer?.getCurrentTime?.()||0);
-      src.comments.push({ comment:text, time:formatEDL(seconds) });
-      commentInput.value=''; updateCommentList();
-    }
-    function hardPause(){ const src=sources[current]; if(!src) return; if(src.type==='file'){ if(!fileVideo.paused) fileVideo.pause(); } else if(ytPlayer && ytPlayer.pauseVideo){ try{ ytPlayer.pauseVideo(); }catch(e){} } }
-    addCommentBtn.addEventListener('click',()=>{ addComment(); resumePlayback(); });
-    commentInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); addComment(); resumePlayback(); } });
-    // NEW: auto-pause while typing in the comment field
-    commentInput.addEventListener('input', hardPause);
-    // Keep existing pause-on-pointer behavior
-    $('comment-form').addEventListener('pointerdown', hardPause, {capture:true});
 
-    function resumePlayback(){ const src=sources[current]; if(!src) return; if(src.type==='file'){ fileVideo.play?.(); } else if(ytPlayer && ytPlayer.playVideo){ try{ ytPlayer.playVideo(); }catch(e){} } }
-
-    clearBtn.addEventListener('click',()=>{
-      const msg= LANG==='de'? 'Alle Kommentare für die aktuelle Quelle löschen?' : 'Delete all comments for the current source?';
-      if(!confirm(msg)) return; const src=sources[current]; if(!src) return; src.comments=[]; updateCommentList();
+    autopause.addEventListener('change',()=>{
+      document.querySelectorAll('.goto-btn').forEach(btn=>{
+        btn.textContent = autopause.checked ? '⏯︎' : '▶';
+      });
     });
 
-    // ---------- EDL Import ----------
-    edlInput.addEventListener('change', ()=>{ const file=edlInput.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>parseEDL(e.target.result); reader.readAsText(file); });
-    function parseEDL(content){
-      const src=sources[current]; if(!src) return;
-      const lines=content.split(/\r?\n/); let lastTime='';
-      for(const line of lines){
-        if(line.includes('V     C        ')){ lastTime=line.split('V     C        ')[1].split(' ')[0].trim(); }
-        else if(line.includes('|M:')){ const commentText=line.split('|M:')[1].split('|')[0].trim(); if(!lastTime) continue; src.comments.push({ comment:commentText, time:lastTime }); lastTime=''; }
-      }
+    function removeCommentAt(i){
+      const src=sources[current];
+      if(!src) return;
+      src.comments.splice(i,1);
+      persistCurrentComments();
       updateCommentList();
     }
 
-    // ---------- EDL Export ----------
+    function addComment(){
+      const src=sources[current];
+      if(!src) return;
+      const textVal=commentInput.value.trim();
+      if(!textVal) return;
+      maybePause();
+      const seconds = src.type==='file'
+        ? (fileVideo.currentTime||0)
+        : (ytPlayer?.getCurrentTime?.()||0);
+      src.comments.push({ comment:textVal, time:formatEDL(seconds), color:currentCommentColor || DEFAULT_COLOR_KEY });
+      persistCurrentComments();
+      commentInput.value='';
+      updateCommentList();
+    }
+
+    function hardPause(){
+      const src=sources[current];
+      if(!src) return;
+      if(src.type==='file'){
+        if(!fileVideo.paused) fileVideo.pause();
+      }else if(ytPlayer && ytPlayer.pauseVideo){
+        try{ ytPlayer.pauseVideo(); }catch(e){}
+      }
+    }
+    function resumePlayback(){
+      const src=sources[current];
+      if(!src) return;
+      if(src.type==='file'){
+        fileVideo.play?.();
+      }else if(ytPlayer && ytPlayer.playVideo){
+        try{ ytPlayer.playVideo(); }catch(e){}
+      }
+    }
+
+    addCommentBtn.addEventListener('click',()=>{ addComment(); resumePlayback(); });
+    commentInput.addEventListener('keydown',(e)=>{
+      if(e.key==='Enter' && !e.shiftKey){
+        e.preventDefault();
+        addComment();
+        resumePlayback();
+      }
+    });
+    commentInput.addEventListener('input', maybePause);
+    $('comment-form').addEventListener('pointerdown', maybePause, {capture:true});
+
+    clearBtn.addEventListener('click',()=>{
+      const msg= LANG==='de'? 'Alle Kommentare für die aktuelle Quelle löschen?' : 'Delete all comments for the current source?';
+      if(!confirm(msg)) return;
+      const src=sources[current];
+      if(!src) return;
+      src.comments=[];
+      persistCurrentComments();
+      updateCommentList();
+    });
+
+    edlInput.addEventListener('change', ()=>{
+      const file=edlInput.files[0];
+      if(!file) return;
+      const reader=new FileReader();
+      reader.onload=e=>parseEDL(e.target.result);
+      reader.readAsText(file);
+    });
+    function parseEDL(content){
+      const src=sources[current];
+      if(!src) return;
+      const lines=content.split(/\r?\n/);
+      let lastTime='';
+      for(const line of lines){
+        if(line.includes('V     C        ')){
+          lastTime=line.split('V     C        ')[1].split(' ')[0].trim();
+        }else if(line.includes('|M:')){
+          const commentText=line.split('|M:')[1].split('|')[0].trim();
+          let colorKey = DEFAULT_COLOR_KEY;
+          const cIdx = line.indexOf('|C:');
+          if(cIdx !== -1){
+            const colorPart = line.slice(cIdx+3).split('|')[0].trim();
+            if(colorPart) colorKey = colorPart;
+          }
+          if(!lastTime) continue;
+          src.comments.push({ comment:commentText, time:lastTime, color:colorKey });
+          lastTime='';
+        }
+      }
+      persistCurrentComments();
+      updateCommentList();
+    }
+
     downloadBtn.addEventListener('click', ()=>{
-      const src=sources[current]; if(!src) return;
+      const src=sources[current];
+      if(!src) return;
       const title= src.title || (src.type==='file'? src.fileName : src.id);
       let edl=`TITLE: PHANTOMCREW.DE Edit list for ${title}\nFCM: NON-DROP FRAME\n\n`;
       let i=1;
-      const write=(c)=>{ const tc=formatEDL(parseEDLTime(c.time)); edl+=`00${two(i++)}  001      V     C        ${tc} ${tc} ${tc} ${tc} \n |C:ResolveColorBlue |M:${c.comment} |D:1\n\n`; };
+      const write=(c)=>{
+        const tc=formatEDL(parseEDLTime(c.time));
+        const colorKey = c.color || DEFAULT_COLOR_KEY;
+        edl+=`00${two(i++)}  001      V     C        ${tc} ${tc} ${tc} ${tc} \n |C:${colorKey} |M:${c.comment} |D:1\n\n`;
+      };
       for(const c of (src.comments||[])) write(c);
-      const blob=new Blob([edl],{type:'application/octet-stream;charset=utf-8'});
+      const blob=new Blob([edl],{type:'text/plain;charset=utf-8'});
       const safeName=(title||'session').replace(/[^a-z0-9_\-]+/gi,'_');
       saveAs(blob, `${safeName}.edl`);
     });
 
-    // ---------- Auto-load from URL (?v=... and/or ?list=...) ----------
     (async function autoLoadFromUrl(){
       const params = new URLSearchParams(location.search);
       const startVid  = params.get('v');
       const startList = params.get('list');
-      // Warten bis YouTube bereit (max. 5s)
       await waitFor(()=>ytReady, 5000);
       if(startList){
         const vidOk = startVid && isValidVideoId(startVid) ? startVid : null;
