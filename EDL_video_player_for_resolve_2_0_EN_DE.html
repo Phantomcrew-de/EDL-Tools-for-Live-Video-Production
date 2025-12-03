@@ -54,16 +54,13 @@
       border-radius:6px;
       padding:6px 8px;
     }
-    /* Alle Kommentar-Textfelder dürfen schrumpfen (overridet globale 240px) */
     #comments input[type="text"]{
       min-width:0;
     }
-    /* Kommentartext – nimmt den Löwenanteil, aber schrumpft mit */
     #comments li input[type="text"]:not(.tc){
       flex:1 1 220px;
       min-width:0;
     }
-    /* Timecode – etwas größer, aber kompakt */
     #comments .tc{
       flex:0 1 100px;
       min-width:90px;
@@ -77,10 +74,8 @@
     footer{ padding:16px; text-align:center; color:var(--muted) }
     #resolver-host{ position:absolute; width:0; height:0; overflow:hidden; opacity:0; pointer-events:none; }
 
-    /* Kommentar-Form als Position-Anchor für die Farbbox */
     #comment-form{ position:relative; }
 
-    /* --- Mobile Responsive & No-Zoom Pack --- */
     :root{ --gap:16px; --gap-sm:8px; --radius:12px; --bg:#0b1226; --panel:#0f1832; --text:#e7ecff; --muted:#9aacd6; }
     html, body { background:#0b1226; color:var(--text); -webkit-text-size-adjust:100%; text-size-adjust:100%; touch-action: manipulation; }
 
@@ -88,12 +83,11 @@
     .row{ display:flex; gap:var(--gap); align-items:center; flex-wrap:wrap; }
     .stack{ display:grid; gap:var(--gap); }
 
-    /* Zweispalten-Layout: Player größer als Kommentarspalte */
     .layout-grid{
       display:grid;
       grid-template-columns:minmax(0,1.8fr) minmax(0,1.2fr);
       gap:16px;
-      align-items:stretch; /* rechter Container gleiche Höhe wie linker */
+      align-items:stretch;
     }
 
     button{ display:inline-flex; align-items:center; justify-content:center; font-size:16px; background:#2a355e; color:#f2f5ff; border:0; border-radius:8px; padding:10px 14px; cursor:pointer; transition:transform .06s ease, opacity .2s ease; }
@@ -105,7 +99,6 @@
     input[type="text"], select{ background:#0e1426; color:var(--text); border:1px solid #2a355e; border-radius:8px; padding:10px 12px; min-width:240px; }
     input, select, textarea{ font-size:16px !important; }
 
-    /* Desktop max width breiter */
     @media (min-width: 1100px){
       header, main, footer{ max-width:1400px; margin-inline:auto; }
     }
@@ -123,7 +116,6 @@
       input[type="text"], select, button, #file-input{ width:100%; min-width:0; }
       #player-wrap{ border-radius:8px; }
 
-      /* MOBILE: Kommentar-Layout umsortieren */
       #comments{
         max-height:none;
         padding-right:0;
@@ -132,25 +124,21 @@
         flex-wrap:wrap;
         align-items:stretch;
       }
-      /* Farbe ganz oben */
       #comments li .comment-color-btn{
         order:0;
         flex:0 0 auto;
         margin-bottom:4px;
       }
-      /* Kommentar-Feld in eigener Zeile */
       #comments li input[type="text"]:not(.tc){
         order:1;
         flex:1 1 100%;
       }
-      /* Timecode-Feld darunter, volle Breite */
       #comments li .tc{
         order:2;
         flex:1 1 100%;
         max-width:none;
         text-align:left;
       }
-      /* Button-Reihe ganz unten, 2 Buttons je 50% */
       #comments li .comment-btn-row{
         order:3;
         flex:1 1 100%;
@@ -211,7 +199,6 @@
       }
     }
 
-    /* Comment color & Button-Spalte (Desktop schmal) */
     .comment-color-btn{
       width:32px;
       height:32px;
@@ -297,7 +284,6 @@
 </header>
 <main class="stack" style="padding:16px">
   <section class="layout-grid">
-    <!-- Linke Spalte: Player + Kommentar hinzufügen -->
     <div class="panel stack" id="left-col">
       <div id="player-wrap">
         <div id="player"></div>
@@ -305,7 +291,6 @@
         <div id="resolver-host"></div>
       </div>
 
-      <!-- Kommentar-Form mit Farbauswahl links -->
       <form id="comment-form" class="row" onsubmit="return false">
         <button id="new-color" type="button" class="comment-color-btn" title="Farbe für neuen Kommentar"></button>
         <input id="comment-input" type="text" placeholder="Kommentar hinzufügen…"/>
@@ -313,7 +298,6 @@
         <span id="clip-info" style="font-size:12px;color:var(--muted)"></span>
       </form>
 
-      <!-- Auto-Pause + EDL-Import unten rechts -->
       <div class="row" style="gap:8px;align-items:center;justify-content:space-between;">
         <label for="autopause" style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;">
           <input id="autopause" type="checkbox" checked style="width:16px;height:16px;">
@@ -327,7 +311,6 @@
       </div>
     </div>
 
-    <!-- Rechte Spalte: Kommentar-Liste + Export -->
     <div class="panel stack" id="right-col">
       <ul id="comments"></ul>
       <div class="row">
@@ -444,7 +427,13 @@
       newPalette.style.display = wasOpen ? 'none' : 'grid';
     });
 
-    let LANG='de';
+    // --- Language with optional ?lang=de|en ---
+    let LANG = (()=>{
+      const params = new URLSearchParams(location.search);
+      const l = (params.get('lang') || '').toLowerCase();
+      return (l === 'en') ? 'en' : 'de';
+    })();
+
     const I18N={
       de:{
         title:'Phantomcrew · EDL Review Player',
@@ -473,6 +462,7 @@
         autopause:'Auto-pause while working with markers'
       }
     };
+
     function applyLang(){
       const t=I18N[LANG];
       $('t_title').textContent=t.title;
@@ -490,8 +480,23 @@
       langToggle.textContent=(LANG==='de'?'EN':'DE');
       document.documentElement.lang=LANG;
     }
+
+    function updateLangInUrl(){
+      const base = location.origin + location.pathname;
+      const params = new URLSearchParams(location.search);
+      params.set('lang', LANG);
+      const qs = params.toString();
+      history.replaceState(null, '', qs ? `${base}?${qs}` : base);
+    }
+
     applyLang();
-    langToggle.addEventListener('click',()=>{ LANG=LANG==='de'?'en':'de'; applyLang(); });
+    updateLangInUrl(); // optional; kannst du rausnehmen, wenn du die URL nicht automatisch ändern willst
+
+    langToggle.addEventListener('click',()=>{
+      LANG = (LANG==='de' ? 'en' : 'de');
+      applyLang();
+      updateLangInUrl();
+    });
 
     const two=n=>n<10?('0'+n):(''+n);
     function formatEDL(seconds){
@@ -547,7 +552,7 @@
 
     function ensureResolver(){
       if(resolver || !window.YT || !YT.Player) return;
-      const pv={ rel:0, controls:0, disablekb:1, modestbranding:1, iv_load_policy:3, playsinline:1 };
+      const pv={ rel:0, controls:0, disablekb:1, modestbranding:1, playsinline:1, iv_load_policy:3 };
       resolver=new YT.Player('resolver-host',{
         width:'0',
         height:'0',
@@ -795,14 +800,19 @@
     function updateUrlWithCurrentSource(){
       const src = sources[current];
       const base = location.origin + location.pathname;
-      if(!src || src.type!=='video'){
-        history.replaceState(null, '', base);
-        return;
+      const params = new URLSearchParams(location.search);
+
+      // preserve lang, but reset v/list depending on source
+      params.delete('v');
+      params.delete('list');
+
+      if(src && src.type === 'video'){
+        if(src.playlist) params.set('list', src.playlist);
+        params.set('v', src.id);
       }
-      const params = new URLSearchParams();
-      if(src.playlist) params.set('list', src.playlist);
-      params.set('v', src.id);
-      history.replaceState(null, '', `${base}?${params.toString()}`);
+
+      const qs = params.toString();
+      history.replaceState(null, '', qs ? `${base}?${qs}` : base);
     }
 
     function updateCommentList(){
