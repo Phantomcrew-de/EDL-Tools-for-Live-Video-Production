@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -94,7 +93,7 @@
       display:grid;
       grid-template-columns:minmax(0,1.8fr) minmax(0,1.2fr);
       gap:16px;
-      align-items:flex-start;
+      align-items:stretch; /* rechter Container gleiche Höhe wie linker */
     }
 
     button{ display:inline-flex; align-items:center; justify-content:center; font-size:16px; background:#2a355e; color:#f2f5ff; border:0; border-radius:8px; padding:10px 14px; cursor:pointer; transition:transform .06s ease, opacity .2s ease; }
@@ -285,10 +284,6 @@
       <select id="source-select"></select>
       <span id="diag" class="badge" style="display:none"></span>
     </div>
-    <div class="row">
-      <label id="t_edlimport">.edl Marker importieren</label>
-      <input id="edl-input" type="file" accept=".edl,text/plain"/>
-    </div>
     <div id="fileproto" class="banner">
       Hinweis: Du öffnest die Datei über <span class="badge">file://</span>.
       Der YouTube-Player kann so Fehler (<code>2</code>, <code>5</code>) werfen.
@@ -317,12 +312,17 @@
         <span id="clip-info" style="font-size:12px;color:var(--muted)"></span>
       </form>
 
-      <!-- Auto-Pause Toggle -->
-      <div class="row" style="gap:8px;align-items:center;">
+      <!-- Auto-Pause + EDL-Import unten rechts -->
+      <div class="row" style="gap:8px;align-items:center;justify-content:space-between;">
         <label for="autopause" style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;">
           <input id="autopause" type="checkbox" checked style="width:16px;height:16px;">
-          Auto-Pause beim Arbeiten mit Markern
+          <span id="t_autopause">Auto-Pause beim Arbeiten mit Markern</span>
         </label>
+
+        <div class="row" style="gap:8px;flex-wrap:nowrap;margin-left:auto;">
+          <input id="edl-input" type="file" accept=".edl,text/plain" style="display:none"/>
+          <button id="t_edlimport" type="button">📂 EDL importieren</button>
+        </div>
       </div>
     </div>
 
@@ -351,6 +351,7 @@
     const diag=$('diag'), fileBanner=$('fileproto'), clipInfo=$('clip-info');
     const autopause = $('autopause');
     const newColorBtn = $('new-color');
+    const edlImportBtn = $('t_edlimport');
 
     const sources=[];
     let current=0; let ytPlayer=null; let ytReady=false;
@@ -444,14 +445,46 @@
 
     let LANG='de';
     const I18N={
-      de:{ title:'Phantomcrew · EDL Review Player', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Datei(en) hinzufügen', sourcelabel:'Quelle wählen', add:'Hinzufügen', addComment:'Kommentar hinzufügen…', edlimport:'.edl Marker importieren', export:'💾 EDL exportieren', clear:'🗑️ Alle löschen' },
-      en:{ title:'Phantomcrew · EDL Review Player', ytlabel:'YouTube URL (Video/Playlist/Live)', filelabel:'Add file(s)', sourcelabel:'Select source', add:'Add', addComment:'Add a comment…', edlimport:'Import .edl markers', export:'💾 Export EDL', clear:'🗑️ Clear all' }
+      de:{
+        title:'Phantomcrew · EDL Review Player',
+        ytlabel:'YouTube URL',
+        filelabel:'Datei(en) hinzufügen',
+        sourcelabel:'Quelle wählen',
+        add:'Hinzufügen',
+        addComment:'Kommentar hinzufügen…',
+        edlimport:'📂 EDL importieren',
+        export:'💾 EDL exportieren',
+        clear:'🗑️ Alle löschen',
+        autopause:'Auto-Pause beim Arbeiten mit Markern'
+      },
+      en:{
+        title:'Phantomcrew · EDL Review Player',
+        ytlabel:'YouTube URL',
+        filelabel:'Add file(s)',
+        sourcelabel:'Select source',
+        add:'Add',
+        addComment:'Add a comment…',
+        edlimport:'📂 Import EDL',
+        export:'💾 Export EDL',
+        clear:'🗑️ Clear all',
+        autopause:'Auto-pause while working with markers'
+      }
     };
     function applyLang(){
       const t=I18N[LANG];
-      $('t_title').textContent=t.title; $('t_ytlabel').textContent=t.ytlabel; $('t_filelabel').textContent=t.filelabel; $('t_sourcelabel').textContent=t.sourcelabel;
-      addUrlBtn.textContent=t.add; addCommentBtn.textContent=t.add; commentInput.placeholder=t.addComment; $('t_edlimport').textContent=t.edlimport; downloadBtn.textContent=t.export; clearBtn.textContent=t.clear;
-      langToggle.textContent=(LANG==='de'?'EN':'DE'); document.documentElement.lang=LANG;
+      $('t_title').textContent=t.title;
+      $('t_ytlabel').textContent=t.ytlabel;
+      $('t_filelabel').textContent=t.filelabel;
+      $('t_sourcelabel').textContent=t.sourcelabel;
+      addUrlBtn.textContent=t.add;
+      addCommentBtn.textContent=t.add;
+      commentInput.placeholder=t.addComment;
+      edlImportBtn.textContent=t.edlimport;
+      downloadBtn.textContent=t.export;
+      clearBtn.textContent=t.clear;
+      $('t_autopause').textContent=t.autopause;
+      langToggle.textContent=(LANG==='de'?'EN':'DE');
+      document.documentElement.lang=LANG;
     }
     applyLang();
     langToggle.addEventListener('click',()=>{ LANG=LANG==='de'?'en':'de'; applyLang(); });
@@ -940,6 +973,11 @@
       reader.onload=e=>parseEDL(e.target.result);
       reader.readAsText(file);
     });
+
+    edlImportBtn.addEventListener('click', ()=>{
+      edlInput.click();
+    });
+
     function parseEDL(content){
       const src=sources[current];
       if(!src) return;
