@@ -276,8 +276,9 @@
       <button id="add-url" type="button">Hinzufügen</button>
     </div>
     <div class="row">
-      <label for="file-input" id="t_filelabel">Datei(en) hinzufügen</label>
-      <input id="file-input" type="file" accept="video/*" multiple/>
+      <label id="t_filelabel">Lokale Medien</label>
+      <input id="file-input" type="file" accept="video/*,audio/*" multiple style="display:none"/>
+      <button id="file-btn" type="button" aria-labelledby="t_filelabel">Video-/Audiodateien importieren</button>
     </div>
     <div class="row">
       <label id="t_sourcelabel">Quelle wählen</label>
@@ -344,7 +345,7 @@
   document.addEventListener('DOMContentLoaded', init);
 
   function init(){
-    const urlInput=$('yt-url'), addUrlBtn=$('add-url'), fileInput=$('file-input'), selectEl=$('source-select');
+    const urlInput=$('yt-url'), addUrlBtn=$('add-url'), fileInput=$('file-input'), selectEl=$('source-select'), fileBtn=$('file-btn');
     const commentInput=$('comment-input'), addCommentBtn=$('add-comment');
     const commentsEl=$('comments'), downloadBtn=$('download-edl'), clearBtn=$('clear-comments');
     const edlInput=$('edl-input'), fileVideo=$('file-player'), langToggle=$('lang-toggle');
@@ -448,7 +449,8 @@
       de:{
         title:'Phantomcrew · EDL Review Player',
         ytlabel:'YouTube URL',
-        filelabel:'Datei(en) hinzufügen',
+        filelabel:'Lokale Medien',
+        filebtn:'Video-/Audiodateien importieren',
         sourcelabel:'Quelle wählen',
         add:'Hinzufügen',
         addComment:'Kommentar hinzufügen…',
@@ -460,7 +462,8 @@
       en:{
         title:'Phantomcrew · EDL Review Player',
         ytlabel:'YouTube URL',
-        filelabel:'Add file(s)',
+        filelabel:'Local media',
+        filebtn:'Import video/audio files',
         sourcelabel:'Select source',
         add:'Add',
         addComment:'Add a comment…',
@@ -475,6 +478,7 @@
       $('t_title').textContent=t.title;
       $('t_ytlabel').textContent=t.ytlabel;
       $('t_filelabel').textContent=t.filelabel;
+      fileBtn.textContent = t.filebtn;
       $('t_sourcelabel').textContent=t.sourcelabel;
       addUrlBtn.textContent=t.add;
       addCommentBtn.textContent=t.add;
@@ -730,6 +734,10 @@
         e.preventDefault();
         addUrlBtn.click();
       }
+    });
+
+    fileBtn.addEventListener('click', () => {
+      fileInput.click();
     });
 
     fileInput.addEventListener('change',()=>{
